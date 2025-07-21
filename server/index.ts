@@ -85,7 +85,7 @@ const sessionOptions: SessionOptions = {
 app.use(session(sessionOptions));
 
 // connectDB();
-app.use("/api", require("./Router/router"));
+app.use("/api", require("./router/router"));
 
 const server = app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

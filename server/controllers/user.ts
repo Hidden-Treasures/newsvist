@@ -151,7 +151,7 @@ export const updateUser = async (req: Request, res: Response) => {
 
 export const getUserDetails = async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
+    const userId = (req.user as any)?._id;
 
     // Find the user by ID
     const user = await User.findById(userId);

@@ -6,7 +6,7 @@ export const isAuth = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   const token = req.cookies.authToken;
 
   if (!token) return sendError(res, "Unauthorized!");

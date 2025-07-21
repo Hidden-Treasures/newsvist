@@ -111,7 +111,7 @@ const route = express.Router();
 
 route.post("/register", register);
 route.post("/login", login);
-route.get("/isAuth", isAuth, checkAuth);
+route.get("/check-auth", isAuth, checkAuth);
 route.post("/logout", isAuth, logout);
 route.get("/mainSearch", mainSearch);
 route.get("/getNewsByLiveUpdateType/:liveUpdateType", getNewsByLiveUpdateType);
@@ -274,7 +274,7 @@ route.get("/comments/:articleId", getComments);
 
 // ..............USER ROUTE............
 // Route for updating user profile
-route.get("/me/:userId", isAuth, getUserDetails);
+route.get("/my-profile", isAuth, getUserDetails);
 route.put(
   "/me/:userId",
   isAuth,
