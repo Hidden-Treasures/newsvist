@@ -14,8 +14,8 @@ export const loginUser = async (data: Data) => {
   return response.data;
 };
 export const getProfile = async () => {
-  const response = await api.get("/my-profile", { withCredentials: true });
-  return response.data;
+  const { data } = await api.get("/my-profile", { withCredentials: true });
+  return data;
 };
 export const logoutUser = async () => {
   const response = await api.post("/logout", {}, { withCredentials: true });

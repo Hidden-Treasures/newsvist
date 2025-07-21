@@ -1,12 +1,16 @@
 "use client";
 
-import React, { createContext, useContext } from "react";
+import React, { createContext, ReactNode, useContext } from "react";
 import { useLogout, useProfile } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
 
 interface User {
   _id: string;
   email: string;
   username: string;
+  profilePhoto: string;
+  createdAt: string;
+  updatedAt: string;
   role: string;
   token: string;
 }
@@ -20,12 +24,17 @@ interface AuthContextProps {
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { data: user, isPending, isError } = useProfile();
   const { mutate: logoutMutate } = useLogout();
+  const router = useRouter();
 
   const logout = async () => {
-    await logoutMutate();
+    await logoutMutate(undefined, {
+      onSuccess: () => {
+        router.push("/login");
+      },
+    });
   };
 
   return (

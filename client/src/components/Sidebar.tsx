@@ -284,29 +284,26 @@ const Sidebar = ({ onAddNewsClick }: SidebarProps) => {
                           }`}
                         >
                           <li className="mb-1 last:mb-0">
-                            <NavLink
-                              end={true}
-                              onClick={onAddNewsClick}
-                              className={({ isActive }) =>
-                                "block transition duration-150 truncate " +
-                                (isActive
-                                  ? "text-indigo-500"
-                                  : "text-slate-400 hover:text-slate-200")
-                              }
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                onAddNewsClick();
+                              }}
+                              className="block transition duration-150 truncate text-slate-400 hover:text-slate-200 w-full text-left cursor-pointer"
                             >
                               <span
                                 className={`text-sm font-medium lg:opacity-0 ${
                                   sidebarExpanded && "lg:!opacity-100"
-                                }  duration-200`}
+                                } duration-200`}
                               >
                                 Create
                               </span>
-                            </NavLink>
+                            </button>
                           </li>
                           <li className="mb-1 last:mb-0">
                             <NavLink
                               end={true}
-                              href="/admin/news-management/Image-upload"
+                              href="/admin/news-management/image-upload"
                               className={({ isActive }) =>
                                 "block transition duration-150 truncate " +
                                 (isActive
@@ -326,7 +323,7 @@ const Sidebar = ({ onAddNewsClick }: SidebarProps) => {
                           <li className="mb-1 last:mb-0">
                             <NavLink
                               end={true}
-                              href="/admin/news-management/Image-gallery"
+                              href="/admin/news-management/image-gallery"
                               className={({ isActive }) =>
                                 "block transition duration-150 truncate " +
                                 (isActive
@@ -346,7 +343,7 @@ const Sidebar = ({ onAddNewsClick }: SidebarProps) => {
                           <li className="mb-1 last:mb-0">
                             <NavLink
                               end={true}
-                              href="/admin/news-management/NewsList"
+                              href="/admin/news-management/newsList"
                               className={({ isActive }) =>
                                 "block transition duration-150 truncate " +
                                 (isActive
@@ -427,7 +424,7 @@ const Sidebar = ({ onAddNewsClick }: SidebarProps) => {
                           <li className="mb-1 last:mb-0">
                             <NavLink
                               end={true}
-                              href="/admin/news-management/approve-reject"
+                              href="/admin/news-management/status-update"
                               className={({ isActive }) =>
                                 "block transition duration-150 truncate " +
                                 (isActive

@@ -1,0 +1,520 @@
+import api from "@/app/lib/api";
+import { AxiosError, AxiosProgressEvent } from "axios";
+
+export interface PaginationParams {
+  currentPage: number;
+  itemsPerPage: number;
+}
+
+interface CreateNewsResponse {
+  success?: boolean;
+  error?: string;
+  message?: string;
+  [key: string]: any;
+}
+
+interface APIResponse<T = any> {
+  data?: T;
+  error?: string;
+  message?: string;
+  [key: string]: any;
+}
+
+type progressCallback = (progress: number) => void;
+
+export const createNews = async (
+  formData: FormData,
+  onUploadProgress?: progressCallback
+): Promise<CreateNewsResponse> => {
+  try {
+    const { data } = await api.post<CreateNewsResponse>(
+      "/create-news",
+      formData,
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        onUploadProgress: (progressEvent: AxiosProgressEvent) => {
+          if (onUploadProgress && progressEvent.total) {
+            const percentCompleted = Math.floor(
+              (progressEvent.loaded / progressEvent.total) * 100
+            );
+            onUploadProgress(percentCompleted);
+          }
+        },
+      }
+    );
+
+    return data;
+  } catch (error: any) {
+    const { response } = error;
+    if (response?.data) return response.data;
+
+    return { error: error.message || String(error) };
+  }
+};
+
+export const videoUpload = async (
+  videoData: FormData,
+  onUploadProgress?: progressCallback
+): Promise<APIResponse> => {
+  try {
+    const { data } = await api.post<APIResponse>("/upload-video", videoData, {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      onUploadProgress: ({ loaded, total }: AxiosProgressEvent) => {
+        if (onUploadProgress && total) {
+          onUploadProgress(Math.floor((loaded / total) * 100));
+        }
+      },
+    });
+    return data;
+  } catch (error: any) {
+    return handleError(error);
+  }
+};
+
+// getSubCat
+export const getSubCat = async (
+  selectedNewsCategory: string
+): Promise<APIResponse> => {
+  try {
+    const { data } = await api.get(
+      `/getsubcategories/${selectedNewsCategory}`,
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return data;
+  } catch (error: any) {
+    return handleError(error);
+  }
+};
+
+// getTypes
+export const getTypes = async (): Promise<APIResponse> => {
+  try {
+    const { data } = await api.get("/types", {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return data;
+  } catch (error: any) {
+    return handleError(error);
+  }
+};
+
+// deleteType
+export const deleteType = async (TypeId: string): Promise<APIResponse> => {
+  try {
+    const { data } = await api.delete(`/deleteType/${TypeId}`, {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return data;
+  } catch (error: any) {
+    return handleError(error);
+  }
+};
+
+// addCategories
+export const addCategories = async (
+  name: string,
+  subcategories: string[],
+  parentCategory: string
+): Promise<APIResponse> => {
+  try {
+    const { data } = await api.post(
+      "/addCategories",
+      { name, subcategories, parentCategory },
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return data;
+  } catch (error: any) {
+    return handleError(error);
+  }
+};
+
+// updateCategory
+export const updateCategory = async (
+  categoryId: string,
+  categoryName: string
+): Promise<APIResponse> => {
+  try {
+    const { data } = await api.put(
+      `/updateCategory/${categoryId}`,
+      { categoryName },
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return data;
+  } catch (error: any) {
+    return handleError(error);
+  }
+};
+
+// updateSubCat
+export const updateSubCat = async (
+  categoryId: string,
+  subcategoryId: string,
+  subcategoryName: string
+): Promise<APIResponse> => {
+  try {
+    const { data } = await api.put(
+      `/updateSubCategory/${categoryId}/subcategory/${subcategoryId}`,
+      { subcategoryName },
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return data;
+  } catch (error: any) {
+    return handleError(error);
+  }
+};
+
+// getCategories
+export const getCategories = async (): Promise<APIResponse> => {
+  try {
+    const { data } = await api.get("/getAllNewsCategories", {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return data;
+  } catch (error: any) {
+    return handleError(error);
+  }
+};
+
+// getCategoriesWithSub
+export const getCategoriesWithSub = async (): Promise<APIResponse> => {
+  try {
+    const { data } = await api.get("/AllCategoriesWithSubCategory", {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return data;
+  } catch (error: any) {
+    return handleError(error);
+  }
+};
+
+// deleteCategory
+export const deleteCategory = async (
+  categoryId: string
+): Promise<APIResponse> => {
+  try {
+    const { data } = await api.delete(`/deleteCategories/${categoryId}`, {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return data;
+  } catch (error: any) {
+    return handleError(error);
+  }
+};
+
+// deleteSubCat
+export const deleteSubCat = async (
+  categoryId: string,
+  subcategoryId: string
+): Promise<APIResponse> => {
+  try {
+    const { data } = await api.delete(
+      `/categories/${categoryId}/subcategories/${subcategoryId}`,
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return data;
+  } catch (error: any) {
+    return handleError(error);
+  }
+};
+
+// getLastFiveLiveUpdateNewsType
+export const getLastFiveLiveUpdateNewsType = async (): Promise<APIResponse> => {
+  try {
+    const { data } = await api.get("/getLastFiveLiveUpdateNewsType", {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return data;
+  } catch (error: any) {
+    return handleError(error);
+  }
+};
+
+// getLiveUpdateHeadLine
+export const getLiveUpdateHeadLine = async (
+  showHeadLine: string
+): Promise<APIResponse> => {
+  try {
+    const { data } = await api.get(`/getHeadline/${showHeadLine}`, {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return data;
+  } catch (error: any) {
+    return handleError(error);
+  }
+};
+
+export const fetchNewsList = async ({
+  currentPage,
+  itemsPerPage,
+}: PaginationParams): Promise<APIResponse> => {
+  try {
+    const { data } = await api.get("/newsList", {
+      withCredentials: true,
+      params: { page: currentPage + 1, pageSize: itemsPerPage },
+    });
+    return data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const fetchAllNewsList = async ({
+  currentPage,
+  itemsPerPage,
+}: PaginationParams): Promise<APIResponse> => {
+  try {
+    const { data } = await api.get("/allNewsList", {
+      withCredentials: true,
+      params: { page: currentPage + 1, pageSize: itemsPerPage },
+    });
+    return data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const fetchPendingNewsList = async ({
+  currentPage,
+  itemsPerPage,
+}: PaginationParams): Promise<APIResponse> => {
+  try {
+    const { data } = await api.get("/pending", {
+      withCredentials: true,
+      params: { page: currentPage + 1, pageSize: itemsPerPage },
+    });
+    return data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const fetchRejectedNewsList = async ({
+  currentPage,
+  itemsPerPage,
+}: PaginationParams): Promise<APIResponse> => {
+  try {
+    const { data } = await api.get("/rejected", {
+      withCredentials: true,
+      params: { page: currentPage + 1, pageSize: itemsPerPage },
+    });
+    return data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const fetchApprovedNewsList = async ({
+  currentPage,
+  itemsPerPage,
+}: PaginationParams): Promise<APIResponse> => {
+  try {
+    const { data } = await api.get("/approved", {
+      withCredentials: true,
+      params: { page: currentPage + 1, pageSize: itemsPerPage },
+    });
+    return data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const approveArticle = async (
+  approvedItemId: string
+): Promise<APIResponse> => {
+  try {
+    const { data } = await api.put(
+      `/approve/${approvedItemId}`,
+      {},
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    return data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const rejectArticle = async (
+  rejectedItemId: string
+): Promise<APIResponse> => {
+  try {
+    const { data } = await api.put(
+      `/reject/${rejectedItemId}`,
+      {},
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    return data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const getArticleById = async (id: string): Promise<APIResponse> => {
+  try {
+    const { data } = await api.get(`/getNewsByArticleId/${id}`, {
+      withCredentials: true,
+      headers: { "Content-Type": "application/json" },
+    });
+    return data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const getNewsById = async (id: string): Promise<APIResponse> => {
+  try {
+    const { data } = await api.get(`/getNewsByID/${id}`, {
+      withCredentials: true,
+      headers: { "Content-Type": "application/json" },
+    });
+    return data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const updateNews = async (
+  id: string,
+  newsData: FormData
+): Promise<APIResponse> => {
+  try {
+    const { data } = await api.patch(`/update/${id}`, newsData, {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const getNewsForUpdate = async (id: string): Promise<APIResponse> => {
+  try {
+    const { data } = await api.get(`/for-update/${id}`, {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const addToRecycleBin = async (id: string): Promise<APIResponse> => {
+  try {
+    const { data } = await api.delete(`/recycle-bin/${id}`, {
+      withCredentials: true,
+      headers: { "Content-Type": "application/json" },
+    });
+    return data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const fetchDeletedArticles = async ({
+  currentPage,
+  itemsPerPage,
+}: PaginationParams): Promise<APIResponse> => {
+  try {
+    const { data } = await api.get("/recycle-bin", {
+      withCredentials: true,
+      params: { page: currentPage + 1, pageSize: itemsPerPage },
+    });
+    return data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const deleteArticle = async (id: string): Promise<APIResponse> => {
+  try {
+    const { data } = await api.delete(`/news/${id}`, {
+      withCredentials: true,
+      headers: { "Content-Type": "application/json" },
+    });
+    return data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+export const restoreArticle = async (id: string): Promise<APIResponse> => {
+  try {
+    const { data } = await api.patch(
+      `/news/restore/${id}`,
+      {},
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    return data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+
+// Common error handler
+function handleError(error: any): APIResponse {
+  const axiosError = error as AxiosError;
+  if (axiosError.response?.data) return axiosError.response.data as APIResponse;
+  return { error: axiosError.message || String(error) };
+}

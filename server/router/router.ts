@@ -132,7 +132,7 @@ route.post(
   videoUpload
 );
 route.post(
-  "/createnews",
+  "/create-news",
   isAuth,
   canCreateRead,
   upload.single("file"),

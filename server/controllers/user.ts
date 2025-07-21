@@ -154,13 +154,13 @@ export const getUserDetails = async (req: Request, res: Response) => {
     const userId = (req.user as any)?._id;
 
     // Find the user by ID
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).select("-password");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json({ user });
+    res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
