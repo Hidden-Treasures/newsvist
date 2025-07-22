@@ -6,6 +6,7 @@ import { FileUploader } from "react-drag-drop-files";
 import { UploadCloud } from "react-feather";
 import NewsForm from "./News";
 import { useCreateNews, useVideoUpload } from "@/hooks/useNews";
+import { Colors } from "@/utils/Colors";
 
 // Define types
 interface VideoInfo {
@@ -38,12 +39,28 @@ const CreateNewsForm: FC = () => {
   const { mutateAsync: uploadVideoMutation } = useVideoUpload();
   const { mutateAsync: createNewsMutation } = useCreateNews();
 
+  const resetForm = () => {
+    setVideoSelected(false);
+    setVideoUploaded(false);
+    setUploadProgress(0);
+    setNewsUploaded(false);
+    setNewsUploadProgress(0);
+    setVideoInfo(null);
+    setUploadVideo(false);
+    setBusy(false);
+  };
+
   const handleTypeError = (error: string) => toast.error(error);
 
   const handleChange = (file: File) => {
+    const MAX_FILE_SIZE_MB = 100;
+    const maxSizeInBytes = MAX_FILE_SIZE_MB * 1024 * 1024;
+    if (file.size > maxSizeInBytes) {
+      toast.error(`File size exceeds ${MAX_FILE_SIZE_MB}MB limit.`);
+      return;
+    }
     const formData = new FormData();
     formData.append("video", file);
-
     setVideoSelected(true);
     handleUploadVideo(formData);
   };
@@ -83,12 +100,13 @@ const CreateNewsForm: FC = () => {
     return `Uploading... ${uploadProgress || newsUploadProgress}%`;
   };
 
-  const handleSubmit = async (data: FormData) => {
+  const handleSubmit = async (data: FormData, resetNewsForm: () => void) => {
     try {
       setBusy(true);
       if (videoInfo) {
         data.append("video", JSON.stringify(videoInfo));
       }
+      data.append("folder", "news-assets");
 
       const result = await createNewsMutation({
         formData: data,
@@ -101,6 +119,9 @@ const CreateNewsForm: FC = () => {
 
       setNewsUploaded(true);
       toast.success("News uploaded successfully.");
+
+      resetForm();
+      resetNewsForm();
     } catch (error: any) {
       toast.error(error.message || "Failed to upload news");
     } finally {
@@ -120,13 +141,12 @@ const CreateNewsForm: FC = () => {
           />
           <span className="text-gray-700">Upload Video</span>
         </label>
-        {uploadVideo && (
-          <UploadProgress
-            visible={!videoUploaded && videoSelected}
-            message={getUploadProgressValue()}
-            width={uploadProgress}
-          />
-        )}
+
+        <UploadProgress
+          visible={!videoUploaded && videoSelected}
+          message={getUploadProgressValue()}
+          width={uploadProgress}
+        />
       </div>
       {uploadVideo && !videoSelected ? (
         <VideoSelector
@@ -139,9 +159,10 @@ const CreateNewsForm: FC = () => {
           <NewsForm
             busy={busy}
             onSubmit={(formData) => {
-              if (!busy) handleSubmit(formData);
+              if (!busy) handleSubmit(formData, () => resetForm());
             }}
             btnTitle=""
+            videoUploaded={videoUploaded}
           />
         </div>
       )}
@@ -149,7 +170,7 @@ const CreateNewsForm: FC = () => {
   );
 };
 
-const VideoSelector: React.FC<VideoSelectorProps> = ({
+const VideoSelector: FC<VideoSelectorProps> = ({
   visible,
   handleChange,
   onTypeError,
@@ -164,16 +185,20 @@ const VideoSelector: React.FC<VideoSelectorProps> = ({
         types={["mp4", "avi"]}
         name="video"
       >
-        <label className="w-48 h-48 border border-dashed border-light-subtle rounded-full flex flex-col items-center justify-center text-secondary cursor-pointer">
+        <label
+          className="w-48 h-48 border border-dashed rounded-full flex flex-col items-center justify-center cursor-pointer"
+          style={{ borderColor: Colors.lightSubtle, color: Colors.secondary }}
+        >
           <UploadCloud size={80} />
           <p>Drop your file here!</p>
+          <p className="text-sm text-gray-500 mt-2">(Max size: 100MB)</p>
         </label>
       </FileUploader>
     </div>
   );
 };
 
-const UploadProgress: React.FC<UploadProgressProps> = ({
+const UploadProgress: FC<UploadProgressProps> = ({
   width,
   message,
   visible,
@@ -181,16 +206,26 @@ const UploadProgress: React.FC<UploadProgressProps> = ({
   if (!visible) return null;
 
   return (
-    <div className="items-center text-center bg-white drop-shadow-lg rounded p-3">
-      <div className="relative h-3 bg-light-subtle overflow-hidden">
-        <div
-          style={{ width: `${width}%` }}
-          className="h-full max-w-full absolute left-0 bg-secondary"
-        />
+    <div
+      className="relative w-full h-12 rounded-lg overflow-hidden shadow-md text-center text-white font-semibold"
+      style={{
+        background: "#d1fae5",
+      }}
+    >
+      <div
+        className="absolute top-0 left-0 h-full transition-all duration-200 ease-in-out"
+        style={{
+          width: `${width}%`,
+          backgroundColor: "#10b981",
+        }}
+      />
+      <div className="relative z-10 flex items-center justify-center h-full">
+        {typeof width === "number" && width < 100 ? (
+          <span style={{ color: "#065f46" }}>{width}%</span>
+        ) : (
+          <span style={{ color: "#065f46" }}>{message}</span>
+        )}
       </div>
-      <p className="mx-20 items-center font-semibold text-light-subtle animate-pulse mt-1 text-center !bg-green-500">
-        {message}
-      </p>
     </div>
   );
 };

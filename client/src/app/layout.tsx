@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastContainer } from "react-toastify";
 import Providers from "./Providers";
+import "../styles/globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +34,7 @@ export const metadata = {
     siteName: "Newsvist",
     images: [
       {
-        url: "https://res.cloudinary.com/dqxcyhqvx/image/upload/v1753022225/Newsvistlogo_agfbuq.png",
+        url: "https://res.cloudinary.com/deazsxjtf/image/upload/v1753176926/Newsvistlogo_q9zego.png",
         width: 1920,
         height: 1080,
       },

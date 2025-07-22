@@ -12,6 +12,8 @@ import User from "../models/User";
 import { FileObject, GetNewsQuery, NewsQuery } from "../types";
 import Image from "../models/Image";
 import Comment from "../models/Comment";
+import { nanoid } from "nanoid";
+import slugify from "slugify";
 
 // Extend Express Request type to include 'user'
 declare global {
@@ -20,6 +22,20 @@ declare global {
       user?: any;
     }
   }
+}
+
+async function generateUniqueSlug(title: string): Promise<string> {
+  const baseSlug = slugify(title, { lower: true, strict: true });
+  let slug = baseSlug;
+  let exists = await News.findOne({ slug });
+
+  while (exists) {
+    const suffix = nanoid(4);
+    slug = `${baseSlug}-${suffix}`;
+    exists = await News.findOne({ slug });
+  }
+
+  return slug;
 }
 
 // const { s3Client } = require("../s3Upload");
@@ -50,19 +66,6 @@ export const videoUpload = async (req: Request, res: Response) => {
     console.error("Error in video upload:", error);
     res.status(500).json({ error: "Server error" });
   }
-  // const { file } = req;
-  // if (!file) return sendError(res, "Video file is missing!");
-
-  // const { secure_url: url, public_id } = await cloudinary.uploader.upload(
-  //   file.path,
-  //   {
-  //     resource_type: "video",
-  //     chunk_size: 6000000,
-  //     folder: "videos",
-  //   }
-  // );
-
-  // res.status(201).json({ url, public_id });
 };
 
 export const getLastFiveLiveUpdateNewsType = async function (
@@ -114,8 +117,11 @@ export const createNews = async (req: Request, res: Response) => {
       }
     }
 
+    const slug = await generateUniqueSlug(title);
+
     const newNews = new News({
       title,
+      slug,
       newsCategory,
       subCategory,
       type,
@@ -125,8 +131,8 @@ export const createNews = async (req: Request, res: Response) => {
       isLiveUpdate,
       liveUpdateType,
       liveUpdateHeadline,
-      video,
       city,
+      video,
       user: userId,
       name: bioId,
     });
@@ -138,11 +144,12 @@ export const createNews = async (req: Request, res: Response) => {
     // uploading Image file
     if (req.body.cloudinaryUrls && req.body.cloudinaryUrls.length > 0) {
       const cloudinaryUrls: FileObject[] = req.body.cloudinaryUrls;
+
       const videoFile = cloudinaryUrls.find((file) =>
         file.url.match(/\.mp4|\.mov|\.avi$/i)
       );
       const imageFiles = cloudinaryUrls.filter((file) =>
-        file.url.match(/\.jpg|\.jpeg|\.png$/i)
+        file.url.match(/\.(jpg|jpeg|png|webp|avif|gif)$/i)
       );
 
       if (videoFile) {
@@ -698,37 +705,40 @@ export const deleteSubCategory = async (req: Request, res: Response) => {
 export const addCategory = async (req: Request, res: Response) => {
   const { name, subcategories, parentCategory } = req.body;
   try {
-    if (!subcategories) {
+    if (!subcategories || subcategories.length === 0) {
       const newCategory = new Category({ title: name });
       const savedCategory = await newCategory.save();
-      res.status(201).json(savedCategory);
+      return res.status(201).json(savedCategory);
     } else {
-      // Find the parent category by its ID
+      // Find parent
       const category = await Category.findById(parentCategory);
-
       if (!category) {
-        return res
-          .status(404)
-          .json({ status: false, message: "Parent category not found" });
+        return res.status(404).json({
+          status: false,
+          message: "Parent category not found",
+        });
       }
 
-      // Create a new subcategory document
-      const newSubCategory = new SubCategory({ name: subcategories });
+      const [subcategoryName] = subcategories;
+
+      // Create new subcategory
+      const newSubCategory = new SubCategory({ name: subcategoryName });
       const savedSubCategory = await newSubCategory.save();
 
-      // Add the new subcategory's ID to the items array
       category.items.push(savedSubCategory._id);
 
-      // Save the updated category
       const savedCategory = await category.save();
 
-      res.status(201).json(savedCategory);
+      return res.status(201).json(savedCategory);
     }
   } catch (error: any) {
     console.error("Error adding category:", error.message);
-    res.status(500).json({ status: false, message: "Internal server error" });
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error" });
   }
 };
+
 export const updateCategory = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -766,15 +776,21 @@ export const updateSubCategory = async (req: Request, res: Response) => {
         .json({ error: "Subcategory not found in this category" });
     }
 
-    const subcategory = await SubCategory.findById(subcategoryId);
+    const subcategory = await SubCategory.findByIdAndUpdate(
+      subcategoryId,
+      { name: subcategoryName },
+      { new: true }
+    );
+
     if (!subcategory) {
       return res.status(404).json({ error: "Subcategory not found" });
     }
 
-    subcategory.name = subcategoryName;
-    await category.save();
-
-    res.json({ message: "Subcategory updated successfully", subcategory });
+    res.json({
+      success: true,
+      message: "Subcategory updated successfully",
+      data: subcategory,
+    });
   } catch (error) {
     res.status(500).json({ error: "Error updating subcategory" });
   }

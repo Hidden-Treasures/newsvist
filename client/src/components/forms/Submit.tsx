@@ -1,4 +1,5 @@
 "use client";
+import { Colors } from "@/utils/Colors";
 import React, { MouseEvent, MouseEventHandler } from "react";
 import { Loader } from "react-feather";
 
@@ -18,8 +19,9 @@ export default function Submit({
   return (
     <button
       type={type}
-      className="w-full rounded bg-secondary text-white hover:bg-opacity-90 transition font-semibold text-lg cursor-pointer h-10 flex items-center justify-center"
+      className="w-full rounded text-white hover:bg-opacity-90 transition font-semibold text-lg cursor-pointer h-10 flex items-center justify-center"
       onClick={onClick}
+      style={{ backgroundColor: Colors.secondary }}
     >
       {busy ? <Loader className="animate-spin" /> : value}
     </button>

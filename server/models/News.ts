@@ -53,6 +53,7 @@ const NewsSchema = new Schema<INews>(
     slug: {
       type: String,
       unique: true,
+      sparse: true,
       trim: true,
     },
     publishedAt: {

@@ -52,7 +52,7 @@ const userSchema = new mongoose.Schema(
     profilePhoto: {
       type: String,
       default:
-        "https://res.cloudinary.com/dqxcyhqvx/image/upload/v1753100903/newsvist-profile-picture_xhwsaq.png",
+        "https://res.cloudinary.com/deazsxjtf/image/upload/v1753176879/newsvist-profile-picture_vi5org.png",
     },
     status: {
       type: String,

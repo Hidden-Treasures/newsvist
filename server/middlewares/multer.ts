@@ -29,12 +29,13 @@ export const uploadToCloudinary = async (
       ? [req.file as CloudinaryFile]
       : [];
     if (!files || files.length === 0) {
-      return next(new Error("No files provided"));
+      return next();
     }
 
-    const folder = (
-      req.body.folder || `user_${req.params.userId || "uploads"}`
-    ).replace(/[^a-zA-Z0-9_\/-]/g, "");
+    const userId = req.params.userId || "assets";
+    let baseFolder =
+      typeof req.body.folder === "string" ? req.body.folder : `news_${userId}`;
+    baseFolder = baseFolder.replace(/[^a-zA-Z0-9_\/-]/g, "");
 
     const cloudinaryUrls: { url: string; public_id: string }[] = [];
 
@@ -42,13 +43,18 @@ export const uploadToCloudinary = async (
       // Determine resource type based on MIME type
       const isImage = file.mimetype.startsWith("image/");
       const isVideo = file.mimetype.startsWith("video/");
+      const subFolder = isImage ? "images" : isVideo ? "videos" : "others";
+
+      if (!isImage && !isVideo) {
+        console.warn(`Unsupported file type: ${file.mimetype}`);
+        continue;
+      }
+
       if (!isVideo && req.originalUrl.includes("/upload-video")) {
         return next(new Error("Only video files are allowed for this route"));
       }
-      if (!isImage && !isVideo) {
-        return next(new Error(`Unsupported file type: ${file.mimetype}`));
-      }
 
+      const folder = `${baseFolder}/${subFolder}`;
       let buffer = file.buffer;
 
       // Resize image if it's an image file
@@ -115,20 +121,3 @@ export const uploadToCloudinary = async (
     return next(new Error("Failed to upload files to Cloudinary"));
   }
 };
-
-// const imageFileFilter = (req, file, cb) => {
-//   if (!file.mimetype.startsWith("image")) {
-//     cb("Supported only image files!", false);
-//   }
-//   cb(null, true);
-// };
-
-// const videoFileFilter = (req, file, cb) => {
-//   if (!file.mimetype.startsWith("video")) {
-//     cb("Supported only image files!", false);
-//   }
-//   cb(null, true);
-// };
-
-// exports.uploadImage = multer({ storage, fileFilter: imageFileFilter });
-// exports.uploadVideo = multer({ storage, fileFilter: videoFileFilter });

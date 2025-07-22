@@ -189,11 +189,7 @@ route.patch(
 
 route.get("/for-update/:newsId", isAuth, canCreateRead, getNewsForUpdate);
 // route.get("/filesForNewsByFilename/:filename", filesForNewsByFilename);
-route.get(
-  "/AllCategoriesWithSubCategory",
-  isAuth,
-  AllCategoriesWithSubCategory
-);
+route.get("/categories-and-sub", isAuth, AllCategoriesWithSubCategory);
 route.delete(
   "/deleteCategories/:categoryId",
   isAuth,

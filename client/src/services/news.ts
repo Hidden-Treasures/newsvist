@@ -1,24 +1,11 @@
 import api from "@/app/lib/api";
 import { AxiosError, AxiosProgressEvent } from "axios";
-
-export interface PaginationParams {
-  currentPage: number;
-  itemsPerPage: number;
-}
-
-interface CreateNewsResponse {
-  success?: boolean;
-  error?: string;
-  message?: string;
-  [key: string]: any;
-}
-
-interface APIResponse<T = any> {
-  data?: T;
-  error?: string;
-  message?: string;
-  [key: string]: any;
-}
+import {
+  APIResponse,
+  Category,
+  CreateNewsResponse,
+  PaginationParams,
+} from "./types";
 
 type progressCallback = (progress: number) => void;
 
@@ -97,8 +84,30 @@ export const getSubCat = async (
   }
 };
 
+// addTypes
+export const addType = async (name: string) => {
+  try {
+    const { data } = await api.post(
+      "/addType",
+      { name },
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return data;
+  } catch (error: any) {
+    const { response } = error;
+    if (response?.data) return response.data;
+
+    return { error: error.message || error };
+  }
+};
+
 // getTypes
-export const getTypes = async (): Promise<APIResponse> => {
+export const getTypes = async () => {
   try {
     const { data } = await api.get("/types", {
       withCredentials: true,
@@ -113,7 +122,7 @@ export const getTypes = async (): Promise<APIResponse> => {
 };
 
 // deleteType
-export const deleteType = async (TypeId: string): Promise<APIResponse> => {
+export const deleteType = async (TypeId: string) => {
   try {
     const { data } = await api.delete(`/deleteType/${TypeId}`, {
       withCredentials: true,
@@ -189,7 +198,11 @@ export const updateSubCat = async (
         },
       }
     );
-    return data;
+    return {
+      success: data.success,
+      message: data.message,
+      data: data.data,
+    };
   } catch (error: any) {
     return handleError(error);
   }
@@ -211,17 +224,18 @@ export const getCategories = async (): Promise<APIResponse> => {
 };
 
 // getCategoriesWithSub
-export const getCategoriesWithSub = async (): Promise<APIResponse> => {
+export const getCategoriesWithSub = async (): Promise<Category[]> => {
   try {
-    const { data } = await api.get("/AllCategoriesWithSubCategory", {
+    const { data } = await api.get("/categories-and-sub", {
       withCredentials: true,
       headers: {
         "Content-Type": "application/json",
       },
     });
-    return data;
+    // console.log("services__", JSON.stringify(data, null, 2));
+    return data ?? [];
   } catch (error: any) {
-    return handleError(error);
+    return [];
   }
 };
 

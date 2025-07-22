@@ -1,5 +1,7 @@
 "use client";
 
+import CreateNewsForm from "@/components/forms/CreateNews";
+import NewsForm from "@/components/forms/News";
 import { useAuth } from "@/context/AuthContext";
 import { useState } from "react";
 
@@ -26,8 +28,8 @@ export default function DashboardPage() {
         Add News
       </button>
       {showNewsUploadModal && (
-        <div className="modal">
-          {/* Modal content for news upload */}
+        <div className="bg-white -mt-16">
+          <CreateNewsForm />
           <button onClick={hideNewsUploadModal}>Close</button>
         </div>
       )}

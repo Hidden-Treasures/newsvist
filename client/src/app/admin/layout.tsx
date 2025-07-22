@@ -48,7 +48,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <p className="text-xl font-semibold">Checking authentication...</p>
+        <p className="text-xl font-semibold animate-pulse">Authenticating...</p>
       </div>
     );
   }
@@ -56,9 +56,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar onAddNewsClick={displayNewsUploadModal} />
-      <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
+      <div className="relative flex flex-col flex-1 overflow-x-hidden overflow-y-scroll hide-scrollbar">
         <Header profileImage={user?.profilePhoto!} />
-        <main className="dark:!bg-[#182235] px-4 sm:px-6 lg:px-8 py-8 w-full h-screen max-w-9xl mx-auto overflow-auto scrollbar">
+        <main className="dark:!bg-[#182235] px-4 sm:px-6 lg:px-8 py-8 w-full h-screen max-w-9xl mx-auto overflow-auto scrollbar overflow-y-scroll hide-scrollbar">
           {children}
         </main>
       </div>

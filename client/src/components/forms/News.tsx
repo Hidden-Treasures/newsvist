@@ -10,29 +10,13 @@ import ImageSelector from "@/utils/ImageSelector";
 import Submit from "./Submit";
 import TextEditor from "@/utils/TextEditor";
 import {
-  useCategories,
   useLiveUpdateHeadline,
   useLiveUpdateTypes,
   useNewsTypes,
-  useSubCategories,
 } from "@/hooks/useNews";
 import { cities } from "@/utils/Cities";
 import { Colors } from "@/utils/Colors";
-
-interface NewsType {
-  name: string;
-  _id?: string;
-}
-
-interface Category {
-  title: string;
-  _id?: string;
-}
-
-interface SubCategory {
-  name: string;
-  _id?: string;
-}
+import { useCategories, useSubCategories } from "@/hooks/useCategories";
 
 interface TagOption {
   label: string;
@@ -59,7 +43,8 @@ interface NewsFormProps {
   busy: boolean;
   btnTitle: string;
   initialState?: InitialState;
-  onSubmit: (formData: FormData) => void;
+  onSubmit: (formData: FormData, reset: () => void) => void;
+  videoUploaded?: boolean;
 }
 
 const NewsForm: FC<NewsFormProps> = ({
@@ -67,13 +52,11 @@ const NewsForm: FC<NewsFormProps> = ({
   btnTitle,
   initialState,
   onSubmit,
+  videoUploaded,
 }) => {
   const [title, setTitle] = useState<string>("");
   const [city, setCity] = useState<string>("");
-  //   const [types, setTypes] = useState<NewsType[]>([]);
   const [file, setFile] = useState<File | null>(null);
-  const [NewsCategory, setNewsCategory] = useState<Category[]>([]);
-  const [NewsSubCategory, setNewsSubCategory] = useState<SubCategory[]>([]);
   const [selectedType, setSelectedType] = useState<string>("");
   const [selectedNewsCategory, setSelectedNewsCategory] = useState<string>("");
   const [selectedNewsSubCategory, setSelectedNewsSubCategory] =
@@ -82,7 +65,6 @@ const NewsForm: FC<NewsFormProps> = ({
   const [editorText, setEditorText] = useState<string>("");
   const [authorName, setAuthorName] = useState<string>("");
   const [bioName, setBioName] = useState<string>("");
-  //   const [liveUpdateTypes, setLiveUpdateTypes] = useState<string[]>([]);
   const [selectedLiveUpdateType, setSelectedLiveUpdateType] =
     useState<string>("");
   const [liveUpdateHeadline, setLiveUpdateHeadline] = useState<string>("");
@@ -93,10 +75,37 @@ const NewsForm: FC<NewsFormProps> = ({
 
   // Using TanStack Query hooks
   const { data: types = [] } = useNewsTypes();
-  const { data: categories = [] } = useCategories();
-  const { data: subCategories = [] } = useSubCategories(selectedNewsCategory);
+  const { data: categories = [], isLoading: categoriesLoading } =
+    useCategories();
+  const {
+    data: subCategories = [],
+    isLoading: subCategoriesLoading,
+    refetch: refetchSubCategories,
+  } = useSubCategories(selectedNewsCategory);
   const { data: liveUpdateTypes = [] } = useLiveUpdateTypes();
   const { data: liveUpdateHeadlineData } = useLiveUpdateHeadline(showHeadLine);
+
+  const resetForm = () => {
+    setTitle("");
+    setCity("");
+    setFile(null);
+    if (selectedImageForUI) {
+      URL.revokeObjectURL(selectedImageForUI);
+    }
+    setSelectedImageForUI("");
+    setSelectedType("");
+    setSelectedNewsCategory("");
+    setSelectedNewsSubCategory("");
+    setSelectedNewsTags([]);
+    setEditorText("");
+    setAuthorName("");
+    setBioName("");
+    setSelectedLiveUpdateType("");
+    setLiveUpdateHeadline("");
+    setIsLiveUpdate(false);
+    setShowHeadLine("");
+    setIsFocused(false);
+  };
 
   const handleNewsTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setSelectedType(e.target.value);
@@ -142,10 +151,6 @@ const NewsForm: FC<NewsFormProps> = ({
     setShowHeadLine(e.target.value);
   };
 
-  const handleEditorChange = (content: string) => {
-    setEditorText(content);
-  };
-
   const handleSubmit = async () => {
     const tags = selectedNewsTags?.map((tag) => tag?.value || tag?.label);
     const formData = new FormData();
@@ -183,8 +188,9 @@ const NewsForm: FC<NewsFormProps> = ({
     formData.append("editorText", editorText);
     formData.append("authorName", authorName);
     formData.append("name", bioName);
+    formData.append("folder", "news-assets");
 
-    onSubmit(formData);
+    onSubmit(formData, resetForm);
     socket.emit("liveUpdate", true);
   };
 
@@ -193,6 +199,12 @@ const NewsForm: FC<NewsFormProps> = ({
       setLiveUpdateHeadline(liveUpdateHeadlineData.data);
     }
   }, [liveUpdateHeadlineData]);
+
+  useEffect(() => {
+    if (selectedNewsCategory) {
+      refetchSubCategories();
+    }
+  }, [selectedNewsCategory, refetchSubCategories]);
 
   //   useEffect(() => {
   //     const fetchData = async () => {
@@ -279,7 +291,7 @@ const NewsForm: FC<NewsFormProps> = ({
           e.preventDefault();
           handleSubmit();
         }}
-        className="md:flex space-x-3 md:mt-32 h-96 overflow-x-auto"
+        className="md:flex space-x-3 md:mt-32 h-96 overflow-y-scroll hide-scrollbar mx-5"
       >
         <div className="md:w-[70%] space-y-5">
           <div>
@@ -293,11 +305,15 @@ const NewsForm: FC<NewsFormProps> = ({
               name="title"
               type="text"
               className={
-                commonInputClasses + " border-b-2 font-semibold text-xl"
+                commonInputClasses + " border-b-2 font-semibold text-xl w-full"
               }
               style={{
                 borderColor: isFocused ? Colors.primary : Colors.lightSubtle,
                 color: Colors.primary,
+                whiteSpace: "normal",
+                wordWrap: "break-word",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               }}
               placeholder="Titanic"
             />
@@ -513,9 +529,11 @@ const NewsForm: FC<NewsFormProps> = ({
                 }}
               >
                 <option value="" disabled>
-                  Select News Category
+                  {categoriesLoading
+                    ? "Loading categories..."
+                    : "Select News Category"}
                 </option>
-                {NewsCategory?.map((category, index) => (
+                {categories?.map((category: any, index: number) => (
                   <option value={category?.title} key={index}>
                     {category?.title}
                   </option>
@@ -538,9 +556,11 @@ const NewsForm: FC<NewsFormProps> = ({
                 }}
               >
                 <option value="" disabled>
-                  Select News Sub Category
+                  {subCategoriesLoading
+                    ? "Loading subcategories..."
+                    : "Select News Sub Category"}
                 </option>
-                {NewsSubCategory?.map((subcategory, index) => (
+                {subCategories?.map((subcategory: any, index: number) => (
                   <option value={subcategory?.name} key={index}>
                     {subcategory?.name}
                   </option>

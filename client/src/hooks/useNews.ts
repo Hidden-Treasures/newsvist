@@ -16,15 +16,13 @@ import {
   getNewsById,
   getSubCat,
   getTypes,
-  PaginationParams,
   rejectArticle,
   restoreArticle,
   updateNews,
   videoUpload,
 } from "@/services/news";
+import { PaginationParams, queryClient } from "@/services/types";
 import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
-
-export const queryClient = new QueryClient();
 
 interface UploadOptions {
   onUploadProgress?: (progress: number) => void;
@@ -69,29 +67,11 @@ export const useVideoUpload = () => {
   });
 };
 
-// Subcategories Hook
-export const useSubCategories = (selectedNewsCategory: string) => {
-  return useQuery({
-    queryKey: ["subCategories", selectedNewsCategory],
-    queryFn: () => getSubCat(selectedNewsCategory),
-    enabled: !!selectedNewsCategory,
-  });
-};
-
 // News Types Hook
 export const useNewsTypes = () => {
   return useQuery({
     queryKey: ["newsTypes"],
     queryFn: getTypes,
-    staleTime: 1000 * 60 * 5,
-  });
-};
-
-// Categories Hook
-export const useCategories = () => {
-  return useQuery({
-    queryKey: ["categories"],
-    queryFn: getCategories,
     staleTime: 1000 * 60 * 5,
   });
 };
