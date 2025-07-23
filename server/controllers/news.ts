@@ -299,7 +299,7 @@ export const allNewsList = async function (req: Request, res: Response) {
         typeof req.query.pageSize === "string" ? req.query.pageSize : "5"
       ) || 5;
     const role = req.user.role;
-    const isAdmin = role === "Admin";
+    const isAdmin = role === "admin";
     // Check if the user is an admin
     if (!isAdmin) {
       return res.status(403).json({ error: "Access denied" });
@@ -475,8 +475,10 @@ export const updateNews = async (req: Request, res: Response) => {
     video,
     name,
   } = req.body;
+  const slug = await generateUniqueSlug(title);
 
   news.title = title;
+  news.slug = slug;
   news.editorText = editorText;
   news.tags = Array.isArray(tags) ? tags : [tags];
   news.newsCategory = newsCategory;
@@ -1075,22 +1077,29 @@ export const getNews = async (
   req: Request<{}, {}, {}, GetNewsQuery>,
   res: Response
 ) => {
-  const { category, subcategory, type, tags, limit, order } = req.query;
+  const { category, subcategory, type, tags, limit, order, excludeIds } =
+    req.query;
   try {
     let query: NewsQuery = { status: "approved", isDeleted: false };
+
+    if (excludeIds) {
+      const excluded = excludeIds
+        .split(",")
+        .filter((id) => mongoose.Types.ObjectId.isValid(id));
+      if (excluded.length > 0) {
+        query._id = { $nin: excluded };
+      }
+    }
 
     if (category) query.newsCategory = category;
     if (subcategory) query.subCategory = subcategory;
     if (type) query.type = type;
     if (tags) {
-      const tagIds = (tags as string)
-        .split(",")
-        .map((tag) => new mongoose.Types.ObjectId(tag));
-      query.tags = { $in: tagIds };
+      (query as any).tags = { $in: (tags as string).split(",") };
     }
 
     const selectedFields =
-      "_id file video title tags name newsCategory subCategory liveUpdateType createdAt";
+      "_id file video title tags name slug newsCategory subCategory liveUpdateType createdAt";
 
     const news = await News.find(query)
       .select(selectedFields)
@@ -1108,6 +1117,7 @@ export const getNews = async (
       )
       .lean();
 
+    // console.log("🚀 ~ news:", JSON.stringify(news, null, 2));
     res.status(200).json(news);
   } catch (error) {
     console.error(error);
@@ -1150,9 +1160,7 @@ export const getMissedNews = async (
 
     // Filter by tags
     if (tags) {
-      query.tags = {
-        $in: tags.split(",").map((tag) => new mongoose.Types.ObjectId(tag)),
-      };
+      (query as any).tags = { $in: (tags as string).split(",") };
     }
 
     if (missedIt === true) {
@@ -1222,11 +1230,10 @@ export const getNewsByTags = async (req: Request, res: Response) => {
   }
 };
 
-export const getNewsByArticleId = async (req: Request, res: Response) => {
+export const getNewsBySlug = async (req: Request, res: Response) => {
   try {
-    // Find the article by ID and increment the views by 1
-    const article = await News.findByIdAndUpdate(
-      req.params.articleId,
+    const article = await News.findOneAndUpdate(
+      { slug: req.params.slug },
       { $inc: { views: 1 } },
       { new: true }
     ).populate("user");
@@ -1243,11 +1250,11 @@ export const getNewsByArticleId = async (req: Request, res: Response) => {
       status: "approved",
     })
       .limit(3)
-      .select("_id file video title tags newsCategory createdAt");
+      .select("_id file video title tags newsCategory createdAt slug");
 
     res.json({ article, relatedNews });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -1271,9 +1278,7 @@ export const getArticlesByCategory = async (
 
     if (type) query.type = type;
     if (tags) {
-      query.tags = {
-        $in: tags.split(",").map((tag) => new mongoose.Types.ObjectId(tag)),
-      };
+      (query as any).tags = { $in: (tags as string).split(",") };
     }
 
     if (excludeIds) {
@@ -1319,9 +1324,7 @@ export const getImageArticlesByCategory = async (
 
     // Ensure tags are ObjectId references
     if (tags) {
-      query.tags = {
-        $in: tags.split(",").map((tag) => new mongoose.Types.ObjectId(tag)),
-      };
+      (query as any).tags = { $in: (tags as string).split(",") };
     }
 
     // Exclude specific articles by ID
@@ -1357,16 +1360,18 @@ export const getImageArticlesByCategory = async (
 
 export const getRelatedNews = async (req: Request, res: Response) => {
   try {
-    const { articleId, tags, category } = req.query;
+    const { slug, tags, category } = req.query;
+
+    const tagsArray = typeof tags === "string" ? tags.split(",") : [];
 
     const relatedNews = await News.find({
-      _id: { $ne: articleId },
-      $or: [{ tags: { $in: tags } }, { newsCategory: category }],
+      slug: { $ne: slug },
+      $or: [{ tags: { $in: tagsArray } }, { newsCategory: category }],
       status: "approved",
       isDeleted: false,
     })
       .limit(5)
-      .select("_id file video title newsCategory createdAt");
+      .select("_id file video title slug newsCategory createdAt");
 
     res.json({ relatedNews });
   } catch (error) {
@@ -1388,6 +1393,7 @@ export const getNewsAndBuzz = async (req: Request, res: Response) => {
           file: 1,
           video: 1,
           title: 1,
+          slug: 1,
           newsCategory: 1,
           createdAt: 1,
         },
@@ -1405,21 +1411,41 @@ export const getNewsAndBuzz = async (req: Request, res: Response) => {
 
 export const getUpNextArticles = async (req: Request, res: Response) => {
   try {
-    const currentArticle = await News.findById(req.params.articleId);
+    const { slug } = req.params;
+
+    const currentArticle = await News.findOne({ slug });
 
     if (!currentArticle) {
       return res.status(404).json({ message: "Article not found" });
     }
 
-    const upNextArticles = await News.find({
-      _id: { $ne: currentArticle._id },
+    // Fetch up to 5 articles created after the current one
+    let upNextArticles = await News.find({
+      slug: { $ne: slug },
       createdAt: { $gt: currentArticle.createdAt },
       status: "approved",
       isDeleted: false,
     })
       .sort({ createdAt: 1 })
       .limit(5)
-      .select("_id file video title createdAt newsCategory");
+      .select("_id file video title slug createdAt newsCategory");
+
+    const remainingCount = 5 - upNextArticles.length;
+
+    // If less than 5 found, fill the rest with older articles
+    if (remainingCount > 0) {
+      const fallbackArticles = await News.find({
+        slug: { $ne: slug },
+        createdAt: { $lt: currentArticle.createdAt },
+        status: "approved",
+        isDeleted: false,
+      })
+        .sort({ createdAt: -1 })
+        .limit(remainingCount)
+        .select("_id file video title slug createdAt newsCategory");
+
+      upNextArticles = [...upNextArticles, ...fallbackArticles];
+    }
 
     res.json({ upNextArticles });
   } catch (error) {
@@ -1436,7 +1462,7 @@ export const getMostReadArticles = async (req: Request, res: Response) => {
     })
       .sort({ views: -1 })
       .limit(10)
-      .select("title views newsCategory createdAt");
+      .select("title slug views newsCategory createdAt");
     res.json(mostReadArticles);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch most read articles" });
@@ -1470,16 +1496,14 @@ export const getPendingNews = async (
     }
     //Filter by tags
     if (tags) {
-      query.tags = {
-        $in: tags.split(",").map((tag) => new mongoose.Types.ObjectId(tag)),
-      };
+      (query as any).tags = { $in: (tags as string).split(",") };
     }
     //Filter by status
     if (status) {
       query.status = status;
     }
     const selectedFields =
-      "_id file title authorName tags status newsCategory subCategory liveUpdateType createdAt";
+      "_id file title slug authorName tags status newsCategory subCategory liveUpdateType createdAt";
 
     // Check if there are pending news articles in the database
     const pendingNewsCount = await News.countDocuments({ status: "pending" });
@@ -1536,16 +1560,14 @@ export const getApprovedNews = async (
     }
     //Filter by tags
     if (tags) {
-      query.tags = {
-        $in: tags.split(",").map((tag) => new mongoose.Types.ObjectId(tag)),
-      };
+      (query as any).tags = { $in: (tags as string).split(",") };
     }
     //Filter by status
     if (status) {
       query.status = status;
     }
     const selectedFields =
-      "_id file title authorName tags status newsCategory subCategory liveUpdateType createdAt";
+      "_id file title slug authorName tags status newsCategory subCategory liveUpdateType createdAt";
 
     // Check if there are pending news articles in the database
     const pendingNewsCount = await News.countDocuments({ status: "approved" });
@@ -1602,16 +1624,14 @@ export const getRejectedNews = async (
     }
     //Filter by tags
     if (tags) {
-      query.tags = {
-        $in: tags.split(",").map((tag) => new mongoose.Types.ObjectId(tag)),
-      };
+      (query as any).tags = { $in: (tags as string).split(",") };
     }
     //Filter by status
     if (status) {
       query.status = status;
     }
     const selectedFields =
-      "_id file title authorName tags status newsCategory subCategory liveUpdateType createdAt";
+      "_id file title slug authorName tags status newsCategory subCategory liveUpdateType createdAt";
 
     // Check if there are pending news articles in the database
     const pendingNewsCount = await News.countDocuments({ status: "rejected" });
@@ -1847,7 +1867,7 @@ export const createImage = async (req: Request, res: Response) => {
 export const getImages = async (req: Request, res: Response) => {
   try {
     let images;
-    if (req.user.role === "Admin") {
+    if (req.user.role === "admin") {
       // Admin can see all images
       images = await Image.find()
         .populate("category")

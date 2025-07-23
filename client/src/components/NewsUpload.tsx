@@ -71,7 +71,7 @@ const NewsUpload: FC<NewsUploadProps> = ({ visible, onClose }) => {
   const handleChange = (file: File) => {
     const formData = new FormData();
     formData.append("video", file);
-    formData.append("folder", "news-assets");
+    formData.append("folder", "news_assets");
     setVideoSelected(true);
     handleUploadVideo(formData);
   };
@@ -95,7 +95,7 @@ const NewsUpload: FC<NewsUploadProps> = ({ visible, onClose }) => {
       if (videoInfo) {
         data.append("video", JSON.stringify(videoInfo));
       }
-      data.append("folder", "news-assets");
+      data.append("folder", "news_assets");
 
       const result = await createNewsMutation({
         formData: data,

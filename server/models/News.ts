@@ -48,7 +48,7 @@ const NewsSchema = new Schema<INews>(
     },
     name: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Bio",
+      ref: "Biography",
     },
     slug: {
       type: String,
@@ -125,4 +125,6 @@ const News = mongoose.model<INews, mongoose.PaginateModel<INews>>(
   NewsSchema,
   "News"
 );
+
+NewsSchema.index({ _id: 1 });
 export default News;

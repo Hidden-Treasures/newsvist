@@ -9,19 +9,27 @@ import {
   fetchNewsList,
   fetchPendingNewsList,
   fetchRejectedNewsList,
-  getArticleById,
+  getArticleBySlug,
   getCategories,
   getLastFiveLiveUpdateNewsType,
   getLiveUpdateHeadLine,
+  getNewsAndBuzz,
   getNewsById,
+  getRelatedNews,
   getSubCat,
   getTypes,
+  getUpNextArticle,
   rejectArticle,
   restoreArticle,
   updateNews,
   videoUpload,
 } from "@/services/news";
-import { PaginationParams, queryClient } from "@/services/types";
+import {
+  GetRelatedNewsParams,
+  PaginationParams,
+  queryClient,
+  UseRelatedNewsResult,
+} from "@/services/types";
 import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
 
 interface UploadOptions {
@@ -149,11 +157,20 @@ export const useRejectArticle = () => {
 };
 
 // Single News Hooks
-export const useArticleById = (id: string) => {
+export const useArticleBySlug = (slug: string) => {
   return useQuery({
-    queryKey: ["article", id],
-    queryFn: () => getArticleById(id),
-    enabled: !!id,
+    queryKey: ["news", slug],
+    queryFn: () => getArticleBySlug(slug),
+    enabled: !!slug,
+    throwOnError: true,
+  });
+};
+
+export const useUpNextArticle = (slug: string) => {
+  return useQuery({
+    queryKey: ["news", slug],
+    queryFn: () => getUpNextArticle(slug),
+    enabled: !!slug,
   });
 };
 
@@ -163,6 +180,36 @@ export const useNewsById = (id: string) => {
     queryFn: () => getNewsById(id),
     enabled: !!id,
   });
+};
+
+export const useNewsAndBuzz = () => {
+  return useQuery({
+    queryKey: ["news"],
+    queryFn: () => getNewsAndBuzz(),
+  });
+};
+export const useRelatedNews = ({
+  slug,
+  tags,
+  category,
+}: GetRelatedNewsParams): UseRelatedNewsResult => {
+  const queryKey = ["news", { slug, tags, category }];
+
+  const { data, isLoading, error } = useQuery({
+    queryKey,
+    queryFn: () => getRelatedNews({ slug, tags, category }),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 2,
+  });
+
+  return {
+    data: data || [],
+    loading: isLoading,
+    error: error
+      ? (error as any).message || "Error fetching related news"
+      : null,
+  };
 };
 
 // News Update Hook

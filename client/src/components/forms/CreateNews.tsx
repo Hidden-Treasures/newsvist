@@ -106,7 +106,7 @@ const CreateNewsForm: FC = () => {
       if (videoInfo) {
         data.append("video", JSON.stringify(videoInfo));
       }
-      data.append("folder", "news-assets");
+      data.append("folder", "news_assets");
 
       const result = await createNewsMutation({
         formData: data,

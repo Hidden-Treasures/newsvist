@@ -15,8 +15,9 @@ import {
   getImages,
   getImagesByCategoryOrTag,
   getMostReadArticles,
+  getNews,
   getNewsAndBuzz,
-  getNewsByArticleId,
+  getNewsBySlug,
   getPendingNews,
   getRejectedNews,
   getRelatedNews,
@@ -50,7 +51,6 @@ import {
   getLastFiveLiveUpdateNewsType,
   getMissedNews,
   getMostRecentNews,
-  getNews,
   getNewsById,
   getNewsByLiveUpdateType,
   getNewsByTags,
@@ -216,10 +216,10 @@ route.post("/assignRole/:userId", isAuth, assignRole);
 route.get("/user/:userid", isAuth, isAdmin, getUserbyID);
 route.delete("/deleteUsersManually/:id", isAuth, isAdmin, deleteUsersManually);
 route.post("/updateUserData/:userid", isAuth, updateUserData);
-route.get("/getNewsByArticleId/:articleId", getNewsByArticleId);
+route.get("/getNewsBySlug/:slug", getNewsBySlug);
 route.get("/related-news", getRelatedNews);
 route.get("/news-and-buzz", getNewsAndBuzz);
-route.get("/up-next/:articleId", getUpNextArticles);
+route.get("/up-next/:slug", getUpNextArticles);
 route.get("/most-read", getMostReadArticles);
 
 route.get("/pending", isAuth, canCreateRead, getPendingNews);

@@ -1,10 +1,13 @@
 import api from "@/app/lib/api";
-import { AxiosError, AxiosProgressEvent } from "axios";
+import { AxiosError, AxiosProgressEvent, AxiosResponse } from "axios";
 import {
   APIResponse,
   Category,
   CreateNewsResponse,
+  GetRelatedNewsParams,
+  News,
   PaginationParams,
+  RelatedNewsResponse,
 } from "./types";
 
 type progressCallback = (progress: number) => void;
@@ -420,9 +423,21 @@ export const rejectArticle = async (
   }
 };
 
-export const getArticleById = async (id: string): Promise<APIResponse> => {
+export const getUpNextArticle = async (slug: string): Promise<APIResponse> => {
   try {
-    const { data } = await api.get(`/getNewsByArticleId/${id}`, {
+    const { data } = await api.get(`/up-next/${slug}`, {
+      withCredentials: true,
+      headers: { "Content-Type": "application/json" },
+    });
+    console.log("🚀 ~ getUpNextArticle ~ data:", data);
+    return data.upNextArticles;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+export const getArticleBySlug = async (slug: string): Promise<APIResponse> => {
+  try {
+    const { data } = await api.get(`/getNewsBySlug/${slug}`, {
       withCredentials: true,
       headers: { "Content-Type": "application/json" },
     });
@@ -441,6 +456,40 @@ export const getNewsById = async (id: string): Promise<APIResponse> => {
     return data;
   } catch (error) {
     return handleError(error);
+  }
+};
+
+export const getNewsAndBuzz = async () => {
+  try {
+    const response = await api.get(`/news-and-buzz`);
+    return response?.data?.newsAndBuzz;
+  } catch (error) {
+    return handleError(error);
+  }
+};
+export const getRelatedNews = async ({
+  slug,
+  tags,
+  category,
+}: GetRelatedNewsParams): Promise<News[]> => {
+  try {
+    const response: AxiosResponse<RelatedNewsResponse> = await api.get(
+      "/related-news",
+      {
+        params: {
+          slug,
+          tags: tags.join(","),
+          category,
+        },
+      }
+    );
+    return response.data.relatedNews ?? [];
+  } catch (error: any) {
+    console.error(
+      "Error fetching related news:",
+      error.response?.data || error.message
+    );
+    return [];
   }
 };
 

@@ -37,6 +37,7 @@ export default function ImageSelector({
         {selectedImage ? (
           <div
             className={`${commonImageUI} relative overflow-hidden ${className}`}
+            style={{ borderColor: Colors.lightSubtle }}
           >
             <Image
               src={selectedImage}

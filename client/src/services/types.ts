@@ -53,3 +53,40 @@ export interface TypeItem {
   _id: string;
   name: string;
 }
+
+export interface News {
+  _id: string;
+  title: string;
+  name: string | null;
+  slug: string | null;
+  newsCategory: string;
+  subCategory: string;
+  tags: string[];
+  liveUpdateType: string;
+  file: {
+    url: string;
+    public_id: string;
+    responsive: string[];
+  };
+  video?: {
+    url: string;
+    public_id: string;
+  };
+  createdAt: string;
+}
+
+export interface RelatedNewsResponse {
+  relatedNews: News[];
+}
+
+export interface GetRelatedNewsParams {
+  slug: string;
+  tags: string[];
+  category: string;
+}
+
+export interface UseRelatedNewsResult {
+  data: News[];
+  loading: boolean;
+  error: string | null;
+}

@@ -1,6 +1,8 @@
 "use client";
 
 import Header from "@/common/header";
+import FirstSection from "@/home/FirstSection";
+import SecondSection from "@/home/SecondSection";
 import { useState } from "react";
 
 export default function Home() {
@@ -10,9 +12,14 @@ export default function Home() {
   };
 
   return (
-    <>
+    <div className="overflow-x-hidden overflow-y-scroll hide-scrollbar">
       <Header onSearchButtonClick={onSearchButtonClick} />
-      {!showFooterSearch && <></>}
-    </>
+      {!showFooterSearch && (
+        <>
+          <FirstSection />
+          <SecondSection />
+        </>
+      )}
+    </div>
   );
 }

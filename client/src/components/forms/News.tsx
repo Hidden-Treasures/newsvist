@@ -188,7 +188,7 @@ const NewsForm: FC<NewsFormProps> = ({
     formData.append("editorText", editorText);
     formData.append("authorName", authorName);
     formData.append("name", bioName);
-    formData.append("folder", "news-assets");
+    formData.append("folder", "news_assets");
 
     onSubmit(formData, resetForm);
     socket.emit("liveUpdate", true);
@@ -284,6 +284,8 @@ const NewsForm: FC<NewsFormProps> = ({
     }
   }, [initialState]);
 
+  // console.log("types::", types);
+
   return (
     <>
       <form
@@ -336,11 +338,12 @@ const NewsForm: FC<NewsFormProps> = ({
               <option value="" disabled>
                 Select News Type
               </option>
-              {types?.map((type: any, index: number) => (
-                <option value={type?.name} key={index}>
-                  {type?.name}
-                </option>
-              ))}
+              {types &&
+                types?.map((type: any, index: number) => (
+                  <option value={type?.name} key={index}>
+                    {type?.name}
+                  </option>
+                ))}
             </select>
           </div>
           <div>
@@ -359,14 +362,14 @@ const NewsForm: FC<NewsFormProps> = ({
                           name="LiveUpdateType"
                           placeholder="eg: ukraine-russia-war"
                           onChange={handleLiveUpdateTypeChange}
-                          className="mt-2 p-3 mr-2 bg-gray-200 focus:outline-none w-full border rounded-md"
+                          className="mt-2 p-3 mr-2 bg-gray-200 focus:outline-none w-full border rounded-md text-black placeholder-gray-500"
                           required
                         />
                       </div>
                       <p className=" font-medium text-xs flex items-center mb-2 ml-2 text-gray-600">
                         OR
                       </p>
-                      <div className=" w-full">
+                      <div className="w-full">
                         <Label htmlFor="LiveUpdateType">
                           Live Update News Type
                         </Label>
@@ -375,12 +378,12 @@ const NewsForm: FC<NewsFormProps> = ({
                           name="LiveUpdateType"
                           value={selectedLiveUpdateType}
                           onChange={handleLiveUpdateTypeChange}
-                          className="mt-2 p-[0.95rem] ml-2 bg-gray-200 focus:outline-none w-full border rounded-md"
+                          className="mt-2 p-[0.95rem] ml-2 bg-gray-200 focus:outline-none w-full border rounded-md text-black placeholder-gray-500"
                         >
                           <option value="" disabled>
                             Select Live News Type
                           </option>
-                          {liveUpdateTypes.map(
+                          {liveUpdateTypes?.map(
                             (type: string, index: number) => (
                               <option key={index} value={type}>
                                 {type}
@@ -403,7 +406,7 @@ const NewsForm: FC<NewsFormProps> = ({
                           setLiveUpdateHeadline(e.target.value);
                         }}
                         placeholder="Live Update Main Headline"
-                        className="mt-2 p-3 bg-gray-200 focus:outline-none w-full border rounded-md"
+                        className="mt-2 p-3 bg-gray-200 focus:outline-none w-full border rounded-md text-black placeholder-gray-500"
                         required
                       />
                     </div>
@@ -420,7 +423,7 @@ const NewsForm: FC<NewsFormProps> = ({
                         name="LiveUpdateType"
                         placeholder="eg: ukraine-russia-war"
                         onChange={handleLiveUpdateTypeChange}
-                        className="mt-2 p-3 bg-gray-200 focus:outline-none w-full border rounded-md"
+                        className="mt-2 p-3 bg-gray-200 focus:outline-none w-full border rounded-md text-black placeholder-gray-500"
                         required
                       />
                     </div>
@@ -437,7 +440,7 @@ const NewsForm: FC<NewsFormProps> = ({
                           setLiveUpdateHeadline(e.target.value);
                         }}
                         placeholder="Live Update Main Headline"
-                        className="mt-2 p-3 bg-gray-200 focus:outline-none w-full border rounded-md"
+                        className="mt-2 p-3 bg-gray-200 focus:outline-none w-full border rounded-md text-black placeholder-gray-500"
                         required
                       />
                     </div>
@@ -533,11 +536,12 @@ const NewsForm: FC<NewsFormProps> = ({
                     ? "Loading categories..."
                     : "Select News Category"}
                 </option>
-                {categories?.map((category: any, index: number) => (
-                  <option value={category?.title} key={index}>
-                    {category?.title}
-                  </option>
-                ))}
+                {categories &&
+                  categories?.map((category: any, index: number) => (
+                    <option value={category?.title} key={index}>
+                      {category?.title}
+                    </option>
+                  ))}
               </select>
             </div>
             <div>
@@ -560,11 +564,12 @@ const NewsForm: FC<NewsFormProps> = ({
                     ? "Loading subcategories..."
                     : "Select News Sub Category"}
                 </option>
-                {subCategories?.map((subcategory: any, index: number) => (
-                  <option value={subcategory?.name} key={index}>
-                    {subcategory?.name}
-                  </option>
-                ))}
+                {subCategories &&
+                  subCategories?.map((subcategory: any, index: number) => (
+                    <option value={subcategory?.name} key={index}>
+                      {subcategory?.name}
+                    </option>
+                  ))}
               </select>
             </div>
             <div>
