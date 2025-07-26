@@ -74,7 +74,10 @@ const MidCard: FC<MidCardProps> = ({
               <VideoDisplay
                 image={normalizedImage}
                 video={normalizedVideo}
-                className="w-full object-cover transition-transform transform group-hover:scale-100"
+                className={
+                  "w-full object-cover transition-transform transform group-hover:scale-100 " +
+                  className
+                }
                 handleLoadedMetadata={handleLoadedMetadata}
                 showControls={false}
               />
@@ -95,7 +98,10 @@ const MidCard: FC<MidCardProps> = ({
                   isVideo: !!video,
                   duration: videoDuration ?? "",
                 }}
-                className="w-full h-full object-cover transition-transform transform group-hover:scale-100"
+                className={
+                  "w-full h-full object-cover transition-transform transform group-hover:scale-100 " +
+                  className
+                }
               />
             </div>
           )
@@ -104,7 +110,10 @@ const MidCard: FC<MidCardProps> = ({
             <Image
               src={normalizedImage?.url || ""}
               alt={normalizedImage?.public_id || "image"}
-              className="w-96 h-full object-cover transition-transform transform group-hover:scale-100"
+              className={
+                "w-96 h-full object-cover transition-transform transform group-hover:scale-100 " +
+                className
+              }
               width={800}
               height={600}
               unoptimized={true}
@@ -112,9 +121,9 @@ const MidCard: FC<MidCardProps> = ({
           </div>
         )}
 
-        {tags && tags.length > 0 && (
+        {tags && tags?.length > 0 && (
           <div className="absolute bottom-0 left-0">
-            {tags.slice(0, 2).map((tag, index) => (
+            {tags?.slice(0, 2)?.map((tag, index) => (
               <span
                 key={index}
                 className="bg-white text-red-600 text-xs px-2 mr-1 py-1 font-bold"

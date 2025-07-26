@@ -29,6 +29,7 @@ export interface SubCategory {
 export interface Category {
   _id: string;
   title: string;
+  slug?: string;
   items?: SubCategory[];
 }
 
@@ -58,6 +59,7 @@ export interface News {
   _id: string;
   title: string;
   name: string | null;
+  editorText: string | null;
   slug: string | null;
   newsCategory: string;
   subCategory: string;
@@ -74,6 +76,11 @@ export interface News {
   };
   createdAt: string;
 }
+export interface SearchParams {
+  searchText: string;
+  page?: number;
+  pageSize?: number;
+}
 
 export interface RelatedNewsResponse {
   relatedNews: News[];
@@ -89,4 +96,14 @@ export interface UseRelatedNewsResult {
   data: News[];
   loading: boolean;
   error: string | null;
+}
+
+export interface GetArticlesQuery {
+  category?: string;
+  subcategory?: string;
+  limit?: number;
+  order?: string;
+  tags?: string;
+  type?: string;
+  excludeIds?: string;
 }

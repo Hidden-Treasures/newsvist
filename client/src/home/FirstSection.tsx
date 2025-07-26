@@ -204,7 +204,7 @@ const FirstSection: FC = () => {
 
       {/* Mid Section */}
       <div className="w-full md:!w-1/3 p-4 ">
-        {midCardsVisual?.map((card, index) => (
+        {midCardsVisual?.length > 0 &&midCardsVisual?.map((card, index) => (
           <MidCard
             key={`cat1-${index}`}
             link={`/${getDateString(card?.createdAt)}/${card?.newsCategory}/${

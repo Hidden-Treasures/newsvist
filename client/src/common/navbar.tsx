@@ -2,6 +2,8 @@
 
 import NavLink from "@/app/NavLink";
 import { useAuth } from "@/context/AuthContext";
+import { useCategories } from "@/hooks/useCategories";
+import Image from "next/image";
 import Link from "next/link";
 import React, { FC, useState } from "react";
 
@@ -13,9 +15,18 @@ const Navbar: FC<NavbarProps> = ({ onSearchButtonClick }) => {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const { isAuthenticated } = useAuth();
 
+  const { data, isLoading } = useCategories();
+  const categories = data?.slice(0, 13) || [];
+
   const toggleMenu = () => {
     setMenuOpen(!isMenuOpen);
   };
+
+  const staticLinks = [
+    { title: "Watch", slug: "Watch" },
+    { title: "Listen", slug: "Listen" },
+    { title: "Live TV", slug: "live-tv" },
+  ];
 
   return (
     <>
@@ -65,95 +76,102 @@ const Navbar: FC<NavbarProps> = ({ onSearchButtonClick }) => {
             </div>
             <Link href="/">
               <div className="flex justify-center">
-                <img
+                <Image
                   src={
                     "https://res.cloudinary.com/dqxcyhqvx/image/upload/v1753022225/Newsvistlogo_agfbuq.png"
                   }
-                  alt=""
-                  className="h-10"
+                  alt="Newsvist Logo"
+                  width={120}
+                  height={32}
+                  className="w-auto h-10"
                 />
               </div>
             </Link>
-            <NavLink
-              href="/category/US"
-              className="text-white text-[0.937rem] font-bold"
-            >
-              US
-            </NavLink>
-            <NavLink
-              href="/category/World"
-              className="text-white text-[0.937rem] font-bold"
-            >
-              World
-            </NavLink>
-            <NavLink
-              href="/category/Politics"
-              className="text-white text-[0.937rem] font-bold"
-            >
-              Politics
-            </NavLink>
-            <NavLink
-              href="/category/Business"
-              className="text-white text-[0.937rem] font-bold"
-            >
-              Business
-            </NavLink>
-            <NavLink
-              href="/category/Opinion"
-              className="text-white text-[0.937rem] font-bold"
-            >
-              Opinion
-            </NavLink>
-            <NavLink
-              href="/category/Health"
-              className="text-white text-[0.937rem] font-bold"
-            >
-              Health
-            </NavLink>
-            <NavLink
-              href="/category/Entertainment"
-              className="text-white text-[0.937rem] font-bold"
-            >
-              Entertainment
-            </NavLink>
-            <NavLink
-              href="/category/Style"
-              className="text-white text-[0.937rem] font-bold"
-            >
-              Style
-            </NavLink>
-            <NavLink
-              href="/category/Travel"
-              className="text-white text-[0.937rem] font-bold"
-            >
-              Travel
-            </NavLink>
-            <NavLink
-              href="/category/Sports"
-              className="text-white text-[0.937rem] font-bold"
-            >
-              Sports
-            </NavLink>
+            {isLoading ? (
+              <>
+                <NavLink
+                  href="/category/US"
+                  className="text-white text-[0.937rem] font-bold"
+                >
+                  US
+                </NavLink>
+                <NavLink
+                  href="/category/World"
+                  className="text-white text-[0.937rem] font-bold"
+                >
+                  World
+                </NavLink>
+                <NavLink
+                  href="/category/Politics"
+                  className="text-white text-[0.937rem] font-bold"
+                >
+                  Politics
+                </NavLink>
+                <NavLink
+                  href="/category/Business"
+                  className="text-white text-[0.937rem] font-bold"
+                >
+                  Business
+                </NavLink>
+                <NavLink
+                  href="/category/Opinion"
+                  className="text-white text-[0.937rem] font-bold"
+                >
+                  Opinion
+                </NavLink>
+                <NavLink
+                  href="/category/Health"
+                  className="text-white text-[0.937rem] font-bold"
+                >
+                  Health
+                </NavLink>
+                <NavLink
+                  href="/category/Entertainment"
+                  className="text-white text-[0.937rem] font-bold"
+                >
+                  Entertainment
+                </NavLink>
+                <NavLink
+                  href="/category/Style"
+                  className="text-white text-[0.937rem] font-bold"
+                >
+                  Style
+                </NavLink>
+                <NavLink
+                  href="/category/Travel"
+                  className="text-white text-[0.937rem] font-bold"
+                >
+                  Travel
+                </NavLink>
+                <NavLink
+                  href="/category/Sports"
+                  className="text-white text-[0.937rem] font-bold"
+                >
+                  Sports
+                </NavLink>
+              </>
+            ) : (
+              categories?.map((cat: any) => (
+                <NavLink
+                  key={cat._id}
+                  href={`/category/${cat.title}`}
+                  className="text-white text-[0.937rem] capitalize font-bold"
+                >
+                  {cat.title}
+                </NavLink>
+              ))
+            )}
           </div>
           <div className="flex basis-1/4 justify-evenly items-center ">
-            <NavLink
-              href="/category/Watch"
-              className="text-white text-[0.937rem] font-bold"
-            >
-              Watch
-            </NavLink>
-            <NavLink
-              href="/category/Listen"
-              className="text-white text-[0.937rem] font-bold"
-            >
-              Listen
-            </NavLink>
-            <NavLink
-              href="/category/live-tv"
-              className="text-white text-[0.937rem] font-bold"
-            >
-              Live TV
-            </NavLink>
+            {staticLinks.map((item) => (
+              <NavLink
+                key={item.slug}
+                href={`/category/${item.slug}`}
+                className="text-white text-[0.937rem] font-bold"
+              >
+                {item.title}
+              </NavLink>
+            ))}
             <div className=" cursor-pointer" onClick={onSearchButtonClick}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -281,66 +299,80 @@ const Navbar: FC<NavbarProps> = ({ onSearchButtonClick }) => {
           >
             Home
           </NavLink>
-          <NavLink
-            href="/category/Nigeria"
-            className="text-white text-[0.937rem] font-bold"
-          >
-            NG
-          </NavLink>
-          <NavLink
-            href="/category/World"
-            className="text-white text-[0.937rem] font-bold"
-          >
-            World
-          </NavLink>
-          <NavLink
-            href="/category/Politics"
-            className="text-white text-[0.937rem] font-bold"
-          >
-            Politics
-          </NavLink>
-          <NavLink
-            href="/category/Business"
-            className="text-white text-[0.937rem] font-bold"
-          >
-            Business
-          </NavLink>
-          <NavLink
-            href="/category/Opinion"
-            className="text-white text-[0.937rem] font-bold"
-          >
-            Opinion
-          </NavLink>
-          <NavLink
-            href="/category/Health"
-            className="text-white text-[0.937rem] font-bold"
-          >
-            Health
-          </NavLink>
-          <NavLink
-            href="/category/Entertainment"
-            className="text-white text-[0.937rem] font-bold"
-          >
-            Entertainment
-          </NavLink>
-          <NavLink
-            href="/category/Style"
-            className="text-white text-[0.937rem] font-bold"
-          >
-            Style
-          </NavLink>
-          <NavLink
-            href="/category/Travel"
-            className="text-white text-[0.937rem] font-bold"
-          >
-            Travel
-          </NavLink>
-          <NavLink
-            href="/category/Sports"
-            className="text-white text-[0.937rem] font-bold"
-          >
-            Sports
-          </NavLink>
+          {isLoading ? (
+            <>
+              <NavLink
+                href="/category/Nigeria"
+                className="text-white text-[0.937rem] font-bold"
+              >
+                NG
+              </NavLink>
+              <NavLink
+                href="/category/World"
+                className="text-white text-[0.937rem] font-bold"
+              >
+                World
+              </NavLink>
+              <NavLink
+                href="/category/Politics"
+                className="text-white text-[0.937rem] font-bold"
+              >
+                Politics
+              </NavLink>
+              <NavLink
+                href="/category/Business"
+                className="text-white text-[0.937rem] font-bold"
+              >
+                Business
+              </NavLink>
+              <NavLink
+                href="/category/Opinion"
+                className="text-white text-[0.937rem] font-bold"
+              >
+                Opinion
+              </NavLink>
+              <NavLink
+                href="/category/Health"
+                className="text-white text-[0.937rem] font-bold"
+              >
+                Health
+              </NavLink>
+              <NavLink
+                href="/category/Entertainment"
+                className="text-white text-[0.937rem] font-bold"
+              >
+                Entertainment
+              </NavLink>
+              <NavLink
+                href="/category/Style"
+                className="text-white text-[0.937rem] font-bold"
+              >
+                Style
+              </NavLink>
+              <NavLink
+                href="/category/Travel"
+                className="text-white text-[0.937rem] font-bold"
+              >
+                Travel
+              </NavLink>
+              <NavLink
+                href="/category/Sports"
+                className="text-white text-[0.937rem] font-bold"
+              >
+                Sports
+              </NavLink>
+            </>
+          ) : (
+            categories.map((cat: any) => (
+              <NavLink
+                key={cat._id}
+                href={`/category/${cat.title}`}
+                className="text-white text-[0.937rem] font-bold"
+              >
+                {cat.title}
+              </NavLink>
+            ))
+          )}
 
           {isAuthenticated ? (
             <button

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { FC, useState } from "react";
-import { FileUploader } from "react-drag-drop-files";
+import { useDropzone } from "react-dropzone";
 import { toast } from "react-toastify";
 import { UploadCloud } from "react-feather";
 import NewsForm from "./forms/News";
@@ -28,7 +28,6 @@ interface UploadProgressProps {
 interface VideoSelectorProps {
   visible: boolean;
   handleChange: (file: File) => void;
-  onTypeError: (error: string) => void;
 }
 
 const NewsUpload: FC<NewsUploadProps> = ({ visible, onClose }) => {
@@ -140,11 +139,7 @@ const NewsUpload: FC<NewsUploadProps> = ({ visible, onClose }) => {
         )}
       </div>
       {uploadVideo && !videoSelected ? (
-        <VideoSelector
-          visible={!videoSelected}
-          onTypeError={handleTypeError}
-          handleChange={handleChange}
-        />
+        <VideoSelector visible={!videoSelected} handleChange={handleChange} />
       ) : (
         <NewsForm busy={busy} onSubmit={handleSubmit} btnTitle="" />
       )}
@@ -152,33 +147,42 @@ const NewsUpload: FC<NewsUploadProps> = ({ visible, onClose }) => {
   );
 };
 
-const VideoSelector: FC<VideoSelectorProps> = ({
-  visible,
-  handleChange,
-  onTypeError,
-}) => {
+const VideoSelector: FC<VideoSelectorProps> = ({ visible, handleChange }) => {
+  const { getRootProps, getInputProps } = useDropzone({
+    accept: {
+      "video/mp4": [],
+      "video/x-msvideo": [],
+    },
+    multiple: false,
+    onDrop: (acceptedFiles) => {
+      const file = acceptedFiles[0];
+      if (file) {
+        handleChange(file);
+      }
+    },
+    onDropRejected: () => {
+      toast.error("Only .mp4 or .avi files are accepted.");
+    },
+  });
+
   if (!visible) return null;
 
   return (
     <div className="h-full flex items-center justify-center">
-      <FileUploader
-        handleChange={handleChange}
-        onTypeError={onTypeError}
-        types={["mp4", "avi"]}
+      <div
+        {...getRootProps()}
+        className="w-48 h-48 border-2 border-dashed rounded-full flex flex-col items-center justify-center cursor-pointer transition-colors hover:bg-gray-50"
+        style={{ borderColor: Colors.lightSubtle, color: Colors.secondary }}
       >
-        <label
-          className="w-48 h-48 border border-dashed rounded-full flex flex-col items-center justify-center cursor-pointer"
-          style={{ borderColor: Colors.lightSubtle, color: Colors.secondary }}
-        >
-          <UploadCloud size={80} />
-          <p>Drop your file here!</p>
-        </label>
-      </FileUploader>
+        <input {...getInputProps()} />
+        <UploadCloud size={80} />
+        <p className="text-center">Drop your video here or click to upload</p>
+      </div>
     </div>
   );
 };
 
-const UploadProgress: React.FC<UploadProgressProps> = ({
+const UploadProgress: FC<UploadProgressProps> = ({
   width,
   message,
   visible,

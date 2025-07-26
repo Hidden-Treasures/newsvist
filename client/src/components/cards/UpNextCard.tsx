@@ -58,9 +58,8 @@ const UpNext: FC<UpNextProps> = ({ slug }) => {
           </h2>
           <ul>
             {upNextArticles?.map((article: ArticleType, index: number) => {
-              console.log("🚀 ~ {upNextArticles?.map ~ article:", article);
               const normalizedImage = normalizeMediaFile(article?.file);
-              const normalizedVideo = normalizeMediaFile(article?.video);
+              // const normalizedVideo = normalizeMediaFile(article?.video);
               return (
                 <li key={index} className="flex items-start mb-6">
                   <div className="flex-1">

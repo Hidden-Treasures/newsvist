@@ -1,5 +1,6 @@
 "use client";
 
+import Footer from "@/common/Footer";
 import Header from "@/common/header";
 import FirstSection from "@/home/FirstSection";
 import SecondSection from "@/home/SecondSection";
@@ -20,6 +21,7 @@ export default function Home() {
           <SecondSection />
         </>
       )}
+      <Footer />
     </div>
   );
 }

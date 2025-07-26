@@ -29,6 +29,13 @@ export const useSubCategories = (selectedNewsCategory: string) => {
   });
 };
 
+export const useFooter = () => {
+  return useQuery({
+    queryKey: ["footer"],
+    queryFn: getCategoriesWithSub,
+    staleTime: 1000 * 60 * 5,
+  });
+};
 export const useAllCategories = () => {
   return useQuery({
     queryKey: ["categories"],

@@ -113,7 +113,7 @@ route.post("/register", register);
 route.post("/login", login);
 route.get("/check-auth", isAuth, checkAuth);
 route.post("/logout", isAuth, logout);
-route.get("/mainSearch", mainSearch);
+route.get("/main-search", mainSearch);
 route.get("/getNewsByLiveUpdateType/:liveUpdateType", getNewsByLiveUpdateType);
 route.get("/getAllLiveUpdates", getAllLiveUpdates);
 route.get(
@@ -145,7 +145,7 @@ route.post(
 
 route.get("/news", getNews);
 // Route to get articles by category and subcategory
-route.get("/byCat", getArticlesByCategory);
+route.get("/articles/by-category", getArticlesByCategory);
 // route.get("/:category/:subcategory", getArticlesByCategory);
 route.get("/most-recent", isAuth, getMostRecentNews);
 route.get("/missed-news", getMissedNews);
@@ -189,7 +189,7 @@ route.patch(
 
 route.get("/for-update/:newsId", isAuth, canCreateRead, getNewsForUpdate);
 // route.get("/filesForNewsByFilename/:filename", filesForNewsByFilename);
-route.get("/categories-and-sub", isAuth, AllCategoriesWithSubCategory);
+route.get("/categories-and-sub", AllCategoriesWithSubCategory);
 route.delete(
   "/deleteCategories/:categoryId",
   isAuth,

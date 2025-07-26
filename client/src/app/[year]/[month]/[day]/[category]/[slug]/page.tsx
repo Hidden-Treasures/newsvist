@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { FC, useEffect, useState } from "react";
+import { FC } from "react";
 import { format } from "date-fns";
 import Link from "next/link";
 import NewsAndBuzz from "@/home/NewsAndBuzz";
@@ -15,6 +15,9 @@ import Image from "next/image";
 import { useArticleBySlug } from "@/hooks/useNews";
 import RelatedNews from "@/home/RelatedNews";
 import UpNext from "@/components/cards/UpNextCard";
+import Share from "@/common/Share";
+import MetaTags from "@/common/MetaTags";
+import CommentList from "@/components/comment/CommentList";
 
 interface Tag {
   _id: string;
@@ -54,18 +57,13 @@ interface ArticleType {
   newsCategory: string;
 }
 
-interface ArticleResponse {
-  article: ArticleType;
-  relatedNews: ArticleType[];
-}
-
 const PostDetailsPage: FC = () => {
   const { slug } = useParams<{ slug: string }>();
 
   const { data, isLoading, isError, error } = useArticleBySlug(slug!);
-  //   console.log("🚀 ~ data:", data);
 
   const article = data?.article;
+  const articleId = article?._id;
   const relatedNews = data?.relatedNews || [];
 
   const articleTags = article?.tags?.map((tag: any) =>
@@ -104,8 +102,8 @@ const PostDetailsPage: FC = () => {
 
   const cityText =
     article?.city && article.city !== "undefined"
-      ? `${article.city} (NV)`
-      : "(NV)";
+      ? `${article.city} (NVist)`
+      : "(NVist)";
 
   if (isLoading) {
     return (
@@ -121,6 +119,17 @@ const PostDetailsPage: FC = () => {
     return <div>Error: {(error as Error).message}</div>;
   }
 
+  {
+    article && (
+      <MetaTags
+        title={article.title}
+        description={articleDescription}
+        url={articleUrl}
+        image={article.file?.url}
+      />
+    );
+  }
+
   return (
     <div className="flex flex-wrap">
       <div className="w-full md:w-3/4 p-4">
@@ -131,7 +140,7 @@ const PostDetailsPage: FC = () => {
         <div className="author flex">
           <div className="w-10 h-10 rounded-full overflow-hidden">
             <Image
-              src={article?.user?.profilePicture}
+              src={article?.user?.profilePhoto}
               alt="user"
               width={100}
               height={100}
@@ -179,12 +188,13 @@ const PostDetailsPage: FC = () => {
           </div>
         </div>
 
-        {/* <Share
-            url={articleUrl}
-            title={articleTitle}
-            image={articleImage}
-            hashtag={hashTags}
-          /> */}
+        <Share
+          url={articleUrl}
+          title={articleTitle}
+          image={articleImage}
+          hashtag={hashTags}
+          description={articleDescription}
+        />
 
         <div className="content pt-6">
           <div className="image-box bg-gray-100">
@@ -219,14 +229,14 @@ const PostDetailsPage: FC = () => {
               })}
             </div>
 
-            {/* <Share
-                url={articleUrl}
-                title={articleTitle}
-                image={articleImage}
-                hashtag={hashTags}
-              />
+            <Share
+              url={articleUrl}
+              title={articleTitle}
+              image={articleImage}
+              hashtag={hashTags}
+              description={articleDescription}
+            />
 
-               */}
             <RelatedNews
               slug={slug!}
               tags={articleTags}
@@ -236,33 +246,38 @@ const PostDetailsPage: FC = () => {
             <MostRead />
           </div>
 
-          {/* <Share url={articleUrl} title={articleTitle} /> */}
-          {/* <CommentList articleId={articleId!} /> */}
+          <Share
+            url={articleUrl}
+            title={articleTitle}
+            image={articleImage}
+            hashtag={hashTags}
+            description={articleDescription}
+          />
+          <CommentList articleId={articleId!} />
           {/* <ThirdAdv /> */}
         </div>
       </div>
 
       <div className="w-full md:w-1/4 p-4 pr-2">
-        <div className="mt-12 md:mt-[12.5rem]">
-          <ColumnHead columnHeadTag="MORE FROM NEWSVIST" />
-        </div>
+        {relatedNews && (
+          <div className="mt-12 md:mt-[12.5rem]">
+            <ColumnHead columnHeadTag="MORE FROM NEWSVIST" />
+          </div>
+        )}
 
         <div>
-          {relatedNews.length === 0 ? (
-            <div>Not found</div>
-          ) : (
-            relatedNews.map((newsItem: ArticleType, index: number) => (
+          {relatedNews &&
+            relatedNews?.map((newsItem: ArticleType, index: number) => (
               <TagSmallCard
                 key={index}
-                link={`/${getDateString(newsItem.createdAt)}/${
-                  newsItem.newsCategory
-                }/${newsItem.slug}`}
-                imageSrc={newsItem.file}
-                text={newsItem.title}
-                video={newsItem.video}
+                link={`/${getDateString(newsItem?.createdAt)}/${
+                  newsItem?.newsCategory
+                }/${newsItem?.slug}`}
+                imageSrc={newsItem?.file}
+                text={newsItem?.title}
+                video={newsItem?.video}
               />
-            ))
-          )}
+            ))}
         </div>
 
         <div className="mt-12 md:mt-[12.5rem]">

@@ -1,16 +1,22 @@
+import { CommentType } from "@/components/comment/Comment";
 import {
+  addComment,
+  addReply,
   addToRecycleBin,
   approveArticle,
   createNews,
   deleteArticle,
   fetchAllNewsList,
   fetchApprovedNewsList,
+  fetchArticlesByCategory,
   fetchDeletedArticles,
+  fetchNewsData,
   fetchNewsList,
   fetchPendingNewsList,
   fetchRejectedNewsList,
   getArticleBySlug,
   getCategories,
+  getComments,
   getLastFiveLiveUpdateNewsType,
   getLiveUpdateHeadLine,
   getNewsAndBuzz,
@@ -28,18 +34,11 @@ import {
   GetRelatedNewsParams,
   PaginationParams,
   queryClient,
+  SearchParams,
   UseRelatedNewsResult,
 } from "@/services/types";
-import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
-
-interface UploadOptions {
-  onUploadProgress?: (progress: number) => void;
-}
-
-interface FormDataWithProgress {
-  formData: FormData;
-  onUploadProgress?: (progress: number) => void;
-}
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 export const useCreateNews = () => {
   return useMutation({
@@ -255,5 +254,60 @@ export const useRestoreArticle = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["news"] });
     },
+  });
+};
+
+export const useGetComments = (articleId: string) => {
+  return useQuery<CommentType[]>({
+    queryKey: ["comments", articleId],
+    queryFn: () => getComments(articleId),
+    staleTime: 0,
+  });
+};
+
+export const usePostComment = (articleId: string) => {
+  return useMutation({
+    mutationFn: (commentText: string) => addComment({ articleId, commentText }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", articleId] });
+    },
+  });
+};
+
+export const useReply = (articleId: string) => {
+  return useMutation({
+    mutationFn: (params: { replyText: string; parentCommentId: string }) =>
+      addReply({
+        articleId,
+        commentText: params.replyText,
+        parentCommentId: params.parentCommentId,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", articleId] });
+    },
+  });
+};
+
+export const useArticlesByCategory = (params: {
+  category?: string;
+  subcategory?: string;
+  limit?: number;
+  order?: string;
+  tags?: string;
+  type?: string;
+  excludeIds?: string;
+}) => {
+  return useQuery({
+    queryKey: ["articles-by-category", params],
+    queryFn: () => fetchArticlesByCategory(params),
+    enabled: !!params.category || !!params.subcategory,
+  });
+};
+
+export const useSearch = (params: SearchParams) => {
+  return useQuery({
+    queryKey: ["search", params.searchText, params.page],
+    queryFn: () => fetchNewsData(params),
+    enabled: !!params.searchText,
   });
 };

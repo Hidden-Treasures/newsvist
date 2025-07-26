@@ -1280,9 +1280,13 @@ export const getArticlesByCategory = async (
     if (tags) {
       (query as any).tags = { $in: (tags as string).split(",") };
     }
-
     if (excludeIds) {
-      query._id = { $nin: excludeIds.split(",") };
+      const excluded = excludeIds
+        .split(",")
+        .filter((id) => mongoose.Types.ObjectId.isValid(id));
+      if (excluded.length > 0) {
+        query._id = { $nin: excluded };
+      }
     }
 
     let articles = News.find(query);
@@ -1296,6 +1300,7 @@ export const getArticlesByCategory = async (
     }
 
     const results = await articles;
+    // console.log("🚀 ~ getArticlesByCategory ~ results:", results);
 
     if (!results.length) {
       return res.status(404).json({ message: "No articles found" });
@@ -2041,7 +2046,7 @@ export const mainSearch = async function (req: Request, res: Response) {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const pageSize = parseInt(req.query.pageSize as string) || 10;
-    const searchText = req.query.searchText as string;
+    const searchText = req.query.q as string;
 
     const query = {
       $or: [

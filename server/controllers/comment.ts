@@ -48,7 +48,7 @@ export const getComments = async (req: Request, res: Response) => {
         path: "replies",
         populate: { path: "replies" },
       })
-      .populate("user", "username")
+      .populate("user", "username", "profilePhoto")
       .sort({ createdAt: -1 });
 
     res.status(200).json(comments);

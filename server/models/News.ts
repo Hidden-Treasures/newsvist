@@ -125,6 +125,4 @@ const News = mongoose.model<INews, mongoose.PaginateModel<INews>>(
   NewsSchema,
   "News"
 );
-
-NewsSchema.index({ _id: 1 });
 export default News;

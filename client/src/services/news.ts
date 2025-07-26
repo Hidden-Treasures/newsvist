@@ -4,11 +4,14 @@ import {
   APIResponse,
   Category,
   CreateNewsResponse,
+  GetArticlesQuery,
   GetRelatedNewsParams,
   News,
   PaginationParams,
   RelatedNewsResponse,
+  SearchParams,
 } from "./types";
+import { CommentType } from "@/components/comment/Comment";
 
 type progressCallback = (progress: number) => void;
 
@@ -235,7 +238,6 @@ export const getCategoriesWithSub = async (): Promise<Category[]> => {
         "Content-Type": "application/json",
       },
     });
-    // console.log("services__", JSON.stringify(data, null, 2));
     return data ?? [];
   } catch (error: any) {
     return [];
@@ -573,6 +575,67 @@ export const restoreArticle = async (id: string): Promise<APIResponse> => {
   } catch (error) {
     return handleError(error);
   }
+};
+
+// add comment
+export const addComment = async ({
+  articleId,
+  commentText,
+}: {
+  articleId: string;
+  commentText: string;
+}) => {
+  const response = await api.post("/comment", { articleId, commentText });
+  return response.data;
+};
+
+// get comment
+export const getComments = async (
+  articleId: string
+): Promise<CommentType[]> => {
+  const response = await api.get(`/comments/${articleId}`);
+  return response.data;
+};
+
+// add reply
+export const addReply = async ({
+  articleId,
+  commentText,
+  parentCommentId,
+}: {
+  articleId: string;
+  commentText: string;
+  parentCommentId: string;
+}) => {
+  const response = await api.post("/comment", {
+    articleId,
+    commentText,
+    parentCommentId,
+  });
+  return response.data;
+};
+
+export const fetchArticlesByCategory = async (
+  params: GetArticlesQuery
+): Promise<News[]> => {
+  const response = await api.get("/articles/by-category", { params });
+  return response.data;
+};
+
+export const fetchNewsData = async ({
+  searchText,
+  page = 1,
+  pageSize = 5,
+}: SearchParams) => {
+  const response = await api.get("/main-search", {
+    params: { q: searchText, page, pageSize },
+  });
+
+  return {
+    news: response.data.news,
+    totalPages: response.data.totalPages,
+    currentPage: response.data.currentPage,
+  };
 };
 
 // Common error handler
