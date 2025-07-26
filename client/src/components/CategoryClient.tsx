@@ -1,7 +1,7 @@
 "use client";
 
 import { useArticlesByCategory } from "@/hooks/useNews";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import React, { useMemo, useState } from "react";
 import TextOnly from "./cards/TextOnly";
 import Footer from "@/common/Footer";
@@ -13,9 +13,11 @@ import Header from "@/common/header";
 
 const CategoryClient = ({ slug }: { slug: string }) => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const subcategory = searchParams.get("sub");
 
   const [showFooterSearch, setShowFooterSearch] = useState(false);
+
   const onSearchButtonClick = () => {
     setShowFooterSearch(!showFooterSearch);
   };
