@@ -12,10 +12,8 @@ import User from "../models/User";
 import { FileObject, GetNewsQuery, NewsQuery } from "../types";
 import Image from "../models/Image";
 import Comment from "../models/Comment";
-import { nanoid } from "nanoid";
 import slugify from "slugify";
 
-// Extend Express Request type to include 'user'
 declare global {
   namespace Express {
     interface Request {
@@ -25,6 +23,7 @@ declare global {
 }
 
 async function generateUniqueSlug(title: string): Promise<string> {
+  const { nanoid } = await import("nanoid");
   const baseSlug = slugify(title, { lower: true, strict: true });
   let slug = baseSlug;
   let exists = await News.findOne({ slug });
