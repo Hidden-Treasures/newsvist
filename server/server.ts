@@ -12,10 +12,11 @@ import helmet from "helmet";
 import session, { SessionOptions } from "express-session";
 import connectMongoDBSession from "connect-mongodb-session";
 import { Server as SocketIOServer } from "socket.io";
-dotenv.config({ path: "config.env" });
+dotenv.config();
 import "./database/db";
 const MongoDBStore = connectMongoDBSession(session);
 
+const PORT = Number(process.env.PORT) || 8080;
 const app = express();
 
 interface ServerToClientEvents {
@@ -40,8 +41,6 @@ interface LiveUpdatePayload {
   timestamp?: string;
 }
 
-const PORT = Number(process.env.PORT) || 8080;
-
 app.use(
   cors({
     origin: ["https://www.newsvist.com", "http://localhost:3000"],
@@ -54,7 +53,7 @@ app.use(bodyParser.json());
 app.use(compression());
 app.use(helmet());
 app.use(cookieParser());
-app.use(express.json({ limit: "50mb" }));
+app.use(express.json());
 app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
 
