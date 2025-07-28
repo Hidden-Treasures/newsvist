@@ -1,8 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 
-const express = require("express");
-const app = express();
+import express from "express";
+
 const bodyParser = require("body-parser");
+import morgan from "morgan";
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const dotenv = require("dotenv");
@@ -14,6 +15,8 @@ import { Server as SocketIOServer } from "socket.io";
 const MongoDBStore = connectMongoDBSession(session);
 dotenv.config({ path: "config.env" });
 import "./database/db";
+
+const app = express();
 
 interface ServerToClientEvents {
   liveNewsUpdate: (data: LiveUpdatePayload) => void;
@@ -35,18 +38,23 @@ interface LiveUpdatePayload {
   title: string;
   content: string;
   timestamp?: string;
-  // Add any other fields you want here
 }
 
-const PORT = process.env.PORT || 8000;
+const PORT = Number(process.env.PORT) || 8080;
 
 app.use(
   cors({
     origin: ["https://www.newsvist.com", "http://localhost:3000"],
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
   })
 );
+// app.use(
+//   cors({
+//     origin: ["https://www.newsvist.com", "http://localhost:3000"],
+//     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+//     credentials: true,
+//   })
+// );
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.header("Access-Control-Allow-Credentials", "true");
@@ -57,13 +65,9 @@ app.use(bodyParser.json());
 app.use(compression());
 app.use(helmet());
 app.use(cookieParser());
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(morgan("dev"));
 app.use(express.urlencoded({ extended: true }));
-app.use(
-  express.static("public", {
-    maxAge: "1d",
-  })
-);
 
 const store = new MongoDBStore({
   uri: process.env.MONGO_URI!,
@@ -87,7 +91,7 @@ app.use(session(sessionOptions));
 // connectDB();
 app.use("/api", require("./router/router"));
 
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
