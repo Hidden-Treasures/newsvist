@@ -45,21 +45,10 @@ const PORT = Number(process.env.PORT) || 8080;
 app.use(
   cors({
     origin: ["https://www.newsvist.com", "http://localhost:3000"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"],
     credentials: true,
   })
 );
-// app.use(
-//   cors({
-//     origin: ["https://www.newsvist.com", "http://localhost:3000"],
-//     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-//     credentials: true,
-//   })
-// );
-
-app.use((req: Request, res: Response, next: NextFunction) => {
-  res.header("Access-Control-Allow-Credentials", "true");
-  next();
-});
 
 app.use(bodyParser.json());
 app.use(compression());
@@ -82,13 +71,15 @@ const sessionOptions: SessionOptions = {
   store: store,
   cookie: {
     maxAge: 1000 * 60 * 60 * 24 * 7,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "none",
+    secure: process.env.NODE_ENV === "production" ? true : false,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   },
 };
 app.use(session(sessionOptions));
 
-// connectDB();
+app.get("/", (req: Request, res: Response) => {
+  res.status(200).json({ message: "Backend is running" });
+});
 app.use("/api", require("./router/router"));
 
 const server = app.listen(PORT, "0.0.0.0", () => {
@@ -106,10 +97,8 @@ const io = new SocketIOServer<
     methods: ["GET", "POST", "HEAD"],
     credentials: true,
   },
-  transports: ["polling"],
+  transports: ["websocket", "polling"],
 });
-
-module.exports = io;
 
 io.on("connection", async (socket) => {
   console.log("A user connected");
