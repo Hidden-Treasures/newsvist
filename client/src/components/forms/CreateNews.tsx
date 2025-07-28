@@ -8,7 +8,6 @@ import NewsForm from "./News";
 import { useCreateNews, useVideoUpload } from "@/hooks/useNews";
 import { Colors } from "@/utils/Colors";
 
-// Define types
 interface VideoInfo {
   url: string;
   public_id: string;
@@ -48,8 +47,6 @@ const CreateNewsForm: FC = () => {
     setUploadVideo(false);
     setBusy(false);
   };
-
-  const handleTypeError = (error: string) => toast.error(error);
 
   const handleChange = (file: File) => {
     const MAX_FILE_SIZE_MB = 100;
@@ -142,10 +139,17 @@ const CreateNewsForm: FC = () => {
         </label>
 
         <UploadProgress
-          visible={!videoUploaded && videoSelected}
+          visible={!videoUploaded || !newsUploaded || videoSelected}
           message={getUploadProgressValue()}
           width={uploadProgress}
         />
+        {/* {uploadVideo && (
+          <UploadProgress
+            visible={!videoUploaded && videoSelected}
+            message={getUploadProgressValue()}
+            width={uploadProgress}
+          />
+        )} */}
       </div>
       {uploadVideo && !videoSelected ? (
         <VideoSelector visible={!videoSelected} handleChange={handleChange} />
@@ -169,7 +173,7 @@ const VideoSelector: FC<VideoSelectorProps> = ({ visible, handleChange }) => {
   const { getRootProps, getInputProps } = useDropzone({
     accept: {
       "video/mp4": [],
-      "video/x-msvideo": [], // .avi
+      "video/x-msvideo": [],
     },
     multiple: false,
     onDrop: (acceptedFiles) => {

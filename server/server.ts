@@ -2,19 +2,19 @@ import { NextFunction, Request, Response } from "express";
 
 import express from "express";
 
-const bodyParser = require("body-parser");
+import bodyParser from "body-parser";
 import morgan from "morgan";
-const cookieParser = require("cookie-parser");
-const cors = require("cors");
-const dotenv = require("dotenv");
-const compression = require("compression");
-const helmet = require("helmet");
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import dotenv from "dotenv";
+import compression from "compression";
+import helmet from "helmet";
 import session, { SessionOptions } from "express-session";
 import connectMongoDBSession from "connect-mongodb-session";
 import { Server as SocketIOServer } from "socket.io";
-const MongoDBStore = connectMongoDBSession(session);
 dotenv.config({ path: "config.env" });
 import "./database/db";
+const MongoDBStore = connectMongoDBSession(session);
 
 const app = express();
 

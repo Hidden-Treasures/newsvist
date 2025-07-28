@@ -11,7 +11,7 @@ export interface GetNewsQuery {
   limit?: string;
   order?: "asc" | "desc";
   missedIt?: boolean;
-  createdAt: Date | { $gte: Date; $lte?: Date };
+  createdAt?: Date | { $gte: Date; $lte?: Date };
   excludeIds?: string;
 }
 

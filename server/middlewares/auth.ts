@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { sendError } from "../utils/helper";
-const jwt = require("jsonwebtoken");
+import jwt = require("jsonwebtoken");
 
 export const isAuth = async (
   req: Request,
@@ -11,7 +11,7 @@ export const isAuth = async (
 
   if (!token) return sendError(res, "Unauthorized!");
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!);
     req.user = decoded;
 
     next();

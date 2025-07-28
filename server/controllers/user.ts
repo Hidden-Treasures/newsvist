@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import User from "../models/User";
 import { cloudinary } from "../cloud";
-const bcrypt = require("bcryptjs");
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import ResetToken from "../models/ResetToken";
 import { sendEmail } from "../utils/email";

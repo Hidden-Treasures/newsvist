@@ -32,7 +32,7 @@ import {
   updateUserData,
   users,
 } from "./../controllers/news";
-const express = require("express");
+import express = require("express");
 
 import {
   addToNewsRecycleBin,
