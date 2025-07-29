@@ -101,10 +101,10 @@ const io = new SocketIOServer<
 });
 
 io.on("connection", async (socket) => {
-  console.log("A user connected");
+  // console.log("A user connected");
 
   socket.on("liveUpdate", async (data) => {
-    console.log("Live News Received:", data);
+    // console.log("Live News Received:", data);
     io.emit("liveNewsUpdate", data);
   });
 
