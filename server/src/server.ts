@@ -12,6 +12,7 @@ import helmet from "helmet";
 import session, { SessionOptions } from "express-session";
 import connectMongoDBSession from "connect-mongodb-session";
 import { Server as SocketIOServer } from "socket.io";
+import router from "./router/router";
 dotenv.config();
 import "./database/db";
 const MongoDBStore = connectMongoDBSession(session);
@@ -79,7 +80,7 @@ app.use(session(sessionOptions));
 app.get("/", (req: Request, res: Response) => {
   res.status(200).json({ message: "Backend is running" });
 });
-app.use("/api", require("./router/router"));
+app.use("/api", router);
 
 const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server is running on http://localhost:${PORT}`);

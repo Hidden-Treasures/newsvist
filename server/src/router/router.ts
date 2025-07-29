@@ -323,4 +323,4 @@ route.get("/bio/:bioName", getBioByName);
 route.get("/bio-articles", getArticlesByBiography);
 // ..............BIOGRAPHY ROUTE END............
 
-module.exports = route;
+export default route;
