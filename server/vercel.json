@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "root": "server",
   "builds": [
     {
       "src": "src/server.ts",
