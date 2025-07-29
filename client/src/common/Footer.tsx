@@ -51,7 +51,7 @@ const Footer: FC<FooterProps> = ({ SearchText = "" }) => {
     return <div className="text-white">Failed to load categories</div>;
   }
 
-  const mid = Math.ceil(categories.length / 2);
+  const mid = Math.ceil(categories.length / 1);
   const categoriesRow1 = categories.slice(0, mid);
   const categoriesRow2 = categories.slice(mid);
 

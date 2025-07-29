@@ -25,6 +25,7 @@ export interface MidCardProps {
   db?: boolean;
   video?: string | MediaFile | null;
   className?: string;
+  fileClass?: string;
 }
 
 const MidCard: FC<MidCardProps> = ({
@@ -39,6 +40,7 @@ const MidCard: FC<MidCardProps> = ({
   db = false,
   video,
   className = "",
+  fileClass = "",
   bioId,
 }) => {
   const [videoDuration, setVideoDuration] = useState<string | null>(null);
@@ -76,7 +78,7 @@ const MidCard: FC<MidCardProps> = ({
                 video={normalizedVideo}
                 className={
                   "w-full object-cover transition-transform transform group-hover:scale-100 " +
-                  className
+                  fileClass
                 }
                 handleLoadedMetadata={handleLoadedMetadata}
                 showControls={false}
@@ -100,7 +102,7 @@ const MidCard: FC<MidCardProps> = ({
                 }}
                 className={
                   "w-full h-full object-cover transition-transform transform group-hover:scale-100 " +
-                  className
+                  fileClass
                 }
               />
             </div>

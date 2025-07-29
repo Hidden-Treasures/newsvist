@@ -10,6 +10,7 @@ import {
   fetchApprovedNewsList,
   fetchArticlesByCategory,
   fetchDeletedArticles,
+  fetchNewsByTag,
   fetchNewsData,
   fetchNewsList,
   fetchPendingNewsList,
@@ -309,5 +310,13 @@ export const useSearch = (params: SearchParams) => {
     queryKey: ["search", params.searchText, params.page],
     queryFn: () => fetchNewsData(params),
     enabled: !!params.searchText,
+  });
+};
+
+export const useNewsByTag = (tag: string, page = 1) => {
+  return useQuery({
+    queryKey: ["newsByTag", tag, page],
+    queryFn: () => fetchNewsByTag(tag, page),
+    enabled: !!tag,
   });
 };

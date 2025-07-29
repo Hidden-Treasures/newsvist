@@ -149,7 +149,7 @@ route.get("/articles/by-category", getArticlesByCategory);
 // route.get("/:category/:subcategory", getArticlesByCategory);
 route.get("/most-recent", isAuth, getMostRecentNews);
 route.get("/missed-news", getMissedNews);
-route.get("/newsByTags", getNewsByTags);
+route.get("/news-by-tags", getNewsByTags);
 route.post("/addType", isAuth, canCreateRead, addType);
 route.delete("/deleteType/:typeId", isAuth, canCreateRead, deleteType);
 route.get("/types", isAuth, getNewsType);

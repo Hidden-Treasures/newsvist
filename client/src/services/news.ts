@@ -638,6 +638,17 @@ export const fetchNewsData = async ({
   };
 };
 
+export const fetchNewsByTag = async (tag: string, page = 1, limit = 10) => {
+  const response = await api.get(`/news-by-tags`, {
+    params: {
+      tags: tag,
+      page,
+      limit,
+    },
+  });
+  return response.data;
+};
+
 // Common error handler
 function handleError(error: any): APIResponse {
   const axiosError = error as AxiosError;
