@@ -15,10 +15,10 @@ import { Server as SocketIOServer } from "socket.io";
 import router from "./router/router";
 dotenv.config();
 import "./database/db";
-const MongoDBStore = connectMongoDBSession(session);
 
 const PORT = Number(process.env.PORT) || 8080;
 const app = express();
+const MongoDBStore = connectMongoDBSession(session);
 
 interface ServerToClientEvents {
   liveNewsUpdate: (data: LiveUpdatePayload) => void;
@@ -82,7 +82,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 app.use("/api", router);
 
-const server = app.listen(PORT, "0.0.0.0", () => {
+const server = app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
