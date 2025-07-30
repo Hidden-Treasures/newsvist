@@ -31,10 +31,10 @@ route.post("/create-news", auth_1.isAuth, auth_1.canCreateRead, multer_1.upload.
 route.get("/news", news_1.getNews);
 // Route to get articles by category and subcategory
 route.get("/articles/by-category", news_2.getArticlesByCategory);
-// route.get("/:category/:subcategory", getArticlesByCategory);
+route.get("/get-ads", news_1.getAdvertisements);
 route.get("/most-recent", auth_1.isAuth, news_2.getMostRecentNews);
 route.get("/missed-news", news_2.getMissedNews);
-route.get("/newsByTags", news_2.getNewsByTags);
+route.get("/news-by-tags", news_2.getNewsByTags);
 route.post("/addType", auth_1.isAuth, auth_1.canCreateRead, news_2.addType);
 route.delete("/deleteType/:typeId", auth_1.isAuth, auth_1.canCreateRead, news_2.deleteType);
 route.get("/types", auth_1.isAuth, news_2.getNewsType);

@@ -45,8 +45,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getImages = exports.createImage = exports.moderateComment = exports.getAnalytics = exports.rejectNews = exports.approveNews = exports.getRejectedNews = exports.getApprovedNews = exports.getPendingNews = exports.getMostReadArticles = exports.getUpNextArticles = exports.getNewsAndBuzz = exports.getRelatedNews = exports.getImageArticlesByCategory = exports.getArticlesByCategory = exports.getNewsBySlug = exports.getNewsByTags = exports.getMissedNews = exports.getNews = exports.getMostRecentNews = exports.getHeadLine = exports.getUserbyID = exports.updateUserData = exports.deleteUsersManually = exports.users = exports.assignRole = exports.updateSubCategory = exports.updateCategory = exports.addCategory = exports.deleteSubCategory = exports.deleteCategory = exports.AllCategoriesWithSubCategory = exports.restoreNews = exports.deleteNews = exports.addToNewsRecycleBin = exports.getNewsById = exports.getNewsForUpdate = exports.updateNews = exports.writerNewsList = exports.editorNewsList = exports.allNewsList = exports.newsList = exports.getAllNewsSubCategories = exports.getAllNewsCategories = exports.getNewsType = exports.deleteType = exports.addType = exports.createNews = exports.getLastFiveLiveUpdateNewsType = exports.videoUpload = void 0;
-exports.getAllLiveUpdates = exports.getNewsByLiveUpdateType = exports.getOldestNewsArticleByType = exports.mainSearch = exports.getDeletedNews = exports.getSingleImage = exports.images = exports.deleteImageByUser = exports.getImagesByCategoryOrTag = exports.getAllImages = void 0;
+exports.createImage = exports.moderateComment = exports.getAnalytics = exports.rejectNews = exports.approveNews = exports.getRejectedNews = exports.getApprovedNews = exports.getPendingNews = exports.getMostReadArticles = exports.getUpNextArticles = exports.getNewsAndBuzz = exports.getRelatedNews = exports.getImageArticlesByCategory = exports.getArticlesByCategory = exports.getNewsBySlug = exports.getNewsByTags = exports.getMissedNews = exports.getNews = exports.getMostRecentNews = exports.getHeadLine = exports.getUserbyID = exports.updateUserData = exports.deleteUsersManually = exports.users = exports.assignRole = exports.updateSubCategory = exports.updateCategory = exports.addCategory = exports.deleteSubCategory = exports.deleteCategory = exports.AllCategoriesWithSubCategory = exports.restoreNews = exports.deleteNews = exports.addToNewsRecycleBin = exports.getNewsById = exports.getNewsForUpdate = exports.updateNews = exports.writerNewsList = exports.editorNewsList = exports.allNewsList = exports.newsList = exports.getAllNewsSubCategories = exports.getAllNewsCategories = exports.getNewsType = exports.deleteType = exports.addType = exports.getAdvertisements = exports.createNews = exports.getLastFiveLiveUpdateNewsType = exports.videoUpload = void 0;
+exports.getAllLiveUpdates = exports.getNewsByLiveUpdateType = exports.getOldestNewsArticleByType = exports.mainSearch = exports.getDeletedNews = exports.getSingleImage = exports.images = exports.deleteImageByUser = exports.getImagesByCategoryOrTag = exports.getAllImages = exports.getImages = void 0;
 const helper_1 = require("../utils/helper");
 const News_1 = __importDefault(require("../models/News"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
@@ -118,7 +118,7 @@ const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const role = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;
         const isAdmin = role === "admin";
         const isEditor = role === "editor";
-        const { title, newsCategory, subCategory, type, tags, editorText, authorName, isLiveUpdate, liveUpdateType, liveUpdateHeadline, video, city, name, } = req.body;
+        const { title, newsCategory, subCategory, type, tags, editorText, authorName, isLiveUpdate, liveUpdateType, liveUpdateHeadline, video, city, name, isAdvertisement, } = req.body;
         let bioId = null;
         if (name) {
             const bio = yield Biography_1.default.findOne({
@@ -145,6 +145,7 @@ const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             video,
             user: userId,
             name: bioId,
+            isAdvertisement,
         });
         if (isAdmin || isEditor) {
             newNews.status = "approved";
@@ -193,6 +194,19 @@ const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.createNews = createNews;
+const getAdvertisements = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const ads = yield News_1.default.find({ isAdvertisement: true, published: true })
+            .sort({ createdAt: -1 })
+            .limit(10);
+        res.status(200).json(ads);
+    }
+    catch (err) {
+        console.error("Error fetching ads:", err);
+        res.status(500).json({ error: "Failed to fetch advertisements" });
+    }
+});
+exports.getAdvertisements = getAdvertisements;
 const addType = function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { name } = req.body;

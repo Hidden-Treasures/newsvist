@@ -30,7 +30,12 @@ const PORT = Number(process.env.PORT) || 8080;
 const app = (0, express_1.default)();
 const MongoDBStore = (0, connect_mongodb_session_1.default)(express_session_1.default);
 app.use((0, cors_1.default)({
-    origin: ["https://www.newsvist.com", "http://localhost:3000"],
+    origin: [
+        "https://newsvist.com",
+        "https://www.newsvist.com",
+        "https://newsvist.vercel.app",
+        "http://localhost:3000",
+    ],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"],
     credentials: true,
 }));

@@ -60,6 +60,10 @@ const NewsSchema = new mongoose_1.Schema({
     publishedAt: {
         type: Date,
     },
+    isAdvertisement: {
+        type: Boolean,
+        default: false,
+    },
     published: { type: Boolean, default: false },
     file: {
         type: Object,
