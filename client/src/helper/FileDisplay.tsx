@@ -44,7 +44,7 @@ const FileDisplay: FC<FileDisplayProps> = ({
           <Image
             src={file?.url}
             alt={file?.public_id || "file image"}
-            className="file-image"
+            className="rounded"
             width={800}
             height={600}
             unoptimized={true}
@@ -54,7 +54,7 @@ const FileDisplay: FC<FileDisplayProps> = ({
         <Image
           src={file?.url}
           alt={file?.public_id || "file image"}
-          className="file-image"
+          className="rounded"
           width={800}
           height={600}
           unoptimized={true}

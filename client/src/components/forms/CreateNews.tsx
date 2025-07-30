@@ -33,6 +33,7 @@ const CreateNewsForm: FC = () => {
   const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [busy, setBusy] = useState<boolean>(false);
   const [uploadVideo, setUploadVideo] = useState<boolean>(false);
+  const [isAdvertisement, setIsAdvertisement] = useState<boolean>(false);
 
   const { mutateAsync: uploadVideoMutation } = useVideoUpload();
   const { mutateAsync: createNewsMutation } = useCreateNews();
@@ -40,6 +41,7 @@ const CreateNewsForm: FC = () => {
   const resetForm = () => {
     setVideoSelected(false);
     setVideoUploaded(false);
+    setIsAdvertisement(false);
     setUploadProgress(0);
     setNewsUploaded(false);
     setNewsUploadProgress(0);
@@ -128,28 +130,34 @@ const CreateNewsForm: FC = () => {
   return (
     <div className={"mt-24 w-fit ml-10"}>
       <div className="mb-5">
-        <label className="flex items-center space-x-3">
-          <input
-            type="checkbox"
-            checked={uploadVideo}
-            onChange={() => setUploadVideo(!uploadVideo)}
-            className="form-checkbox h-5 w-5 text-gray-600 cursor-pointer"
-          />
-          <span className="text-gray-700">Upload Video</span>
-        </label>
-
-        <UploadProgress
-          visible={!videoUploaded || !newsUploaded || videoSelected}
-          message={getUploadProgressValue()}
-          width={uploadProgress}
-        />
-        {/* {uploadVideo && (
+        <div className="flex flex-col min-h-[100px]">
+          <label className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={uploadVideo}
+              onChange={() => setUploadVideo(!uploadVideo)}
+              className="form-checkbox h-5 w-5 text-gray-600 cursor-pointer"
+            />
+            <span className="text-gray-400">Upload Video</span>
+          </label>
+          <div className="flex-grow"></div>{" "}
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isAdvertisement}
+              onChange={(e) => setIsAdvertisement(e.target.checked)}
+              className="h-5 w-5 text-gray-300 cursor-pointer"
+            />
+            <span className="text-gray-400">Post as Advertisement</span>
+          </label>
+        </div>
+        {uploadVideo && (
           <UploadProgress
             visible={!videoUploaded && videoSelected}
             message={getUploadProgressValue()}
             width={uploadProgress}
           />
-        )} */}
+        )}
       </div>
       {uploadVideo && !videoSelected ? (
         <VideoSelector visible={!videoSelected} handleChange={handleChange} />
@@ -162,6 +170,8 @@ const CreateNewsForm: FC = () => {
             }}
             btnTitle=""
             videoUploaded={videoUploaded}
+            isAdvertisement={isAdvertisement}
+            setIsAdvertisement={setIsAdvertisement}
           />
         </div>
       )}

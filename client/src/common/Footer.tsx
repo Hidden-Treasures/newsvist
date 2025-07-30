@@ -25,17 +25,13 @@ const Footer: FC<FooterProps> = ({ SearchText = "" }) => {
 
   const handleProfileClick = async (): Promise<void> => {
     const profile = await refetchProfile();
-    const role = profile.data ? profile.data?.user?.role : profile.data?.role;
-    switch (role) {
-      case "admin":
-        router.push("/admin/dashboard");
-        break;
-      case "editor":
-        router.push("/editor/dashboard");
-        break;
-      default:
-        router.push("/");
-        break;
+    const role = profile.data?.user?.role ?? profile.data?.role;
+    if (role === "admin") {
+      router.push("/admin/dashboard");
+    } else if (role === "editor") {
+      router.push("/editor/dashboard");
+    } else {
+      router.push("/");
     }
   };
 
@@ -107,7 +103,7 @@ const Footer: FC<FooterProps> = ({ SearchText = "" }) => {
             <NavLink href="/">
               <Image
                 src={
-                  "https://res.cloudinary.com/dqxcyhqvx/image/upload/v1753022225/Newsvistlogo_agfbuq.png"
+                  "https://res.cloudinary.com/deazsxjtf/image/upload/v1753868566/full_logo_u40lkd.png"
                 }
                 alt="Newsvist Logo"
                 width={120}
@@ -117,8 +113,8 @@ const Footer: FC<FooterProps> = ({ SearchText = "" }) => {
             </NavLink>
             <div className="font-bold text-2xl text-white">NG</div>
           </div>
-          <div className="flex flex-wrap items-center w-full">
-            <div className="border-r border-gray-500 w-1 h-6 mx-4"></div>
+          <div className="flex flex-wrap justify-between items-center w-full">
+            <div className="border-r border-gray-500 w-1 h-6 mx-4" />
             {/* <div className="text-white text-[0.937rem] font-bold">
               Follow NEWSVIST
             </div>
@@ -153,7 +149,7 @@ const Footer: FC<FooterProps> = ({ SearchText = "" }) => {
             {isLoggedIn === true ? (
               <button
                 onClick={handleProfileClick}
-                className="text-white p-1 rounded text-[0.937rem] border border-white font-bold"
+                className="text-white p-1 rounded text-[0.937rem] border border-white font-bold cursor-pointer"
               >
                 Profile
               </button>

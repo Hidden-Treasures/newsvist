@@ -8,6 +8,7 @@ import {
   deleteImageByUser,
   deleteSubCategory,
   deleteUsersManually,
+  getAdvertisements,
   getAllImages,
   getAnalytics,
   getApprovedNews,
@@ -146,7 +147,7 @@ route.post(
 route.get("/news", getNews);
 // Route to get articles by category and subcategory
 route.get("/articles/by-category", getArticlesByCategory);
-// route.get("/:category/:subcategory", getArticlesByCategory);
+route.get("/get-ads", getAdvertisements);
 route.get("/most-recent", isAuth, getMostRecentNews);
 route.get("/missed-news", getMissedNews);
 route.get("/news-by-tags", getNewsByTags);

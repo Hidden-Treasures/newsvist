@@ -15,6 +15,7 @@ import {
   fetchNewsList,
   fetchPendingNewsList,
   fetchRejectedNewsList,
+  getAdvertisements,
   getArticleBySlug,
   getCategories,
   getComments,
@@ -75,6 +76,14 @@ export const useVideoUpload = () => {
   });
 };
 
+// News Ads Hook
+export const useNewsAds = () => {
+  return useQuery({
+    queryKey: ["newsAds"],
+    queryFn: getAdvertisements,
+    staleTime: 1000 * 60 * 5,
+  });
+};
 // News Types Hook
 export const useNewsTypes = () => {
   return useQuery({

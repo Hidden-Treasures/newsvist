@@ -74,7 +74,7 @@ const BigCard: FC<BigCardProps> = ({
               <VideoDisplay
                 image={normalizedImage}
                 video={normalizedVideo}
-                className="w-full h-full object-cover transition-transform transform group-hover:scale-100"
+                className="w-full h-full object-cover transition-transform transform group-hover:scale-100 hover:opacity-50"
                 handleLoadedMetadata={handleLoadedMetadata}
                 showControls={false}
               />
@@ -94,7 +94,7 @@ const BigCard: FC<BigCardProps> = ({
                 isVideo: !!video,
                 duration: videoDuration ?? "",
               }}
-              className="w-full h-full object-cover transition-transform transform group-hover:scale-100"
+              className="w-full h-full object-cover transition-transform transform group-hover:scale-100 hover:opacity-50"
             />
           )
         ) : (
@@ -102,7 +102,7 @@ const BigCard: FC<BigCardProps> = ({
             <Image
               src={normalizedImage?.url || ""}
               alt={normalizedImage?.public_id || "image"}
-              className="w-full h-full object-cover transition-transform transform group-hover:scale-100"
+              className="w-full h-full object-cover transition-transform transform group-hover:scale-100 hover:opacity-50"
               width={800}
               height={600}
               unoptimized={true}

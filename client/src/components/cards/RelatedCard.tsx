@@ -121,7 +121,7 @@ const RelatedCard: FC<RelatedCardProps> = ({
 
       <div>
         <h4
-          className={`md:text-xl font-bold mb-2 mt-2 ${
+          className={`mb-2 mt-2 ${
             color ? "text-white" : ""
           } hover:underline hover:text-gray-700`}
         >

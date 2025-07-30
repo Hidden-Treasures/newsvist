@@ -45,6 +45,8 @@ interface NewsFormProps {
   initialState?: InitialState;
   onSubmit: (formData: FormData, reset: () => void) => void;
   videoUploaded?: boolean;
+  isAdvertisement?: boolean;
+  setIsAdvertisement?: (value: boolean) => void;
 }
 
 const NewsForm: FC<NewsFormProps> = ({
@@ -53,6 +55,8 @@ const NewsForm: FC<NewsFormProps> = ({
   initialState,
   onSubmit,
   videoUploaded,
+  isAdvertisement,
+  setIsAdvertisement,
 }) => {
   const [title, setTitle] = useState<string>("");
   const [city, setCity] = useState<string>("");
@@ -105,6 +109,9 @@ const NewsForm: FC<NewsFormProps> = ({
     setIsLiveUpdate(false);
     setShowHeadLine("");
     setIsFocused(false);
+    if (typeof setIsAdvertisement === "function") {
+      setIsAdvertisement(false);
+    }
   };
 
   const handleNewsTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
@@ -181,6 +188,7 @@ const NewsForm: FC<NewsFormProps> = ({
     formData.append("type", selectedType);
     formData.append("isLiveUpdate", String(isLiveUpdate));
     formData.append("liveUpdateType", selectedLiveUpdateType);
+    formData.append("isAdvertisement", String(isAdvertisement));
     formData.append("liveUpdateHeadline", liveUpdateHeadline);
     formData.append("newsCategory", selectedNewsCategory);
     formData.append("subCategory", selectedNewsSubCategory);
@@ -293,7 +301,7 @@ const NewsForm: FC<NewsFormProps> = ({
           e.preventDefault();
           handleSubmit();
         }}
-        className="md:flex space-x-3 md:mt-32 h-96 overflow-y-scroll hide-scrollbar mx-5"
+        className="md:flex space-x-3 md:mt-0 h-96 overflow-y-scroll hide-scrollbar mx-5"
       >
         <div className="md:w-[70%] space-y-5">
           <div>

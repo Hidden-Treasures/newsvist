@@ -139,7 +139,7 @@ const FirstSection: FC = () => {
                   <VideoDisplay
                     image={breaking[1]?.file}
                     video={breaking[1]?.video}
-                    className="h-64 object-cover transition-transform transform group-hover:scale-100"
+                    className="h-64 object-cover transition-transform transform group-hover:scale-100 hover:opacity-50"
                   />
                 ) : (
                   <FileDisplay file={breaking[1]?.file} />
@@ -204,19 +204,20 @@ const FirstSection: FC = () => {
 
       {/* Mid Section */}
       <div className="w-full md:!w-1/3 p-4 ">
-        {midCardsVisual?.length > 0 &&midCardsVisual?.map((card, index) => (
-          <MidCard
-            key={`cat1-${index}`}
-            link={`/${getDateString(card?.createdAt)}/${card?.newsCategory}/${
-              card?.slug
-            }`}
-            imageSrc={card?.file}
-            video={card?.video}
-            text={card?.title}
-            loading={loading3}
-            db={true}
-          />
-        ))}
+        {midCardsVisual?.length > 0 &&
+          midCardsVisual?.map((card, index) => (
+            <MidCard
+              key={`cat1-${index}`}
+              link={`/${getDateString(card?.createdAt)}/${card?.newsCategory}/${
+                card?.slug
+              }`}
+              imageSrc={card?.file}
+              video={card?.video}
+              text={card?.title}
+              loading={loading3}
+              db={true}
+            />
+          ))}
       </div>
 
       {/* Right Section */}

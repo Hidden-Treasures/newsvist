@@ -35,7 +35,7 @@ export const metadata = {
     siteName: "Newsvist",
     images: [
       {
-        url: "https://res.cloudinary.com/deazsxjtf/image/upload/v1753176926/Newsvistlogo_q9zego.png",
+        url: "https://res.cloudinary.com/deazsxjtf/image/upload/v1753868573/newsvist_logo__pp8cit.png",
         width: 1920,
         height: 1080,
       },

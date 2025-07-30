@@ -111,7 +111,20 @@ export const addType = async (name: string) => {
     return { error: error.message || error };
   }
 };
-
+// get- ads
+export const getAdvertisements = async () => {
+  try {
+    const { data } = await api.get("/get-ads", {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    return data;
+  } catch (error: any) {
+    return handleError(error);
+  }
+};
 // getTypes
 export const getTypes = async () => {
   try {

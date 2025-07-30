@@ -13,6 +13,7 @@ interface INews extends Document {
   name: mongoose.Types.ObjectId;
   slug: string;
   publishedAt?: Date;
+  isAdvertisement: boolean;
   published: boolean;
   file: FileObject;
   video?: FileObject;
@@ -58,6 +59,10 @@ const NewsSchema = new Schema<INews>(
     },
     publishedAt: {
       type: Date,
+    },
+    isAdvertisement: {
+      type: Boolean,
+      default: false,
     },
     published: { type: Boolean, default: false },
     file: {

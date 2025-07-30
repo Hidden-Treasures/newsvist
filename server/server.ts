@@ -44,7 +44,12 @@ interface LiveUpdatePayload {
 
 app.use(
   cors({
-    origin: ["https://www.newsvist.com", "http://localhost:3000"],
+    origin: [
+      "https://newsvist.com",
+      "https://www.newsvist.com",
+      "https://newsvist.vercel.app",
+      "http://localhost:3000",
+    ],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"],
     credentials: true,
   })

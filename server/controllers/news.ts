@@ -103,6 +103,7 @@ export const createNews = async (req: Request, res: Response) => {
       video,
       city,
       name,
+      isAdvertisement,
     } = req.body;
 
     let bioId = null;
@@ -134,6 +135,7 @@ export const createNews = async (req: Request, res: Response) => {
       video,
       user: userId,
       name: bioId,
+      isAdvertisement,
     });
 
     if (isAdmin || isEditor) {
@@ -192,6 +194,19 @@ export const createNews = async (req: Request, res: Response) => {
   } catch (err) {
     console.error("Error saving news:", err);
     res.status(500).json({ error: "Failed to save news" });
+  }
+};
+
+export const getAdvertisements = async (req: Request, res: Response) => {
+  try {
+    const ads = await News.find({ isAdvertisement: true, published: true })
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    res.status(200).json(ads);
+  } catch (err) {
+    console.error("Error fetching ads:", err);
+    res.status(500).json({ error: "Failed to fetch advertisements" });
   }
 };
 

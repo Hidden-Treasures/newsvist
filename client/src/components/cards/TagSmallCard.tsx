@@ -126,7 +126,7 @@ const TagSmallCard: FC<TagSmallCardProps> = ({
         )}
       </div>
 
-      <div className="w-3/5 ml-2">
+      <div className="w-full ml-2">
         <h4
           className={`text-base self-start ml-2 hover:underline hover:text-gray-700`}
         >

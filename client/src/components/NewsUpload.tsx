@@ -131,18 +131,18 @@ const NewsUpload: FC<NewsUploadProps> = ({ visible, onClose }) => {
           <span className="text-gray-700">Upload Video</span>
         </label>
 
-        <UploadProgress
+        {/* <UploadProgress
           visible={!videoUploaded || !newsUploaded || videoSelected}
           message={getUploadProgressValue()}
           width={uploadProgress}
-        />
-        {/* {uploadVideo && (
+        /> */}
+        {uploadVideo && (
           <UploadProgress
             visible={!videoUploaded && videoSelected}
             message={getUploadProgressValue()}
             width={uploadProgress}
           />
-        )} */}
+        )}
       </div>
       {uploadVideo && !videoSelected ? (
         <VideoSelector visible={!videoSelected} handleChange={handleChange} />

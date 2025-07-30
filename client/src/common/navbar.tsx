@@ -2,9 +2,11 @@
 
 import NavLink from "@/app/NavLink";
 import { useAuth } from "@/context/AuthContext";
+import { useProfile } from "@/hooks/useAuth";
 import { useCategories } from "@/hooks/useCategories";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { FC, useState } from "react";
 
 interface NavbarProps {
@@ -14,7 +16,8 @@ interface NavbarProps {
 const Navbar: FC<NavbarProps> = ({ onSearchButtonClick }) => {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const { isAuthenticated } = useAuth();
-
+  const router = useRouter();
+  const { refetch: refetchProfile } = useProfile();
   const { data, isLoading } = useCategories();
   const categories = data?.slice(0, 13) || [];
 
@@ -27,6 +30,18 @@ const Navbar: FC<NavbarProps> = ({ onSearchButtonClick }) => {
     { title: "Listen", slug: "Listen" },
     { title: "Live TV", slug: "live-tv" },
   ];
+
+  const handleProfileClick = async (): Promise<void> => {
+    const profile = await refetchProfile();
+    const role = profile.data?.user?.role ?? profile.data?.role;
+    if (role === "admin") {
+      router.push("/admin/dashboard");
+    } else if (role === "editor") {
+      router.push("/editor/dashboard");
+    } else {
+      router.push("/");
+    }
+  };
 
   return (
     <>
@@ -78,7 +93,7 @@ const Navbar: FC<NavbarProps> = ({ onSearchButtonClick }) => {
               <div className="flex justify-center">
                 <Image
                   src={
-                    "https://res.cloudinary.com/dqxcyhqvx/image/upload/v1753022225/Newsvistlogo_agfbuq.png"
+                    "https://res.cloudinary.com/deazsxjtf/image/upload/v1753868566/full_logo_u40lkd.png"
                   }
                   alt="Newsvist Logo"
                   width={120}
@@ -191,15 +206,15 @@ const Navbar: FC<NavbarProps> = ({ onSearchButtonClick }) => {
 
             {isAuthenticated ? (
               <button
-                // onClick={handleProfileClick}
-                className="text-white p-1 rounded text-[0.937rem] border border-white font-bold"
+                onClick={handleProfileClick}
+                className="text-white p-1 rounded text-[0.937rem] border border-white font-bold cursor-pointer"
               >
                 Profile
               </button>
             ) : (
               <NavLink
                 href="/login"
-                className="text-white p-1 rounded text-[0.937rem] border border-white font-bold"
+                className="text-white p-1 rounded text-[0.937rem] border border-white font-bold cursor-pointer"
               >
                 Log In
               </NavLink>
@@ -208,7 +223,7 @@ const Navbar: FC<NavbarProps> = ({ onSearchButtonClick }) => {
         </nav>
       </div>
       <div className="block md:hidden bg-black text-white pt-4">
-        <div className="flex justify-between">
+        <div className="flex justify-between items-center">
           <div className="flex items-center">
             <button
               onClick={toggleMenu}
@@ -248,24 +263,23 @@ const Navbar: FC<NavbarProps> = ({ onSearchButtonClick }) => {
                 </svg>
               )}
             </button>
-            <div className="logo flex justify-center ">
+            <div className="logo flex justify-center">
               <Link href="/">
-                <img
+                <Image
                   src={
-                    "https://res.cloudinary.com/dqxcyhqvx/image/upload/v1753022225/Newsvistlogo_agfbuq.png"
+                    "https://res.cloudinary.com/deazsxjtf/image/upload/v1753868601/newsvist-text_auxefn.png"
                   }
-                  className="h-10 "
-                  alt=""
+                  alt="Newsvist Logo"
+                  width={50}
+                  height={32}
+                  className="w-auto h-3"
                 />
               </Link>
             </div>
           </div>
 
-          <div className="flex items-center pl-3 pr-3">
-            <div
-              className=" cursor-pointer mr-43"
-              onClick={onSearchButtonClick}
-            >
+          <div className="flex pl-3 pr-3">
+            <div className="cursor-pointer mr-43" onClick={onSearchButtonClick}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -376,15 +390,15 @@ const Navbar: FC<NavbarProps> = ({ onSearchButtonClick }) => {
 
           {isAuthenticated ? (
             <button
-              // onClick={handleProfileClick}
-              className="text-white p-1 rounded text-[0.937rem] border border-white font-bold"
+              onClick={handleProfileClick}
+              className="text-white p-1 rounded text-[0.937rem] border border-white font-bold cursor-pointer"
             >
               Profile
             </button>
           ) : (
             <NavLink
               href="/login"
-              className="text-white p-1 rounded text-[0.937rem] border border-white font-bold mt-2"
+              className="text-white p-1 rounded text-[0.937rem] border border-white font-bold mt-2 cursor-pointer"
             >
               Log In
             </NavLink>

@@ -102,8 +102,8 @@ const PostDetailsPage: FC = () => {
 
   const cityText =
     article?.city && article.city !== "undefined"
-      ? `${article.city} (NVist)`
-      : "(NVist)";
+      ? `${article.city} (NewsVist)`
+      : "(NewsVist)";
 
   if (isLoading) {
     return (
@@ -122,10 +122,10 @@ const PostDetailsPage: FC = () => {
   {
     article && (
       <MetaTags
-        title={article.title}
+        title={article?.title}
         description={articleDescription}
         url={articleUrl}
-        image={article.file?.url}
+        image={article?.file?.url}
       />
     );
   }
@@ -205,15 +205,15 @@ const PostDetailsPage: FC = () => {
             )}
           </div>
 
-          <div className="ml-2 md:ml-16 mr-2 md:mr-16 mt-4">
-            <div>
-              <p className="font-bold inline">{cityText} — </p>
-              <p
-                dangerouslySetInnerHTML={{ __html: article?.editorText }}
-                className="inline"
-              ></p>
-            </div>
+          <p className="text-base leading-relaxed mt-4 mb-6">
+            <span className="font-bold">{cityText} — </span>
+            <span
+              className="[&>*]:inline [&>*]:m-0"
+              dangerouslySetInnerHTML={{ __html: article?.editorText }}
+            />
+          </p>
 
+          <div className="ml-2 md:ml-16 mr-2 md:mr-16 mt-4">
             <div className="flex flex-wrap mt-4">
               <h2 className="text-base font-bold mr-2">Tags: </h2>
               {article?.tags?.map((tag: any, index: number) => {
@@ -259,7 +259,7 @@ const PostDetailsPage: FC = () => {
       </div>
 
       <div className="w-full md:w-1/4 p-4 pr-2">
-        {relatedNews && (
+        {relatedNews && relatedNews?.length > 0 && (
           <div className="mt-12 md:mt-[12.5rem]">
             <ColumnHead columnHeadTag="MORE FROM NEWSVIST" />
           </div>

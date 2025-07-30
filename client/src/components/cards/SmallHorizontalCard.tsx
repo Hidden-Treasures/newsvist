@@ -61,7 +61,7 @@ const SmallHorizontalCard: FC<SmallHorizontalCardProps> = ({
   const normalizedVideo = normalizeMediaFile(video);
 
   const content = (
-    <div className={`flex mt-2 border-t pt-4`}>
+    <div className={`flex mt-2 border-t py-3`}>
       {/* <div className="relative w-305 h-171 group"> */}
       <div className="relative group w-1/4 h-20">
         {imageSrc ? (
@@ -70,7 +70,7 @@ const SmallHorizontalCard: FC<SmallHorizontalCardProps> = ({
               <VideoDisplay
                 image={normalizedImage}
                 video={normalizedVideo}
-                className="w-full h-full object-cover transition-transform transform group-hover:scale-100"
+                className="w-full h-full object-cover transition-transform transform hover:scale-100 hover:opacity-50"
                 handleLoadedMetadata={handleLoadedMetadata}
                 showControls={false}
               />
@@ -90,7 +90,7 @@ const SmallHorizontalCard: FC<SmallHorizontalCardProps> = ({
                 isVideo: !!video,
                 duration: videoDuration ?? "",
               }}
-              className="w-full h-full object-cover transition-transform transform group-hover:scale-100"
+              className="w-full h-full object-cover transition-transform transform hover:scale-100 hover:opacity-50"
             />
           )
         ) : (
@@ -98,7 +98,7 @@ const SmallHorizontalCard: FC<SmallHorizontalCardProps> = ({
             <Image
               src={normalizedImage?.url || ""}
               alt={normalizedImage?.public_id || "image"}
-              className="w-full h-full object-cover transition-transform transform group-hover:scale-100"
+              className="w-full h-full object-cover transition-transform transform hover:scale-100 hover:opacity-50"
               width={800}
               height={600}
               unoptimized={true}

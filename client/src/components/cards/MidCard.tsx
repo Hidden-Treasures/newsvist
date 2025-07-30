@@ -77,7 +77,7 @@ const MidCard: FC<MidCardProps> = ({
                 image={normalizedImage}
                 video={normalizedVideo}
                 className={
-                  "w-full object-cover transition-transform transform group-hover:scale-100 " +
+                  "w-full object-cover transition-transform transform group-hover:scale-100 hover:opacity-50" +
                   fileClass
                 }
                 handleLoadedMetadata={handleLoadedMetadata}
@@ -101,7 +101,7 @@ const MidCard: FC<MidCardProps> = ({
                   duration: videoDuration ?? "",
                 }}
                 className={
-                  "w-full h-full object-cover transition-transform transform group-hover:scale-100 " +
+                  "w-full h-full object-cover transition-transform transform group-hover:scale-100 hover:opacity-50" +
                   fileClass
                 }
               />
@@ -113,11 +113,10 @@ const MidCard: FC<MidCardProps> = ({
               src={normalizedImage?.url || ""}
               alt={normalizedImage?.public_id || "image"}
               className={
-                "w-96 h-full object-cover transition-transform transform group-hover:scale-100 " +
-                className
+                "w-full h-full object-cover transition-transform transform group-hover:scale-100 hover:opacity-50" +
+                fileClass
               }
-              width={800}
-              height={600}
+              fill
               unoptimized={true}
             />
           </div>
