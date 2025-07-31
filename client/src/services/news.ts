@@ -662,6 +662,27 @@ export const fetchNewsByTag = async (tag: string, page = 1, limit = 10) => {
   return response.data;
 };
 
+export const fetchLiveUpdateNewsByType = async (liveUpdateType: string) => {
+  const response = await api.get(
+    `/get-news-by-live-update-type?liveUpdateType=${liveUpdateType}`
+  );
+  return response.data;
+};
+
+export const fetchOldestLiveUpdateNewsArticle = async (
+  liveUpdateType: string
+) => {
+  const response = await api.get(
+    `/get-oldest-news-article-by-type?liveUpdateType=${liveUpdateType}`
+  );
+  return response.data;
+};
+
+export const fetchAllLiveUpdates = async () => {
+  const response = await api.get(`/get-all-live-updates`);
+  return response.data;
+};
+
 // Common error handler
 function handleError(error: any): APIResponse {
   const axiosError = error as AxiosError;

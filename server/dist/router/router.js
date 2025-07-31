@@ -22,9 +22,9 @@ route.post("/login", user_1.login);
 route.get("/check-auth", auth_1.isAuth, auth_1.checkAuth);
 route.post("/logout", auth_1.isAuth, user_1.logout);
 route.get("/main-search", news_2.mainSearch);
-route.get("/getNewsByLiveUpdateType/:liveUpdateType", news_2.getNewsByLiveUpdateType);
-route.get("/getAllLiveUpdates", news_2.getAllLiveUpdates);
-route.get("/getOldestNewsArticleByType/:liveUpdateType", news_2.getOldestNewsArticleByType);
+route.get("/get-news-by-live-update-type", news_2.getNewsByLiveUpdateType);
+route.get("/get-all-live-updates", news_2.getAllLiveUpdates);
+route.get("/get-oldest-news-article-by-type", news_2.getOldestNewsArticleByType);
 // ..............News Route...........
 route.post("/upload-video", auth_1.isAuth, auth_1.canCreateRead, multer_1.upload.single("video"), validator_1.validateVideo, multer_1.uploadToCloudinary, news_2.videoUpload);
 route.post("/create-news", auth_1.isAuth, auth_1.canCreateRead, multer_1.upload.single("file"), helper_1.parseData, validator_1.validateNews, validator_1.validate, multer_1.uploadToCloudinary, news_2.createNews);

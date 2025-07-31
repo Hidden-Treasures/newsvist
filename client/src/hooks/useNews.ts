@@ -6,13 +6,16 @@ import {
   approveArticle,
   createNews,
   deleteArticle,
+  fetchAllLiveUpdates,
   fetchAllNewsList,
   fetchApprovedNewsList,
   fetchArticlesByCategory,
   fetchDeletedArticles,
+  fetchLiveUpdateNewsByType,
   fetchNewsByTag,
   fetchNewsData,
   fetchNewsList,
+  fetchOldestLiveUpdateNewsArticle,
   fetchPendingNewsList,
   fetchRejectedNewsList,
   getAdvertisements,
@@ -327,5 +330,28 @@ export const useNewsByTag = (tag: string, page = 1) => {
     queryKey: ["newsByTag", tag, page],
     queryFn: () => fetchNewsByTag(tag, page),
     enabled: !!tag,
+  });
+};
+
+export const useLiveUpdateNewsByType = (liveUpdateType: string) => {
+  return useQuery({
+    queryKey: ["liveUpdateNews", liveUpdateType],
+    queryFn: () => fetchLiveUpdateNewsByType(liveUpdateType),
+    enabled: !!liveUpdateType,
+  });
+};
+
+export const useOldestLiveUpdateNewsArticle = (liveUpdateType: string) => {
+  return useQuery({
+    queryKey: ["oldestLiveUpdateNewsArticle", liveUpdateType],
+    queryFn: () => fetchOldestLiveUpdateNewsArticle(liveUpdateType),
+    enabled: !!liveUpdateType,
+  });
+};
+
+export const useAllLiveUpdates = () => {
+  return useQuery({
+    queryKey: ["allLiveUpdates"],
+    queryFn: fetchAllLiveUpdates,
   });
 };

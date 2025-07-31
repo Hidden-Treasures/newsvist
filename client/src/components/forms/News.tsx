@@ -30,6 +30,7 @@ interface InitialState {
   type?: string;
   isLiveUpdate?: boolean;
   liveUpdateType?: string;
+  isAdvertisement?: boolean;
   liveUpdateHeadline?: string;
   newsCategory?: string;
   subCategory?: string;
@@ -55,8 +56,6 @@ const NewsForm: FC<NewsFormProps> = ({
   initialState,
   onSubmit,
   videoUploaded,
-  isAdvertisement,
-  setIsAdvertisement,
 }) => {
   const [title, setTitle] = useState<string>("");
   const [city, setCity] = useState<string>("");
@@ -76,7 +75,7 @@ const NewsForm: FC<NewsFormProps> = ({
   const [showHeadLine, setShowHeadLine] = useState<string>("");
   const [selectedImageForUI, setSelectedImageForUI] = useState<string>("");
   const [isFocused, setIsFocused] = useState(false);
-
+  const [isAdvertisement, setIsAdvertisement] = useState<boolean>(false);
   // Using TanStack Query hooks
   const { data: types = [] } = useNewsTypes();
   const { data: categories = [], isLoading: categoriesLoading } =
@@ -109,9 +108,7 @@ const NewsForm: FC<NewsFormProps> = ({
     setIsLiveUpdate(false);
     setShowHeadLine("");
     setIsFocused(false);
-    if (typeof setIsAdvertisement === "function") {
-      setIsAdvertisement(false);
-    }
+    setIsAdvertisement(false);
   };
 
   const handleNewsTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
@@ -214,6 +211,21 @@ const NewsForm: FC<NewsFormProps> = ({
     }
   }, [selectedNewsCategory, refetchSubCategories]);
 
+  useEffect(() => {
+    if (selectedType === "LiveUpdate") {
+      setIsLiveUpdate(true);
+    } else {
+      setIsLiveUpdate(false);
+    }
+  }, [selectedType]);
+  useEffect(() => {
+    if (isAdvertisement) {
+      setIsAdvertisement(true);
+    } else {
+      setIsAdvertisement(false);
+    }
+  }, [isAdvertisement]);
+
   //   useEffect(() => {
   //     const fetchData = async () => {
   //       try {
@@ -272,6 +284,7 @@ const NewsForm: FC<NewsFormProps> = ({
       setCity(initialState.city || "");
       setSelectedType(initialState.type || "");
       setIsLiveUpdate(initialState.isLiveUpdate || false);
+      setIsAdvertisement(initialState.isAdvertisement || false);
       setSelectedLiveUpdateType(initialState.liveUpdateType || "");
       setLiveUpdateHeadline(initialState.liveUpdateHeadline || "");
       setSelectedNewsCategory(initialState.newsCategory || "");
@@ -304,6 +317,15 @@ const NewsForm: FC<NewsFormProps> = ({
         className="md:flex space-x-3 md:mt-0 h-96 overflow-y-scroll hide-scrollbar mx-5"
       >
         <div className="md:w-[70%] space-y-5">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isAdvertisement}
+              onChange={(e) => setIsAdvertisement(e.target.checked)}
+              className="h-5 w-5 text-gray-300 cursor-pointer"
+            />
+            <span className="text-gray-400">Post as Advertisement</span>
+          </label>
           <div>
             <Label htmlFor="title">Title</Label>
             <input

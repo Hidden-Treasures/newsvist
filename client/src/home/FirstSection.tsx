@@ -4,7 +4,7 @@ import FileDisplay from "@/helper/FileDisplay";
 import TextError from "@/helper/TextError";
 import TextLoader from "@/helper/TextLoader";
 import VideoDisplay from "@/helper/VideoDisplay";
-import getDateString from "@/hooks/useDateString";
+import getDateString, { getLiveDateString } from "@/hooks/useDateString";
 import useNewsFetch from "@/hooks/useNewsFetch";
 import Link from "next/link";
 import React, { FC, useMemo } from "react";
@@ -108,6 +108,8 @@ const FirstSection: FC = () => {
   const midCardsList = midCards.slice(0, 1);
   const midCardsVisual = midCards.slice(1);
 
+  // console.log("liveUpdate[0]::", liveUpdate[0]);
+
   return (
     <div className="flex flex-col md:flex-row">
       {/* Left Section */}
@@ -168,7 +170,11 @@ const FirstSection: FC = () => {
 
           {liveUpdate?.length > 0 && (
             <li className="list-disc text-[1.02rem] my-3 hover:underline">
-              <Link href={`/live/${liveUpdate[0]?.liveUpdateType || ""}`}>
+              <Link
+                href={`/live/${liveUpdate[0]?.newsCategory}/live-news/${
+                  liveUpdate[0]?.liveUpdateType
+                }/${getLiveDateString(liveUpdate[0]?.createdAt)}`}
+              >
                 <div>
                   <span className=" text-red-600 font-bold text-[1rem]">
                     Live Update:{" "}

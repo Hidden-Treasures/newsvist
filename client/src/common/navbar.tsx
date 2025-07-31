@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import React, { FC, useState } from "react";
 
 interface NavbarProps {
-  onSearchButtonClick: () => void;
+  onSearchButtonClick?: () => void;
 }
 
 const Navbar: FC<NavbarProps> = ({ onSearchButtonClick }) => {
@@ -51,7 +51,9 @@ const Navbar: FC<NavbarProps> = ({ onSearchButtonClick }) => {
             <div
               onClick={() => {
                 toggleMenu();
-                onSearchButtonClick();
+                if (onSearchButtonClick) {
+                  onSearchButtonClick();
+                }
               }}
               className="text-white focus:outline-none cursor-pointer "
             >

@@ -738,30 +738,6 @@ const updateSubCategory = (req, res) => __awaiter(void 0, void 0, void 0, functi
     }
 });
 exports.updateSubCategory = updateSubCategory;
-// export const addCategory = async (req: Request, res: Response) => {
-//   const { name, subcategories, parentCategory } = req.body;
-//   console.log("subCat :", subcategories);
-//   console.log("parentCategory :", parentCategory);
-//   try {
-//     if (!subcategories) {
-//       const newCategory = new Category({ title: name });
-//       const savedCategory = await newCategory.save();
-//       res.status(201).json(savedCategory);
-//     } else {
-//       // Find the parent category by its ID
-//       const category = await Category.findById(parentCategory);
-//       console.log("category get :", category);
-//       // Add the new subcategory to the subcategories array
-//       category.items.push({ name: subcategories });
-//       // Save the updated category
-//       const savedCategory = await category.save();
-//       res.status(201).json(savedCategory);
-//     }
-//   } catch (error) {
-//     console.error("Error adding category:", error.message);
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// };
 const assignRole = function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { userId } = req.params;
@@ -1848,7 +1824,7 @@ const mainSearch = function (req, res) {
 };
 exports.mainSearch = mainSearch;
 const getOldestNewsArticleByType = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { liveUpdateType } = req.params;
+    const { liveUpdateType } = req.query;
     const query = liveUpdateType ? { liveUpdateType } : {};
     try {
         const oldestNewsArticle = yield News_1.default.findOne(query)
@@ -1868,7 +1844,7 @@ const getOldestNewsArticleByType = (req, res) => __awaiter(void 0, void 0, void 
 });
 exports.getOldestNewsArticleByType = getOldestNewsArticleByType;
 const getNewsByLiveUpdateType = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { liveUpdateType } = req.params;
+    const { liveUpdateType } = req.query;
     const query = liveUpdateType ? { liveUpdateType, isLiveUpdate: true } : {};
     try {
         const newsArticles = yield News_1.default.find(query)

@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { FC } from "react";
 import { format } from "date-fns";
 import Link from "next/link";
@@ -18,6 +18,7 @@ import UpNext from "@/components/cards/UpNextCard";
 import Share from "@/common/Share";
 import MetaTags from "@/common/MetaTags";
 import CommentList from "@/components/comment/CommentList";
+import { useProfileStore } from "@/store/profileStore";
 
 interface Tag {
   _id: string;
@@ -59,7 +60,8 @@ interface ArticleType {
 
 const PostDetailsPage: FC = () => {
   const { slug } = useParams<{ slug: string }>();
-
+  const router = useRouter();
+  const setProfileUser = useProfileStore((state) => state.setProfileUser);
   const { data, isLoading, isError, error } = useArticleBySlug(slug!);
 
   const article = data?.article;
@@ -102,8 +104,8 @@ const PostDetailsPage: FC = () => {
 
   const cityText =
     article?.city && article.city !== "undefined"
-      ? `${article.city} (NewsVist)`
-      : "(NewsVist)";
+      ? `${article.city} (Newsvist)`
+      : "(Newsvist)";
 
   if (isLoading) {
     return (
@@ -130,6 +132,11 @@ const PostDetailsPage: FC = () => {
     );
   }
 
+  const handleAuthorClick = () => {
+    setProfileUser(article.user || article.editor || {});
+    router.push(`/profiles/${article?.authorName}`);
+  };
+
   return (
     <div className="flex flex-wrap">
       <div className="w-full md:w-3/4 p-4">
@@ -150,20 +157,23 @@ const PostDetailsPage: FC = () => {
           <div className="author-name-date">
             <div className="text-base text-gray-600 pl-2">
               By{" "}
-              <span className="underline">
-                <Link
-                  href={`/profiles/${article?.authorName}`}
-                  // state={{ user: article?.user }}
-                >
-                  {article?.authorName}
-                </Link>
-              </span>
-              <Link
-                href={`/profiles/${article?.authorName}`}
-                //   state={{ user: article?.user }}
+              <span
+                className="underline cursor-pointer"
+                onClick={handleAuthorClick}
               >
-                {article?.editor?.username}
-              </Link>
+                {article?.authorName}
+              </span>
+              {article?.editor?.username && (
+                <>
+                  | Editor:{" "}
+                  <span
+                    className="underline cursor-pointer"
+                    onClick={handleAuthorClick}
+                  >
+                    {article.editor.username}
+                  </span>
+                </>
+              )}
               , NEWSVIST
             </div>
             <div className="text-base text-gray-600 pl-2 flex items-center justify-center">

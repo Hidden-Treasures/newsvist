@@ -3,7 +3,7 @@ import Navbar from "./navbar";
 import Adv from "./Adv";
 
 interface HeaderProps {
-  onSearchButtonClick: () => void;
+  onSearchButtonClick?: () => void;
 }
 
 function Header({ onSearchButtonClick }: HeaderProps) {

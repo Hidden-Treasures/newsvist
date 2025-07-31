@@ -812,33 +812,6 @@ export const updateSubCategory = async (req: Request, res: Response) => {
   }
 };
 
-// export const addCategory = async (req: Request, res: Response) => {
-//   const { name, subcategories, parentCategory } = req.body;
-//   console.log("subCat :", subcategories);
-//   console.log("parentCategory :", parentCategory);
-//   try {
-//     if (!subcategories) {
-//       const newCategory = new Category({ title: name });
-//       const savedCategory = await newCategory.save();
-//       res.status(201).json(savedCategory);
-//     } else {
-//       // Find the parent category by its ID
-//       const category = await Category.findById(parentCategory);
-//       console.log("category get :", category);
-//       // Add the new subcategory to the subcategories array
-//       category.items.push({ name: subcategories });
-
-//       // Save the updated category
-//       const savedCategory = await category.save();
-
-//       res.status(201).json(savedCategory);
-//     }
-//   } catch (error) {
-//     console.error("Error adding category:", error.message);
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// };
-
 export const assignRole = async function (req: Request, res: Response) {
   const { userId } = req.params;
   const { role } = req.body;
@@ -2097,7 +2070,7 @@ export const getOldestNewsArticleByType = async (
   req: Request,
   res: Response
 ) => {
-  const { liveUpdateType } = req.params;
+  const { liveUpdateType } = req.query;
   const query = liveUpdateType ? { liveUpdateType } : {};
   try {
     const oldestNewsArticle = await News.findOne(query)
@@ -2116,7 +2089,7 @@ export const getOldestNewsArticleByType = async (
 };
 
 export const getNewsByLiveUpdateType = async (req: Request, res: Response) => {
-  const { liveUpdateType } = req.params;
+  const { liveUpdateType } = req.query;
   const query = liveUpdateType ? { liveUpdateType, isLiveUpdate: true } : {};
   try {
     const newsArticles = await News.find(query)

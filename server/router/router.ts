@@ -115,12 +115,9 @@ route.post("/login", login);
 route.get("/check-auth", isAuth, checkAuth);
 route.post("/logout", isAuth, logout);
 route.get("/main-search", mainSearch);
-route.get("/getNewsByLiveUpdateType/:liveUpdateType", getNewsByLiveUpdateType);
-route.get("/getAllLiveUpdates", getAllLiveUpdates);
-route.get(
-  "/getOldestNewsArticleByType/:liveUpdateType",
-  getOldestNewsArticleByType
-);
+route.get("/get-news-by-live-update-type", getNewsByLiveUpdateType);
+route.get("/get-all-live-updates", getAllLiveUpdates);
+route.get("/get-oldest-news-article-by-type", getOldestNewsArticleByType);
 
 // ..............News Route...........
 route.post(
