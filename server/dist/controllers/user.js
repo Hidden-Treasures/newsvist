@@ -100,7 +100,6 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     try {
         const { userId } = req.params;
         const { username, phone, email, bio, folder } = req.body;
-        // const userId = (req.user as any)?._id;
         // Find the user by ID
         const user = yield User_1.default.findById(userId);
         if (!user) {

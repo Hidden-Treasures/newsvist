@@ -226,57 +226,6 @@ const NewsForm: FC<NewsFormProps> = ({
     }
   }, [isAdvertisement]);
 
-  //   useEffect(() => {
-  //     const fetchData = async () => {
-  //       try {
-  //         const typeResponse = await getTypes();
-  //         setTypes(typeResponse);
-
-  //         const categoryResponse = await getCategories();
-  //         setNewsCategory(categoryResponse);
-
-  //         if (selectedType === "LiveUpdate") {
-  //           setIsLiveUpdate(true);
-  //           const liveUpdateResponse = await getLastFiveLiveUpdateNewsType();
-  //           setLiveUpdateTypes(
-  //             liveUpdateResponse?.map((item: any) => item?.liveUpdateType)
-  //           );
-  //           if (showHeadLine) {
-  //             const liveUpdateHeadlineResponse = await getLiveUpdateHeadLine(
-  //               showHeadLine
-  //             );
-  //             setLiveUpdateHeadline(liveUpdateHeadlineResponse.data);
-  //           }
-  //         } else {
-  //           setIsLiveUpdate(false);
-  //         }
-  //         if (selectedLiveUpdateType) {
-  //           const selectedLiveUpdateTypeResponse =
-  //             await getLastFiveLiveUpdateNewsType(selectedLiveUpdateType);
-  //           setLiveUpdateHeadline(selectedLiveUpdateTypeResponse);
-  //         }
-  //       } catch (error) {
-  //         console.log(error);
-  //       }
-  //     };
-  //     fetchData();
-  //   }, [selectedType, selectedLiveUpdateType]);
-
-  //   useEffect(() => {
-  //     const fetchSubcategories = async () => {
-  //       try {
-  //         if (selectedNewsCategory) {
-  //           const subcategoryResponse = await getSubCat(selectedNewsCategory);
-  //           setNewsSubCategory(subcategoryResponse);
-  //         }
-  //       } catch (error) {
-  //         console.log(error);
-  //       }
-  //     };
-
-  //     fetchSubcategories();
-  //   }, [selectedNewsCategory]);
-
   useEffect(() => {
     if (initialState) {
       setEditorText(initialState.editorText || "");
@@ -483,8 +432,6 @@ const NewsForm: FC<NewsFormProps> = ({
           <div>
             <Label htmlFor="">Content</Label>
             <TextEditor
-              //   placeholder="Content Text..."
-              // onChange={handleEditorChange}
               content={editorText}
               onChange={(newContent) => setEditorText(newContent)}
               description={editorText}

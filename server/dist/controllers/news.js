@@ -285,7 +285,7 @@ const newsList = function (req, res) {
         try {
             const page = parseInt(typeof req.query.page === "string" ? req.query.page : "1") || 1;
             const pageSize = parseInt(typeof req.query.pageSize === "string" ? req.query.pageSize : "5") || 5;
-            const userId = req.user.userId;
+            const userId = req.user._id;
             const options = {
                 page: page,
                 limit: pageSize,
@@ -341,7 +341,7 @@ const editorNewsList = function (req, res) {
         try {
             const page = parseInt(typeof req.query.page === "string" ? req.query.page : "1") || 1;
             const pageSize = parseInt(typeof req.query.pageSize === "string" ? req.query.pageSize : "5") || 5;
-            const userId = req.user.userId;
+            const userId = req.user._id;
             const options = {
                 page: page,
                 limit: pageSize,
@@ -522,7 +522,7 @@ exports.updateNews = updateNews;
 const getNewsForUpdate = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
     const { newsId } = req.params;
-    const editorId = req.user.userId;
+    const editorId = req.user._id;
     if (!isValidObjectId(newsId))
         return (0, helper_1.sendError)(res, "Id is invalid!");
     const news = yield News_1.default.findById(newsId).populate("editor").populate({
@@ -775,7 +775,6 @@ const users = function (req, res) {
 };
 exports.users = users;
 const deleteUsersManually = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const _id = req.user.userId;
     try {
         const userId = req.params.id;
         // Check if the user exists
@@ -1768,7 +1767,7 @@ const getDeletedNews = (req, res) => __awaiter(void 0, void 0, void 0, function*
     try {
         const page = parseInt(typeof req.query.page === "string" ? req.query.page : "1") || 1;
         const pageSize = parseInt(typeof req.query.pageSize === "string" ? req.query.pageSize : "5") || 5;
-        const userId = req.user.userId;
+        const userId = req.user._id;
         const options = {
             page: page,
             limit: pageSize,

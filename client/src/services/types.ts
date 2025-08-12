@@ -1,4 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
+import { Dispatch, SetStateAction } from "react";
 
 export const queryClient = new QueryClient();
 
@@ -59,6 +60,7 @@ export interface News {
   _id: string;
   title: string;
   name: string | null;
+  authorName: string | null;
   editorText: string | null;
   slug: string | null;
   newsCategory: string;
@@ -75,6 +77,7 @@ export interface News {
     public_id: string;
   };
   createdAt: string;
+  deletedAt: string;
 }
 export interface SearchParams {
   searchText: string;
@@ -106,4 +109,53 @@ export interface GetArticlesQuery {
   tags?: string;
   type?: string;
   excludeIds?: string;
+}
+
+export interface NewsTableProps {
+  data: News[];
+  currentPage: number;
+  setCurrentPage: Dispatch<SetStateAction<number>>;
+  afterDelete: (data?: News[]) => void;
+  afterUpdate: (news?: News) => void;
+}
+
+export interface Biography {
+  _id: string;
+  realName: string;
+  stageName?: string;
+  aliasName?: string;
+  dateOfBirth?: string;
+  hometown?: string;
+  category: "Music Artist" | "Footballer" | "Influencer" | "Creator";
+  label?: string;
+  position?: string;
+  niche?: string;
+  genre?: string;
+  club?: string;
+  platform?: string;
+  socialMedia?: Record<string, string>;
+  bio: string;
+  nationality?: string;
+  gender?: string;
+  occupations?: string[];
+  education?: string[];
+  awards?: string[];
+  notableWorks?: string[];
+  spouse?: string;
+  children?: string[];
+  website?: string;
+  wikipedia?: string;
+  activeYears?: string;
+  placeOfBirth?: string;
+  placeOfDeath?: string;
+  quotes?: string[];
+  references?: string[];
+  image?: string;
+}
+
+export interface BioFormProps {
+  biographyData: Biography | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => Promise<any>;
 }

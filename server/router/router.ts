@@ -159,7 +159,7 @@ route.get(
 route.get("/getHeadline/:liveUpdateType", isAuth, getHeadLine);
 route.get("/getAllNewsCategories", getAllNewsCategories);
 route.get("/getsubcategories/:catName", isAuth, getAllNewsSubCategories);
-route.get("/newsList", isAuth, isAdmin, newsList);
+route.get("/news-list", isAuth, isAdmin, newsList);
 route.get("/allNewsList", isAuth, isAdmin, allNewsList);
 route.get("/editor-newsList", isAuth, isEditor, editorNewsList);
 route.get("/writer-newsList", isAuth, isJournalist, writerNewsList);
@@ -297,6 +297,7 @@ route.post("/subscribe", subscription);
 route.get("/live-scores", liveScores);
 // ..............LIVE SCORE ROUTE END............
 // ..............BIOGRAPHY ROUTE............
+
 route.post(
   "/bio",
   isAuth,
@@ -316,9 +317,10 @@ route.put(
   uploadToCloudinary,
   updateBiography
 );
+route.get("/biography/:bioName", getBioByName);
+route.get("/biography-articles", getArticlesByBiography);
 route.delete("/bio/:id", isAuth, canCreateRead, deleteBiography);
-route.get("/bio/:bioName", getBioByName);
-route.get("/bio-articles", getArticlesByBiography);
+
 // ..............BIOGRAPHY ROUTE END............
 
 export default route;

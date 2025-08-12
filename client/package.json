@@ -9,12 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.1",
     "@tailwindcss/forms": "^0.5.10",
     "@tanstack/react-query": "^5.83.0",
     "@tiptap/extension-code": "^3.0.7",
     "@tiptap/extension-document": "^3.0.7",
     "@tiptap/extension-file-handler": "^3.0.7",
     "@tiptap/extension-image": "^3.0.7",
+    "@tiptap/extension-link": "^3.1.0",
     "@tiptap/extension-list": "^3.0.7",
     "@tiptap/extension-placeholder": "^3.0.7",
     "@tiptap/extension-text-align": "^3.0.7",
@@ -31,6 +33,7 @@
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-fade": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
+    "framer-motion": "^12.23.12",
     "moment": "^2.30.1",
     "next": "15.4.1",
     "next-auth": "^4.24.11",
@@ -39,12 +42,14 @@
     "react-draggable": "^4.5.0",
     "react-dropzone": "^14.3.8",
     "react-feather": "^2.0.10",
+    "react-hook-form": "^7.62.0",
     "react-icons": "^5.5.0",
     "react-paginate": "^8.3.0",
     "react-select": "^5.10.2",
     "react-share": "^5.2.2",
     "react-toastify": "^11.0.5",
     "socket.io-client": "^4.8.1",
+    "zod": "^4.0.17",
     "zustand": "^5.0.7"
   },
   "devDependencies": {

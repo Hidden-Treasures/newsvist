@@ -2,11 +2,9 @@
 
 import { useProfileStore } from "@/store/profileStore";
 import Image from "next/image";
-import { useParams, useSearchParams } from "next/navigation";
 import { FC } from "react";
 
 const ProfilePage: FC = () => {
-  const { username } = useParams();
   const user = useProfileStore((state) => state.profileUser);
 
   const authorName = user?.username;

@@ -8,12 +8,12 @@ import News from "../models/News";
 
 export const createBiography = async (req: Request, res: Response) => {
   try {
-    const existingPerson = await Biography.findOne({
+    const existingBiography = await Biography.findOne({
       realName: req.body.realName,
     });
 
-    if (existingPerson) {
-      return res.status(400).json({ message: "Person already exists" });
+    if (existingBiography) {
+      return res.status(400).json({ message: "Biography already exists" });
     }
 
     let socialMediaObject = {};
@@ -78,7 +78,8 @@ export const getBiographies = async (req: Request, res: Response) => {
 export const getBiographyById = async (req: Request, res: Response) => {
   try {
     const person = await Biography.findById(req.params.id);
-    if (!person) return res.status(404).json({ message: "Person not found" });
+    if (!person)
+      return res.status(404).json({ message: "Biography not found" });
     res.status(200).json(person);
   } catch (error: any) {
     sendError(res, error.message);
@@ -113,15 +114,35 @@ export const updateBiography = async (req: Request, res: Response) => {
       platform,
       socialMedia,
       bio,
+      nationality,
+      gender,
+      occupations,
+      education,
+      awards,
+      notableWorks,
+      spouse,
+      children,
+      activeYears,
+      placeOfBirth,
+      placeOfDeath,
+      quotes,
+      references,
     } = req.body;
 
     const updatedData: Partial<IBiography> = {};
 
+    // Basic Information
     if (realName) updatedData.realName = realName;
     if (stageName) updatedData.stageName = stageName;
     if (aliasName) updatedData.aliasName = aliasName;
-    if (dateOfBirth) updatedData.dateOfBirth = dateOfBirth;
+    if (dateOfBirth) updatedData.dateOfBirth = new Date(dateOfBirth);
     if (hometown) updatedData.hometown = hometown;
+    if (nationality) updatedData.nationality = nationality;
+    if (gender) updatedData.gender = gender;
+    if (placeOfBirth) updatedData.placeOfBirth = placeOfBirth;
+    if (placeOfDeath) updatedData.placeOfDeath = placeOfDeath;
+
+    // Career Information
     if (category) updatedData.category = category;
     if (label) updatedData.label = label;
     if (position) updatedData.position = position;
@@ -129,8 +150,50 @@ export const updateBiography = async (req: Request, res: Response) => {
     if (genre) updatedData.genre = genre;
     if (club) updatedData.club = club;
     if (platform) updatedData.platform = platform;
-    if (bio) updatedData.bio = bio;
+    if (activeYears) updatedData.activeYears = activeYears;
 
+    // Education & Achievements
+    if (education) {
+      try {
+        updatedData.education =
+          typeof education === "string" ? JSON.parse(education) : education;
+      } catch (error) {
+        return res.status(400).json({ message: "Invalid education format" });
+      }
+    }
+
+    if (awards) {
+      try {
+        updatedData.awards =
+          typeof awards === "string" ? JSON.parse(awards) : awards;
+      } catch (error) {
+        return res.status(400).json({ message: "Invalid awards format" });
+      }
+    }
+
+    if (notableWorks) {
+      try {
+        updatedData.notableWorks =
+          typeof notableWorks === "string"
+            ? JSON.parse(notableWorks)
+            : notableWorks;
+      } catch (error) {
+        return res.status(400).json({ message: "Invalid notableWorks format" });
+      }
+    }
+
+    // Personal Life
+    if (spouse) updatedData.spouse = spouse;
+    if (children) {
+      try {
+        updatedData.children =
+          typeof children === "string" ? JSON.parse(children) : children;
+      } catch (error) {
+        return res.status(400).json({ message: "Invalid children format" });
+      }
+    }
+
+    // Online Presence
     if (socialMedia) {
       try {
         updatedData.socialMedia =
@@ -142,6 +205,40 @@ export const updateBiography = async (req: Request, res: Response) => {
       }
     }
 
+    // Biography & Media
+    if (bio) updatedData.bio = bio;
+
+    if (quotes) {
+      try {
+        updatedData.quotes =
+          typeof quotes === "string" ? JSON.parse(quotes) : quotes;
+      } catch (error) {
+        return res.status(400).json({ message: "Invalid quotes format" });
+      }
+    }
+
+    if (references) {
+      try {
+        updatedData.references =
+          typeof references === "string" ? JSON.parse(references) : references;
+      } catch (error) {
+        return res.status(400).json({ message: "Invalid references format" });
+      }
+    }
+
+    // Occupations (special case since frontend uses 'occupation' but model uses 'occupations')
+    if (occupations) {
+      try {
+        updatedData.occupations =
+          typeof occupations === "string"
+            ? JSON.parse(occupations)
+            : occupations;
+      } catch (error) {
+        return res.status(400).json({ message: "Invalid occupations format" });
+      }
+    }
+
+    // Handle image upload if present
     if (req.body.cloudinaryUrls && req.body.cloudinaryUrls.length > 0) {
       const cloudinaryUrls: FileObject[] = req.body.cloudinaryUrls;
       if (cloudinaryUrls.length !== 1) {
@@ -152,6 +249,7 @@ export const updateBiography = async (req: Request, res: Response) => {
 
       const imageFile = cloudinaryUrls[0];
 
+      // Delete old image if it exists
       if (person.public_id) {
         const { result } = await cloudinary.uploader.destroy(person.public_id);
         if (result !== "ok") {
@@ -199,8 +297,25 @@ export const deleteBiography = async (req: Request, res: Response) => {
 
 export const getBioByName = async (req: Request, res: Response) => {
   try {
-    const { bioId } = req.params;
-    const biography = await Biography.findById(bioId);
+    const { bioName } = req.params;
+
+    const safePattern = bioName.replace(/\s+/g, "").split("").join("\\s*");
+
+    const biography = await Biography.findOne({
+      $or: [
+        {
+          stageName: {
+            $regex: new RegExp(`^${safePattern}$`, "i"),
+          },
+        },
+        {
+          realName: {
+            $regex: new RegExp(`^${safePattern}$`, "i"),
+          },
+        },
+      ],
+    });
+
     if (!biography) {
       return res.status(404).json({ message: "Biography not found" });
     }

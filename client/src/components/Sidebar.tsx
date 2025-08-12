@@ -444,7 +444,7 @@ const Sidebar = ({ onAddNewsClick }: SidebarProps) => {
                           <li className="mb-1 last:mb-0">
                             <NavLink
                               end={true}
-                              href="/admin/profile-management/profile"
+                              href="/admin/profile-management/biography"
                               className={({ isActive }) =>
                                 "block transition duration-150 truncate " +
                                 (isActive
@@ -457,7 +457,7 @@ const Sidebar = ({ onAddNewsClick }: SidebarProps) => {
                                   sidebarExpanded && "lg:!opacity-100"
                                 } duration-200`}
                               >
-                                Create Profile
+                                Biography
                               </span>
                             </NavLink>
                           </li>

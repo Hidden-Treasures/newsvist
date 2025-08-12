@@ -9,9 +9,11 @@ import {
   FaAlignLeft,
   FaAlignRight,
   FaImage,
+  FaLink,
   FaListUl,
   FaQuoteLeft,
   FaUnderline,
+  FaUnlink,
   FaYoutube,
 } from "react-icons/fa";
 import { MdFormatStrikethrough, MdUndo } from "react-icons/md";
@@ -259,6 +261,35 @@ export default function Toolbar({ editor, description = "" }: ToolbarProps) {
           onClick={() => editor.chain().focus().redo().run()}
         >
           <IoMdRedo className="w-5 h-5" />
+        </ToolbarButton>
+        <ToolbarButton
+          isActive={editor.isActive("link")}
+          onClick={() => {
+            const previousUrl = editor.getAttributes("link").href || "";
+            const url = prompt("Enter URL", previousUrl);
+            if (url === null) return; // cancel
+            if (url === "") {
+              editor.chain().focus().unsetLink().run(); // remove link
+              return;
+            }
+            editor
+              .chain()
+              .focus()
+              .extendMarkRange("link")
+              .setLink({ href: url })
+              .run();
+          }}
+          title="Insert link"
+        >
+          <FaLink className="w-5 h-5 text-blue-600" />
+        </ToolbarButton>
+
+        <ToolbarButton
+          isActive={false}
+          onClick={() => editor.chain().focus().unsetLink().run()}
+          title="Remove link"
+        >
+          <FaUnlink className="w-5 h-5 text-red-500" />
         </ToolbarButton>
         {/* Color mode toggles */}
         <div className="flex items-center gap-1">

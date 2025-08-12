@@ -218,7 +218,8 @@ const PostDetailsPage: FC = () => {
           <p className="text-base leading-relaxed mt-4 mb-6">
             <span className="font-bold">{cityText} — </span>
             <span
-              className="[&>*]:inline [&>*]:m-0"
+              style={{ whiteSpace: "pre-line" }}
+              className="[&>*]:m-0 [&_a]:text-blue-600 [&_a]:underline [&_a]:cursor-pointer hover:[&_a]:text-blue-800"
               dangerouslySetInnerHTML={{ __html: article?.editorText }}
             />
           </p>

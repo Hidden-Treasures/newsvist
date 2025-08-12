@@ -20,7 +20,7 @@ export default function DashboardPage() {
   return (
     <div>
       {/* Page-specific content */}
-      <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+      <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
       <button
         onClick={displayNewsUploadModal}
         className="px-4 py-2 mt-4 bg-blue-500 text-white rounded"

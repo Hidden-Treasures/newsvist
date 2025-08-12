@@ -97,7 +97,6 @@ export const updateUser = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
     const { username, phone, email, bio, folder } = req.body;
-    // const userId = (req.user as any)?._id;
 
     // Find the user by ID
     const user = await User.findById(userId);

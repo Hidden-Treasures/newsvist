@@ -42,7 +42,7 @@ route.get("/getLastFiveLiveUpdateNewsType", auth_1.isAuth, news_2.getLastFiveLiv
 route.get("/getHeadline/:liveUpdateType", auth_1.isAuth, news_2.getHeadLine);
 route.get("/getAllNewsCategories", news_2.getAllNewsCategories);
 route.get("/getsubcategories/:catName", auth_1.isAuth, news_2.getAllNewsSubCategories);
-route.get("/newsList", auth_1.isAuth, auth_1.isAdmin, news_2.newsList);
+route.get("/news-list", auth_1.isAuth, auth_1.isAdmin, news_2.newsList);
 route.get("/allNewsList", auth_1.isAuth, auth_1.isAdmin, news_2.allNewsList);
 route.get("/editor-newsList", auth_1.isAuth, auth_1.isEditor, news_2.editorNewsList);
 route.get("/writer-newsList", auth_1.isAuth, auth_1.isJournalist, news_2.writerNewsList);
@@ -124,8 +124,8 @@ route.get("/bio", auth_1.isAuth, auth_1.canCreateRead, biography_1.getAllBiograp
 route.get("/biographies", biography_1.getBiographies);
 route.get("/bio/:id", auth_1.isAuth, auth_1.canCreateRead, biography_1.getBiographyById);
 route.put("/bio/:id", auth_1.isAuth, auth_1.canCreateRead, multer_1.upload.single("image"), multer_1.uploadToCloudinary, biography_1.updateBiography);
+route.get("/biography/:bioName", biography_1.getBioByName);
+route.get("/biography-articles", biography_1.getArticlesByBiography);
 route.delete("/bio/:id", auth_1.isAuth, auth_1.canCreateRead, biography_1.deleteBiography);
-route.get("/bio/:bioName", biography_1.getBioByName);
-route.get("/bio-articles", biography_1.getArticlesByBiography);
 // ..............BIOGRAPHY ROUTE END............
 exports.default = route;

@@ -28,13 +28,14 @@ export const checkAuth = async (
 ) => {
   try {
     const { user } = req;
+    const userId = (user as any)._id;
     if (!user) {
       return res.status(401).json({ message: "Unauthorized User" });
     }
 
     res.status(200).json({
       user: {
-        _id: user.userId,
+        _id: userId,
         token: req.cookies.authToken,
         role: user.role,
         username: user.username,

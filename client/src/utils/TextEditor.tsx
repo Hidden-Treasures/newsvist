@@ -20,6 +20,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import Code from "@tiptap/extension-code";
 import { BulletList, ListItem } from "@tiptap/extension-list";
 import Text from "@tiptap/extension-text";
+import Link from "@tiptap/extension-link";
 
 interface TipTapProps {
   onChange: (content: string) => void;
@@ -35,15 +36,6 @@ export default function TextEditor({
   const handleChange = (newContent: string) => {
     onChange(newContent);
   };
-
-  // const CustomKeymap = Extension.create({
-  //   name: "customKeymap",
-  //   addKeyboardShortcuts() {
-  //     return {
-  //       Space: () => false,
-  //     };
-  //   },
-  // });
 
   const editor = useEditor({
     extensions: [
@@ -83,6 +75,11 @@ export default function TextEditor({
         className: "has-focus",
         mode: "all",
       }),
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        linkOnPaste: true,
+      }),
     ],
     autofocus: true,
     content: content || "<p></p>",
@@ -99,12 +96,6 @@ export default function TextEditor({
     },
   });
 
-  // useEffect(() => {
-  //   if (editor) {
-  //     editor.commands.focus();
-  //   }
-  // }, [editor]);
-
   return (
     <div className="w-full mt-6">
       <Toolbar
@@ -115,7 +106,7 @@ export default function TextEditor({
       <EditorContent
         style={{ whiteSpace: "normal", caretColor: "black", minHeight: "80px" }}
         editor={editor}
-        className="prose max-w-full"
+        className="prose max-w-full [&_a]:text-blue-600 [&_a]:underline [&_a]:cursor-pointer [&_a:hover]:text-blue-800"
       />
     </div>
   );

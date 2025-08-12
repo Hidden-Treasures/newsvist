@@ -26,7 +26,7 @@ export default function ModalContainer({
     if (ignoreContainer) return children;
 
     return (
-      <div className="bg-white rounded w-[45rem] h-[40rem] overflow-auto p-2 custom-scroll-bar">
+      <div className="bg-white rounded w-[45rem] h-96 overflow-auto p-2 hide-scrollbar">
         {children}
       </div>
     );

@@ -30,12 +30,13 @@ exports.isAuth = isAuth;
 const checkAuth = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { user } = req;
+        const userId = user._id;
         if (!user) {
             return res.status(401).json({ message: "Unauthorized User" });
         }
         res.status(200).json({
             user: {
-                _id: user.userId,
+                _id: userId,
                 token: req.cookies.authToken,
                 role: user.role,
                 username: user.username,

@@ -284,7 +284,7 @@ export const newsList = async function (req: Request, res: Response) {
       parseInt(
         typeof req.query.pageSize === "string" ? req.query.pageSize : "5"
       ) || 5;
-    const userId = (req.user as any).userId;
+    const userId = (req.user as any)._id;
 
     const options = {
       page: page,
@@ -347,7 +347,7 @@ export const editorNewsList = async function (req: Request, res: Response) {
       parseInt(
         typeof req.query.pageSize === "string" ? req.query.pageSize : "5"
       ) || 5;
-    const userId = req.user.userId;
+    const userId = (req.user as any)._id;
 
     const options = {
       page: page,
@@ -571,7 +571,7 @@ export const updateNews = async (req: Request, res: Response) => {
 
 export const getNewsForUpdate = async (req: Request, res: Response) => {
   const { newsId } = req.params;
-  const editorId = req.user.userId;
+  const editorId = (req.user as any)._id;
 
   if (!isValidObjectId(newsId)) return sendError(res, "Id is invalid!");
 
@@ -848,7 +848,6 @@ export const users = async function (req: Request, res: Response) {
 };
 
 export const deleteUsersManually = async (req: Request, res: Response) => {
-  const _id = req.user.userId;
   try {
     const userId = req.params.id;
 
@@ -2009,7 +2008,7 @@ export const getDeletedNews = async (req: Request, res: Response) => {
       parseInt(
         typeof req.query.pageSize === "string" ? req.query.pageSize : "5"
       ) || 5;
-    const userId = (req.user as any).userId;
+    const userId = (req.user as any)._id;
 
     const options = {
       page: page,

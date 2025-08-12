@@ -332,7 +332,7 @@ export const fetchNewsList = async ({
   itemsPerPage,
 }: PaginationParams): Promise<APIResponse> => {
   try {
-    const { data } = await api.get("/newsList", {
+    const { data } = await api.get("/news-list", {
       withCredentials: true,
       params: { page: currentPage + 1, pageSize: itemsPerPage },
     });
@@ -684,7 +684,7 @@ export const fetchAllLiveUpdates = async () => {
 };
 
 // Common error handler
-function handleError(error: any): APIResponse {
+export function handleError(error: any): APIResponse {
   const axiosError = error as AxiosError;
   if (axiosError.response?.data) return axiosError.response.data as APIResponse;
   return { error: axiosError.message || String(error) };

@@ -6,7 +6,16 @@ export interface IBiography extends Document {
   aliasName?: string;
   dateOfBirth?: Date;
   hometown?: string;
-  category: "Music Artist" | "Footballer" | "Influencer" | "Creator";
+  category:
+    | "Music Artist"
+    | "Footballer"
+    | "Influencer"
+    | "Creator"
+    | "Politician"
+    | "Scientist"
+    | "Actor"
+    | "Entrepreneur"
+    | "Author";
   label?: string;
   position?: string;
   niche?: string;
@@ -26,8 +35,6 @@ export interface IBiography extends Document {
   deathDate?: Date;
   spouse?: string;
   children?: string[];
-  website?: string;
-  wikipedia?: string;
   activeYears?: string;
   placeOfBirth?: string;
   placeOfDeath?: string;
@@ -46,7 +53,17 @@ const BiographySchema: Schema = new Schema(
     hometown: { type: String },
     category: {
       type: String,
-      enum: ["Music Artist", "Footballer", "Influencer", "Creator"],
+      enum: [
+        "Music Artist",
+        "Footballer",
+        "Influencer",
+        "Creator",
+        "Politician",
+        "Scientist",
+        "Actor",
+        "Entrepreneur",
+        "Author",
+      ],
       required: true,
     },
     label: { type: String },
@@ -71,8 +88,6 @@ const BiographySchema: Schema = new Schema(
     deathDate: { type: Date },
     spouse: { type: String },
     children: [{ type: String }],
-    website: { type: String },
-    wikipedia: { type: String },
     activeYears: { type: String },
     placeOfBirth: { type: String },
     placeOfDeath: { type: String },

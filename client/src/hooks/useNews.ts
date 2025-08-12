@@ -26,6 +26,7 @@ import {
   getLiveUpdateHeadLine,
   getNewsAndBuzz,
   getNewsById,
+  getNewsForUpdate,
   getRelatedNews,
   getSubCat,
   getTypes,
@@ -36,6 +37,7 @@ import {
   videoUpload,
 } from "@/services/news";
 import {
+  APIResponse,
   GetRelatedNewsParams,
   PaginationParams,
   queryClient,
@@ -43,7 +45,6 @@ import {
   UseRelatedNewsResult,
 } from "@/services/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
 
 export const useCreateNews = () => {
   return useMutation({
@@ -116,7 +117,7 @@ export const useLiveUpdateHeadline = (showHeadLine: string) => {
 // Paginated News Hooks
 export const useNewsList = (params: PaginationParams) => {
   return useQuery({
-    queryKey: ["newsList", params],
+    queryKey: ["news", params],
     queryFn: () => fetchNewsList(params),
   });
 };
@@ -234,13 +235,25 @@ export const useUpdateNews = () => {
     },
   });
 };
+// Get News For Upload Hook
+export const useGetNewsForUpdate = (id: string | null) => {
+  return useQuery<APIResponse, Error>({
+    queryKey: ["news", "for-update", id],
+    queryFn: () => {
+      if (!id) return Promise.reject(new Error("News ID is required"));
+      return getNewsForUpdate(id);
+    },
+    enabled: !!id,
+    retry: 1,
+  });
+};
 
 // Recycle Bin Hooks
 export const useAddToRecycleBin = () => {
   return useMutation({
     mutationFn: (id: string) => addToRecycleBin(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["news"] });
+      queryClient.invalidateQueries({ queryKey: ["deletedArticles"] });
     },
   });
 };
