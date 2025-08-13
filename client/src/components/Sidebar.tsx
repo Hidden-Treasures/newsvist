@@ -300,46 +300,7 @@ const Sidebar = ({ onAddNewsClick }: SidebarProps) => {
                               </span>
                             </button>
                           </li>
-                          <li className="mb-1 last:mb-0">
-                            <NavLink
-                              end={true}
-                              href="/admin/news-management/image-upload"
-                              className={({ isActive }) =>
-                                "block transition duration-150 truncate " +
-                                (isActive
-                                  ? "text-indigo-500"
-                                  : "text-slate-400 hover:text-slate-200")
-                              }
-                            >
-                              <span
-                                className={`text-sm font-medium lg:opacity-0 ${
-                                  sidebarExpanded && "lg:!opacity-100"
-                                }  duration-200`}
-                              >
-                                Upload Photo
-                              </span>
-                            </NavLink>
-                          </li>
-                          <li className="mb-1 last:mb-0">
-                            <NavLink
-                              end={true}
-                              href="/admin/news-management/image-gallery"
-                              className={({ isActive }) =>
-                                "block transition duration-150 truncate " +
-                                (isActive
-                                  ? "text-indigo-500"
-                                  : "text-slate-400 hover:text-slate-200")
-                              }
-                            >
-                              <span
-                                className={`text-sm font-medium lg:opacity-0 ${
-                                  sidebarExpanded && "lg:!opacity-100"
-                                }  duration-200`}
-                              >
-                                Gallery
-                              </span>
-                            </NavLink>
-                          </li>
+
                           <li className="mb-1 last:mb-0">
                             <NavLink
                               end={true}
@@ -360,26 +321,7 @@ const Sidebar = ({ onAddNewsClick }: SidebarProps) => {
                               </span>
                             </NavLink>
                           </li>
-                          <li className="mb-1 last:mb-0">
-                            <NavLink
-                              end={true}
-                              href="/admin/news-management/allNews"
-                              className={({ isActive }) =>
-                                "block transition duration-150 truncate " +
-                                (isActive
-                                  ? "text-indigo-500"
-                                  : "text-slate-400 hover:text-slate-200")
-                              }
-                            >
-                              <span
-                                className={`text-sm font-medium lg:opacity-0 ${
-                                  sidebarExpanded && "lg:!opacity-100"
-                                } duration-200`}
-                              >
-                                All News
-                              </span>
-                            </NavLink>
-                          </li>
+
                           <li className="mb-1 last:mb-0">
                             <NavLink
                               end={true}
@@ -421,26 +363,7 @@ const Sidebar = ({ onAddNewsClick }: SidebarProps) => {
                               </span>
                             </NavLink>
                           </li>
-                          <li className="mb-1 last:mb-0">
-                            <NavLink
-                              end={true}
-                              href="/admin/news-management/status-update"
-                              className={({ isActive }) =>
-                                "block transition duration-150 truncate " +
-                                (isActive
-                                  ? "text-indigo-500"
-                                  : "text-slate-400 hover:text-slate-200")
-                              }
-                            >
-                              <span
-                                className={`text-sm font-medium lg:opacity-0 ${
-                                  sidebarExpanded && "lg:!opacity-100"
-                                } duration-200`}
-                              >
-                                Manage News
-                              </span>
-                            </NavLink>
-                          </li>
+
                           <li className="mb-1 last:mb-0">
                             <NavLink
                               end={true}
@@ -467,7 +390,7 @@ const Sidebar = ({ onAddNewsClick }: SidebarProps) => {
                   );
                 }}
               </SidebarLinkGroup>
-              <SidebarLinkGroup
+              {/* <SidebarLinkGroup
                 activeCondition={pathname.includes("user-management")}
               >
                 {(handleClick, open) => {
@@ -661,8 +584,8 @@ const Sidebar = ({ onAddNewsClick }: SidebarProps) => {
                     </Fragment>
                   );
                 }}
-              </SidebarLinkGroup>
-              <div className="flex items-center mt-4">
+              </SidebarLinkGroup> */}
+              {/* <div className="flex items-center mt-4">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -700,8 +623,8 @@ const Sidebar = ({ onAddNewsClick }: SidebarProps) => {
                     </NavLink>
                   </div>
                 </span>
-              </div>
-              <div className="flex items-center mt-4">
+              </div> */}
+              {/* <div className="flex items-center mt-4">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -739,7 +662,7 @@ const Sidebar = ({ onAddNewsClick }: SidebarProps) => {
                     </NavLink>
                   </div>
                 </span>
-              </div>
+              </div> */}
             </div>
           </div>
           {/* logout */}
