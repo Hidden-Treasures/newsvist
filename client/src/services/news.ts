@@ -330,9 +330,9 @@ export const getLiveUpdateHeadLine = async (
 export const fetchNewsList = async ({
   currentPage,
   itemsPerPage,
-}: PaginationParams): Promise<APIResponse> => {
+}: PaginationParams) => {
   try {
-    const { data } = await api.get("/news-list", {
+    const { data } = await api.get("/article-list", {
       withCredentials: true,
       params: { page: currentPage + 1, pageSize: itemsPerPage },
     });

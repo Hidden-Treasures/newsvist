@@ -156,10 +156,10 @@ route.get(
   isAuth,
   getLastFiveLiveUpdateNewsType
 );
+route.get("/article-list", isAuth, isAdmin, newsList);
 route.get("/getHeadline/:liveUpdateType", isAuth, getHeadLine);
 route.get("/getAllNewsCategories", getAllNewsCategories);
 route.get("/getsubcategories/:catName", isAuth, getAllNewsSubCategories);
-route.get("/news-list", isAuth, isAdmin, newsList);
 route.get("/allNewsList", isAuth, isAdmin, allNewsList);
 route.get("/editor-newsList", isAuth, isEditor, editorNewsList);
 route.get("/writer-newsList", isAuth, isJournalist, writerNewsList);
