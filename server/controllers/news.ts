@@ -13,6 +13,7 @@ import { FileObject, GetNewsQuery, NewsQuery } from "../types";
 import Image from "../models/Image";
 import Comment from "../models/Comment";
 import slugify from "slugify";
+import { cloudinary } from "../cloud";
 
 declare global {
   namespace Express {
@@ -36,11 +37,6 @@ async function generateUniqueSlug(title: string): Promise<string> {
 
   return slug;
 }
-
-// const { s3Client } = require("../s3Upload");
-const cloudinary = require("../cloud");
-// const { GetObjectCommand, HeadObjectCommand } = require("@aws-sdk/client-s3");
-const { PassThrough } = require("stream");
 const { isValidObjectId } = require("mongoose");
 const { subDays } = require("date-fns");
 const webpush = require("web-push");
@@ -630,34 +626,38 @@ export const addToNewsRecycleBin = async (req: Request, res: Response) => {
 };
 
 export const deleteNews = async (req: Request, res: Response) => {
-  const { newsId } = req.params;
+  try {
+    const { newsId } = req.params;
+    if (!isValidObjectId(newsId)) return sendError(res, "Invalid News ID!");
 
-  if (!isValidObjectId(newsId)) return sendError(res, "Invalid News ID!");
+    const news = await News.findById(newsId);
+    if (!news) return sendError(res, "News Not Found!", 404);
 
-  const news = await News.findById(newsId);
-  if (!news) return sendError(res, "News Not Found!", 404);
+    if (news.file?.public_id) {
+      const { result } = await cloudinary.uploader.destroy(news.file.public_id);
+      if (result !== "ok" && result !== "not found") {
+        console.error("Image deletion failed:", result);
+      }
+    }
 
-  const imageId = news.file?.public_id;
-  if (imageId) {
-    const { result } = await cloudinary.uploader.destroy(imageId);
-    if (result !== "ok")
-      return sendError(res, "Could not remove image from cloud!");
+    if (news.video?.public_id) {
+      const { result } = await cloudinary.uploader.destroy(
+        news.video.public_id,
+        {
+          resource_type: "video",
+        }
+      );
+      if (result !== "ok" && result !== "not found") {
+        console.error("Video deletion failed:", result);
+      }
+    }
+
+    await News.findByIdAndDelete(newsId);
+    res.json({ message: "News removed successfully." });
+  } catch (err) {
+    console.error("Error deleting news:", err);
+    sendError(res, "Something went wrong while deleting news!", 500);
   }
-
-  // removing video
-  const videoId = news.video?.public_id;
-  if (videoId) {
-    const { result } = await cloudinary.uploader.destroy(videoId, {
-      resource_type: "video",
-    });
-    if (result !== "ok")
-      return sendError(res, "Could not remove video from cloud!");
-  }
-  // if (!videoId) return sendError(res, "Could not find video in the cloud!");
-
-  await News.findByIdAndDelete(newsId);
-
-  res.json({ message: "News removed successfully." });
 };
 
 export const restoreNews = async (req: Request, res: Response) => {
