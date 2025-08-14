@@ -60,6 +60,7 @@ const User_1 = __importDefault(require("../models/User"));
 const Image_1 = __importDefault(require("../models/Image"));
 const Comment_1 = __importDefault(require("../models/Comment"));
 const slugify_1 = __importDefault(require("slugify"));
+const cloud_1 = require("../cloud");
 function generateUniqueSlug(title) {
     return __awaiter(this, void 0, void 0, function* () {
         const { nanoid } = yield Promise.resolve().then(() => __importStar(require("nanoid")));
@@ -74,10 +75,6 @@ function generateUniqueSlug(title) {
         return slug;
     });
 }
-// const { s3Client } = require("../s3Upload");
-const cloudinary = require("../cloud");
-// const { GetObjectCommand, HeadObjectCommand } = require("@aws-sdk/client-s3");
-const { PassThrough } = require("stream");
 const { isValidObjectId } = require("mongoose");
 const { subDays } = require("date-fns");
 const webpush = require("web-push");
@@ -479,7 +476,7 @@ const updateNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const imageFiles = cloudinaryUrls.filter((file) => file.url.match(/\.jpg|\.jpeg|\.png$/i));
         // Delete existing video if new video is provided
         if (videoFile && ((_b = news.video) === null || _b === void 0 ? void 0 : _b.public_id)) {
-            const { result } = yield cloudinary.uploader.destroy(news.video.public_id, {
+            const { result } = yield cloud_1.cloudinary.uploader.destroy(news.video.public_id, {
                 resource_type: "video",
             });
             if (result !== "ok") {
@@ -491,7 +488,7 @@ const updateNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         }
         // Delete existing image if new images are provided
         if (imageFiles.length > 0 && ((_c = news.file) === null || _c === void 0 ? void 0 : _c.public_id)) {
-            const { result } = yield cloudinary.uploader.destroy(news.file.public_id);
+            const { result } = yield cloud_1.cloudinary.uploader.destroy(news.file.public_id);
             if (result !== "ok") {
                 return (0, helper_1.sendError)(res, "Could not delete existing image!");
             }
@@ -582,30 +579,34 @@ const addToNewsRecycleBin = (req, res) => __awaiter(void 0, void 0, void 0, func
 exports.addToNewsRecycleBin = addToNewsRecycleBin;
 const deleteNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b;
-    const { newsId } = req.params;
-    if (!isValidObjectId(newsId))
-        return (0, helper_1.sendError)(res, "Invalid News ID!");
-    const news = yield News_1.default.findById(newsId);
-    if (!news)
-        return (0, helper_1.sendError)(res, "News Not Found!", 404);
-    const imageId = (_a = news.file) === null || _a === void 0 ? void 0 : _a.public_id;
-    if (imageId) {
-        const { result } = yield cloudinary.uploader.destroy(imageId);
-        if (result !== "ok")
-            return (0, helper_1.sendError)(res, "Could not remove image from cloud!");
+    try {
+        const { newsId } = req.params;
+        if (!isValidObjectId(newsId))
+            return (0, helper_1.sendError)(res, "Invalid News ID!");
+        const news = yield News_1.default.findById(newsId);
+        if (!news)
+            return (0, helper_1.sendError)(res, "News Not Found!", 404);
+        if ((_a = news.file) === null || _a === void 0 ? void 0 : _a.public_id) {
+            const { result } = yield cloud_1.cloudinary.uploader.destroy(news.file.public_id);
+            if (result !== "ok" && result !== "not found") {
+                console.error("Image deletion failed:", result);
+            }
+        }
+        if ((_b = news.video) === null || _b === void 0 ? void 0 : _b.public_id) {
+            const { result } = yield cloud_1.cloudinary.uploader.destroy(news.video.public_id, {
+                resource_type: "video",
+            });
+            if (result !== "ok" && result !== "not found") {
+                console.error("Video deletion failed:", result);
+            }
+        }
+        yield News_1.default.findByIdAndDelete(newsId);
+        res.json({ message: "News removed successfully." });
     }
-    // removing video
-    const videoId = (_b = news.video) === null || _b === void 0 ? void 0 : _b.public_id;
-    if (videoId) {
-        const { result } = yield cloudinary.uploader.destroy(videoId, {
-            resource_type: "video",
-        });
-        if (result !== "ok")
-            return (0, helper_1.sendError)(res, "Could not remove video from cloud!");
+    catch (err) {
+        console.error("Error deleting news:", err);
+        (0, helper_1.sendError)(res, "Something went wrong while deleting news!", 500);
     }
-    // if (!videoId) return sendError(res, "Could not find video in the cloud!");
-    yield News_1.default.findByIdAndDelete(newsId);
-    res.json({ message: "News removed successfully." });
 });
 exports.deleteNews = deleteNews;
 const restoreNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -1702,7 +1703,7 @@ const deleteImageByUser = (req, res) => __awaiter(void 0, void 0, void 0, functi
         // Delete each image in the files array using its public_id
         const deleteResults = yield Promise.all(image.files.map((file) => __awaiter(void 0, void 0, void 0, function* () {
             console.log("Deleting image with public_id:", file.public_id);
-            const result = yield cloudinary.uploader.destroy(file.public_id);
+            const result = yield cloud_1.cloudinary.uploader.destroy(file.public_id);
             if (result.result !== "ok") {
                 console.error(`Failed to delete image: ${file.public_id}`, result);
                 return result;
