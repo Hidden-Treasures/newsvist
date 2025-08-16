@@ -113,100 +113,102 @@ const FirstSection: FC = () => {
   return (
     <div className="flex flex-col md:flex-row">
       {/* Left Section */}
-      <div className="w-full md:w-2/3 p-4 ">
-        <Link
-          href={`/${
-            breaking?.length > 1
-              ? `${getDateString(breaking[1]?.createdAt)}/${
-                  breaking[1]?.newsCategory
-                }/${breaking[1]?.slug}`
-              : ""
-          }`}
-        >
-          <div className="max-w-screen-md mx-auto p-8">
-            <h1 className="md:text-5xl font-bold mb-4 text-black text-center hover:underline">
-              {loading2 ? (
-                <TextLoader className="mx-auto text-center !bg-transparent" />
-              ) : breaking && breaking.length > 1 ? (
-                breaking[1]?.title
-              ) : error2 ? (
-                <TextError className="mx-auto text-center" />
-              ) : (
-                ""
-              )}
-            </h1>
-            <div className="max-w-screen-md mx-auto mb-3">
-              <div className="aspect-w-16 aspect-h-9">
-                {breaking?.length > 1 && breaking[1]?.video ? (
-                  <VideoDisplay
-                    image={breaking[1]?.file}
-                    video={breaking[1]?.video}
-                    className="h-64 object-cover transition-transform transform group-hover:scale-100 hover:opacity-50"
-                  />
-                ) : (
-                  <FileDisplay file={breaking[1]?.file} />
-                )}
-              </div>
-            </div>
-          </div>
-        </Link>
-
-        <ul className="px-5">
-          {textOnly?.length > 0 && (
-            <li className="list-disc text-[1.02rem] my-3 hover:underline">
-              <Link
-                href={`/${getDateString(textOnly[0]?.createdAt)}/${
-                  textOnly[0]?.newsCategory
-                }/${textOnly[0]?.slug}`}
-              >
-                {loading3 ? (
+      {breaking?.length > 0 && (
+        <div className="w-full md:w-2/3 p-4">
+          <Link
+            href={`/${
+              breaking?.length > 1
+                ? `${getDateString(breaking[1]?.createdAt)}/${
+                    breaking[1]?.newsCategory
+                  }/${breaking[1]?.slug}`
+                : ""
+            }`}
+          >
+            <div className="max-w-screen-md mx-auto p-8">
+              <h1 className="md:text-5xl font-bold mb-4 text-black text-center hover:underline">
+                {loading2 ? (
                   <TextLoader className="mx-auto text-center !bg-transparent" />
+                ) : breaking && breaking.length > 1 ? (
+                  breaking[1]?.title
+                ) : error2 ? (
+                  <TextError className="mx-auto text-center" />
                 ) : (
-                  textOnly[0]?.title
+                  ""
                 )}
-              </Link>
-            </li>
-          )}
-
-          {liveUpdate?.length > 0 && (
-            <li className="list-disc text-[1.02rem] my-3 hover:underline">
-              <Link
-                href={`/live/${liveUpdate[0]?.newsCategory}/live-news/${
-                  liveUpdate[0]?.liveUpdateType
-                }/${getLiveDateString(liveUpdate[0]?.createdAt)}`}
-              >
-                <div>
-                  <span className=" text-red-600 font-bold text-[1rem]">
-                    Live Update:{" "}
-                  </span>
-                  {loading4 ? (
-                    <TextLoader className="mx-auto text-center !bg-transparent" />
+              </h1>
+              <div className="max-w-screen-md mx-auto mb-3">
+                <div className="aspect-w-16 aspect-h-9">
+                  {breaking?.length > 1 && breaking[1]?.video ? (
+                    <VideoDisplay
+                      image={breaking[1]?.file}
+                      video={breaking[1]?.video}
+                      className="h-64 object-cover transition-transform transform group-hover:scale-100 hover:opacity-50"
+                    />
                   ) : (
-                    liveUpdate[0]?.title
+                    <FileDisplay file={breaking[1]?.file} />
                   )}
                 </div>
-              </Link>
-            </li>
-          )}
+              </div>
+            </div>
+          </Link>
 
-          {midCardsList?.map((newsItem, index) => (
-            <Link
-              href={`/${getDateString(newsItem?.createdAt)}/${
-                newsItem?.newsCategory
-              }/${newsItem?.slug}`}
-              key={index}
-            >
-              <li className="list-disc my-3 hover:underline">
-                {loading1 ? (
-                  <TextLoader className="mx-auto text-center !bg-transparent" />
-                ) : (
-                  newsItem?.title
-                )}
+          <ul className="px-5">
+            {textOnly?.length > 0 && (
+              <li className="list-disc text-[1.02rem] my-3 hover:underline">
+                <Link
+                  href={`/${getDateString(textOnly[0]?.createdAt)}/${
+                    textOnly[0]?.newsCategory
+                  }/${textOnly[0]?.slug}`}
+                >
+                  {loading3 ? (
+                    <TextLoader className="mx-auto text-center !bg-transparent" />
+                  ) : (
+                    textOnly[0]?.title
+                  )}
+                </Link>
               </li>
-            </Link>
-          ))}
-        </ul>
-      </div>
+            )}
+
+            {liveUpdate?.length > 0 && (
+              <li className="list-disc text-[1.02rem] my-3 hover:underline">
+                <Link
+                  href={`/live/${liveUpdate[0]?.newsCategory}/live-news/${
+                    liveUpdate[0]?.liveUpdateType
+                  }/${getLiveDateString(liveUpdate[0]?.createdAt)}`}
+                >
+                  <div>
+                    <span className=" text-red-600 font-bold text-[1rem]">
+                      Live Update:{" "}
+                    </span>
+                    {loading4 ? (
+                      <TextLoader className="mx-auto text-center !bg-transparent" />
+                    ) : (
+                      liveUpdate[0]?.title
+                    )}
+                  </div>
+                </Link>
+              </li>
+            )}
+
+            {midCardsList?.map((newsItem, index) => (
+              <Link
+                href={`/${getDateString(newsItem?.createdAt)}/${
+                  newsItem?.newsCategory
+                }/${newsItem?.slug}`}
+                key={index}
+              >
+                <li className="list-disc my-3 hover:underline">
+                  {loading1 ? (
+                    <TextLoader className="mx-auto text-center !bg-transparent" />
+                  ) : (
+                    newsItem?.title
+                  )}
+                </li>
+              </Link>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Mid Section */}
       <div className="w-full md:!w-1/3 p-4 ">
@@ -250,9 +252,12 @@ const FirstSection: FC = () => {
           </>
         </Link>
         <div>
-          <div className="mb-2 mt-4 font-bold text-[19px] hover:underline">
-            Catch up on today's global news
-          </div>
+          {textOnly?.length > 0 && (
+            <div className="mb-2 mt-4 font-bold text-[19px] hover:underline">
+              Catch up on today's global news
+            </div>
+          )}
+
           <div>
             {textOnly?.map((card, index) => (
               <TextOnly

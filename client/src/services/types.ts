@@ -159,3 +159,19 @@ export interface BioFormProps {
   onClose: () => void;
   onSuccess: () => Promise<any>;
 }
+
+export interface PushSubscriptionPayload {
+  endpoint: string;
+  expirationTime: number | null;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+  categories: string[];
+}
+
+export interface GroupedMatchesResponse {
+  success: boolean;
+  message?: string;
+  groupedMatches: Record<string, Record<string, any[]>>;
+}

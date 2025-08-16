@@ -29,7 +29,7 @@ const FifthSection: FC = () => {
     loading: textLoading,
     error: textError,
   } = useNewsFetch({
-    category: undefined,
+    category: "Business",
     subcategory: "Market",
     type: undefined,
     tags: undefined,
@@ -83,7 +83,7 @@ const FifthSection: FC = () => {
       <div className="flex flex-wrap">
         {/* First Column (2 parts) */}
         <div className="w-full sm:w-1/2 md:w-1/3 lg:w-1/3 p-4">
-          <ColumnHead columnHeadTag="NV BUSINESS" />
+          {midCards?.length > 0 && <ColumnHead columnHeadTag="NV BUSINESS" />}
           {midCards &&
             midCards?.map((card, index) => (
               <MidCard
@@ -114,7 +114,7 @@ const FifthSection: FC = () => {
         {/* Second Column (1 part) */}
         <div className="w-full sm:w-1/2 md:w-1/3 lg:w-1/3 p-4">
           {/* Content for the second column */}
-          <ColumnHead columnHeadTag="NV TRAVEL" />
+          {midCard2?.length > 0 && <ColumnHead columnHeadTag="NV TRAVEL" />}
           {midCard2?.map((card, index) => (
             <MidCard
               key={index}

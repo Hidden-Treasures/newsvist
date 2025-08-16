@@ -11,6 +11,7 @@ import {
   fetchApprovedNewsList,
   fetchArticlesByCategory,
   fetchDeletedArticles,
+  fetchLiveScores,
   fetchLiveUpdateNewsByType,
   fetchNewsByTag,
   fetchNewsData,
@@ -39,6 +40,7 @@ import {
 import {
   APIResponse,
   GetRelatedNewsParams,
+  GroupedMatchesResponse,
   PaginationParams,
   queryClient,
   SearchParams,
@@ -366,5 +368,14 @@ export const useAllLiveUpdates = () => {
   return useQuery({
     queryKey: ["allLiveUpdates"],
     queryFn: fetchAllLiveUpdates,
+  });
+};
+
+export const useLiveScores = () => {
+  return useQuery<GroupedMatchesResponse>({
+    queryKey: ["liveScores"],
+    queryFn: fetchLiveScores,
+    refetchInterval: 60 * 1000,
+    staleTime: 30 * 1000,
   });
 };

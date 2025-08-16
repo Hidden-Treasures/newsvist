@@ -171,19 +171,44 @@ export const createNews = async (req: Request, res: Response) => {
     const category = newNews.newsCategory;
 
     const baseUrl = "https://www.newsvist.com";
-    const articleUrl = `${baseUrl}/${year}/${month}/${day}/${category}/${newNews._id}`;
+    const articleUrl = `${baseUrl}/${year}/${month}/${day}/${category}/${newNews.slug}`;
+    const categoryDisplay = newNews.newsCategory || "News";
 
     const payload = JSON.stringify({
-      title: "New Article Available from NewsVist",
-      body: `We are pleased to announce a new article titled "${newNews.title}" has been published. Click here to read it.`,
+      title: `NewsVist: ${categoryDisplay}`,
+      body: `New: "${newNews.title}". Tap to read.`,
       url: articleUrl,
+      image: newNews.file?.url || newNews.images?.[0] || undefined,
     });
 
-    const subscriptions = await Subscription.find();
-    subscriptions.forEach((subscription) => {
-      webpush.sendNotification(subscription, payload).catch((error: any) => {
-        console.error("Error sending notification:", error);
-      });
+    let query: Record<string, any> = {
+      $or: [
+        { categories: { $exists: false } },
+        { categories: { $size: 0 } },
+        { categories: newNews.newsCategory },
+      ],
+    };
+
+    if (newNews.type === "BreakingNews") {
+      query = {};
+    }
+
+    const subscriptions = await Subscription.find(query);
+    subscriptions.forEach((subDoc) => {
+      const subscription = subDoc.toObject();
+      webpush
+        .sendNotification(subscription, payload, { TTL: 60 })
+        .catch(async (err: any) => {
+          if (err.statusCode === 404 || err.statusCode === 410) {
+            console.log(
+              "Removing expired subscription:",
+              subscription.endpoint
+            );
+            await Subscription.deleteOne({ endpoint: subscription.endpoint });
+          } else {
+            console.error("Push error:", err);
+          }
+        });
     });
 
     res.status(201).json({ news: { id: newNews._id, title } });
@@ -534,13 +559,21 @@ export const updateNews = async (req: Request, res: Response) => {
     }
 
     // Delete existing image if new images are provided
-    if (imageFiles.length > 0 && news.file?.public_id) {
-      const { result } = await cloudinary.uploader.destroy(news.file.public_id);
-      if (result !== "ok") {
-        return sendError(res, "Could not delete existing image!");
-      }
-    }
     if (imageFiles.length > 0) {
+      // Delete existing images
+      if (news.file?.public_id) {
+        await cloudinary.uploader.destroy(news.file.public_id);
+      }
+
+      if (news.images && news.images.length > 0) {
+        for (const imgUrl of news.images) {
+          // Extract public_id from URL or keep a mapping in DB
+          const publicId = imgUrl.split("/").pop()?.split(".")[0];
+          if (publicId) await cloudinary.uploader.destroy(publicId);
+        }
+      }
+
+      // Save new images
       news.file = {
         url: imageFiles[0].url,
         public_id: imageFiles[0].public_id,

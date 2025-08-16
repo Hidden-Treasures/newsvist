@@ -147,7 +147,7 @@ const NewsUpload: FC<NewsUploadProps> = ({ visible, onClose }) => {
       {uploadVideo && !videoSelected ? (
         <VideoSelector visible={!videoSelected} handleChange={handleChange} />
       ) : (
-        <NewsForm busy={busy} onSubmit={handleSubmit} btnTitle="" />
+        <NewsForm busy={busy} onSubmit={handleSubmit} btnTitle="Publish" />
       )}
     </ModalContainer>
   );

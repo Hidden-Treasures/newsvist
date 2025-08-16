@@ -8,6 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { FC, useState } from "react";
+import Select from "react-select";
 
 interface NavbarProps {
   onSearchButtonClick?: () => void;
@@ -15,15 +16,19 @@ interface NavbarProps {
 
 const Navbar: FC<NavbarProps> = ({ onSearchButtonClick }) => {
   const [isMenuOpen, setMenuOpen] = useState(false);
+  const [isDropdownOpen, setDropdownOpen] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<any[]>([]);
+
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const { refetch: refetchProfile } = useProfile();
   const { data, isLoading } = useCategories();
-  const categories = data?.slice(0, 13) || [];
 
-  const toggleMenu = () => {
-    setMenuOpen(!isMenuOpen);
-  };
+  const categories = data || [];
+  const mainCategories = categories.slice(0, 8);
+  const extraCategories = categories.slice(8);
+
+  const toggleMenu = () => setMenuOpen(!isMenuOpen);
 
   const staticLinks = [
     { title: "Watch", slug: "Watch" },
@@ -43,11 +48,19 @@ const Navbar: FC<NavbarProps> = ({ onSearchButtonClick }) => {
     }
   };
 
+  const handleCategoryChange = (selected: any) => {
+    setSelectedCategories(selected || []);
+    console.log(
+      "Selected categories:",
+      selected.map((c: any) => c.value)
+    );
+  };
+
   return (
     <>
       <div className="hidden md:block">
         <nav className="flex bg-black p-4">
-          <div className="flex basis-3/4 justify-evenly items-center mr-4">
+          <div className="flex basis-3/4 justify-evenly items-center mr-4 relative">
             <div
               onClick={() => {
                 toggleMenu();
@@ -58,7 +71,6 @@ const Navbar: FC<NavbarProps> = ({ onSearchButtonClick }) => {
               className="text-white focus:outline-none cursor-pointer "
             >
               {isMenuOpen ? (
-                // Close icon (X)
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-6 w-6"
@@ -106,81 +118,76 @@ const Navbar: FC<NavbarProps> = ({ onSearchButtonClick }) => {
             </Link>
             {isLoading ? (
               <>
-                <NavLink
-                  href="/category/US"
-                  className="text-white text-[0.937rem] font-bold"
-                >
-                  US
-                </NavLink>
-                <NavLink
-                  href="/category/World"
-                  className="text-white text-[0.937rem] font-bold"
-                >
-                  World
-                </NavLink>
-                <NavLink
-                  href="/category/Politics"
-                  className="text-white text-[0.937rem] font-bold"
-                >
-                  Politics
-                </NavLink>
-                <NavLink
-                  href="/category/Business"
-                  className="text-white text-[0.937rem] font-bold"
-                >
-                  Business
-                </NavLink>
-                <NavLink
-                  href="/category/Opinion"
-                  className="text-white text-[0.937rem] font-bold"
-                >
-                  Opinion
-                </NavLink>
-                <NavLink
-                  href="/category/Health"
-                  className="text-white text-[0.937rem] font-bold"
-                >
-                  Health
-                </NavLink>
-                <NavLink
-                  href="/category/Entertainment"
-                  className="text-white text-[0.937rem] font-bold"
-                >
-                  Entertainment
-                </NavLink>
-                <NavLink
-                  href="/category/Style"
-                  className="text-white text-[0.937rem] font-bold"
-                >
-                  Style
-                </NavLink>
-                <NavLink
-                  href="/category/Travel"
-                  className="text-white text-[0.937rem] font-bold"
-                >
-                  Travel
-                </NavLink>
-                <NavLink
-                  href="/category/Sports"
-                  className="text-white text-[0.937rem] font-bold"
-                >
-                  Sports
-                </NavLink>
+                {[
+                  "US",
+                  "World",
+                  "Politics",
+                  "Business",
+                  "Opinion",
+                  "Health",
+                  "Entertainment",
+                  "Sports",
+                ].map((cat) => (
+                  <NavLink
+                    key={cat}
+                    href={`/category/${cat}`}
+                    className="text-white text-[0.937rem] font-bold"
+                  >
+                    {cat}
+                  </NavLink>
+                ))}
               </>
             ) : (
-              categories?.map((cat: any) => (
-                <NavLink
-                  key={cat._id}
-                  href={`/category/${cat.title}`}
-                  className="text-white text-[0.937rem] capitalize font-bold"
-                >
-                  {cat.title}
-                </NavLink>
-              ))
+              <>
+                {mainCategories.map((cat: any) => (
+                  <NavLink
+                    key={cat._id}
+                    href={`/category/${cat.title}`}
+                    className="text-white text-[0.937rem] capitalize font-bold"
+                  >
+                    {cat.title}
+                  </NavLink>
+                ))}
+
+                {extraCategories.length > 0 && (
+                  <div className="relative group">
+                    <button className="text-white text-[0.937rem] font-bold flex items-center">
+                      More
+                      <svg
+                        className="w-4 h-4 ml-1"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+
+                    {/* Dropdown - opens on hover via group-hover */}
+                    <div className="absolute left-0 mt-2 w-40 bg-white rounded shadow-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                      {extraCategories.map((cat: any) => (
+                        <NavLink
+                          key={cat._id}
+                          href={`/category/${cat.title}`}
+                          className="block px-4 py-2 text-black text-[0.875rem] capitalize hover:bg-gray-100 hover:rounded-t-sm"
+                        >
+                          {cat.title}
+                        </NavLink>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
           <div className="flex basis-1/4 justify-evenly items-center ">
-            {staticLinks.map((item) => (
+            {/* {staticLinks.map((item) => (
               <NavLink
                 key={item.slug}
                 href={`/category/${item.slug}`}
@@ -188,7 +195,7 @@ const Navbar: FC<NavbarProps> = ({ onSearchButtonClick }) => {
               >
                 {item.title}
               </NavLink>
-            ))}
+            ))} */}
             <div className=" cursor-pointer" onClick={onSearchButtonClick}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -317,66 +324,24 @@ const Navbar: FC<NavbarProps> = ({ onSearchButtonClick }) => {
           </NavLink>
           {isLoading ? (
             <>
-              <NavLink
-                href="/category/Nigeria"
-                className="text-white text-[0.937rem] font-bold"
-              >
-                NG
-              </NavLink>
-              <NavLink
-                href="/category/World"
-                className="text-white text-[0.937rem] font-bold"
-              >
-                World
-              </NavLink>
-              <NavLink
-                href="/category/Politics"
-                className="text-white text-[0.937rem] font-bold"
-              >
-                Politics
-              </NavLink>
-              <NavLink
-                href="/category/Business"
-                className="text-white text-[0.937rem] font-bold"
-              >
-                Business
-              </NavLink>
-              <NavLink
-                href="/category/Opinion"
-                className="text-white text-[0.937rem] font-bold"
-              >
-                Opinion
-              </NavLink>
-              <NavLink
-                href="/category/Health"
-                className="text-white text-[0.937rem] font-bold"
-              >
-                Health
-              </NavLink>
-              <NavLink
-                href="/category/Entertainment"
-                className="text-white text-[0.937rem] font-bold"
-              >
-                Entertainment
-              </NavLink>
-              <NavLink
-                href="/category/Style"
-                className="text-white text-[0.937rem] font-bold"
-              >
-                Style
-              </NavLink>
-              <NavLink
-                href="/category/Travel"
-                className="text-white text-[0.937rem] font-bold"
-              >
-                Travel
-              </NavLink>
-              <NavLink
-                href="/category/Sports"
-                className="text-white text-[0.937rem] font-bold"
-              >
-                Sports
-              </NavLink>
+              {[
+                "US",
+                "World",
+                "Politics",
+                "Business",
+                "Opinion",
+                "Health",
+                "Entertainment",
+                "Sports",
+              ].map((cat) => (
+                <NavLink
+                  key={cat}
+                  href={`/category/${cat}`}
+                  className="text-white text-[0.937rem] font-bold"
+                >
+                  {cat}
+                </NavLink>
+              ))}
             </>
           ) : (
             categories.map((cat: any) => (

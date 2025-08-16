@@ -3,6 +3,7 @@ import "./globals.css";
 import { ToastContainer } from "react-toastify";
 import Providers from "./Providers";
 import { ReactNode } from "react";
+import PushNotification from "@/components/PushNotification";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,10 +20,10 @@ export const metadata = {
   description:
     "Stay informed with Newsvist – delivering breaking news, in-depth analysis, and stories that shape the world. Trusted, timely, and impactful journalism.",
   metadataBase: new URL(
-    process.env.NEXTAUTH_URL ??
+    process.env.NEXT_PUBLIC_AUTH_URL ??
       (process.env.NODE_ENV === "development"
         ? "http://localhost:3000"
-        : "https://newsvist.com")
+        : process.env.NEXT_PUBLIC_AUTH_URL!)
   ),
 
   openGraph: {

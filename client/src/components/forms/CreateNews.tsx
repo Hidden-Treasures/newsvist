@@ -153,11 +153,10 @@ const CreateNewsForm: FC = () => {
         <div>
           <NewsForm
             busy={busy}
-            onSubmit={(formData) => {
-              if (!busy) handleSubmit(formData, () => resetForm());
-            }}
-            btnTitle=""
+            onSubmit={handleSubmit}
+            btnTitle="Publish"
             videoUploaded={videoUploaded}
+            initialState={newsUploaded ? {} : undefined}
           />
         </div>
       )}

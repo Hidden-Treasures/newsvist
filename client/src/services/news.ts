@@ -6,6 +6,7 @@ import {
   CreateNewsResponse,
   GetArticlesQuery,
   GetRelatedNewsParams,
+  GroupedMatchesResponse,
   News,
   PaginationParams,
   RelatedNewsResponse,
@@ -680,6 +681,11 @@ export const fetchOldestLiveUpdateNewsArticle = async (
 
 export const fetchAllLiveUpdates = async () => {
   const response = await api.get(`/get-all-live-updates`);
+  return response.data;
+};
+
+export const fetchLiveScores = async (): Promise<GroupedMatchesResponse> => {
+  const response = await api.get("/live-scores");
   return response.data;
 };
 

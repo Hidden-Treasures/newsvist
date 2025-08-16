@@ -21,10 +21,6 @@ export default function NewsUpdate({
   onSuccess,
   onClose,
 }: NewsUpdateProps) {
-  const [busy, setBusy] = useState(false);
-  const [ready, setReady] = useState(false);
-  const [selectedNews, setSelectedNews] = useState<News | null>(null);
-
   const { data, isLoading, isSuccess, error } = useGetNewsForUpdate(newsId);
 
   const { mutate: updateNewsMutation, isPending: isUpdating } = useUpdateNews();

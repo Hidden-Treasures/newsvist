@@ -251,6 +251,8 @@ const NewsForm: FC<NewsFormProps> = ({
       setBioName(initialState?.name?.stageName || "");
       setSelectedImageForUI(initialState.file || "");
       setFile(null);
+    } else {
+      resetForm();
     }
   }, [initialState]);
 
@@ -473,7 +475,7 @@ const NewsForm: FC<NewsFormProps> = ({
 
           <Submit
             busy={busy}
-            value={"Publish"}
+            value={btnTitle}
             onClick={handleSubmit}
             type="button"
           />

@@ -2,6 +2,7 @@
 
 import Footer from "@/common/Footer";
 import Header from "@/common/header";
+import PushNotification from "@/components/PushNotification";
 import FifthSection from "@/home/FifthSection";
 import FirstSection from "@/home/FirstSection";
 import FourthSection from "@/home/FourthSection";
@@ -19,6 +20,7 @@ export default function Home() {
 
   return (
     <div className="overflow-x-hidden overflow-y-scroll hide-scrollbar">
+      <PushNotification />
       <Header onSearchButtonClick={onSearchButtonClick} />
       {!showFooterSearch && (
         <>

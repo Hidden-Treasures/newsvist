@@ -117,7 +117,7 @@ const SixthSection: FC = () => {
       <div className="flex flex-wrap">
         {/* First Column (2 parts) */}
         <div className="w-full sm:w-1/2 md:w-1/3 lg:w-1/3 p-4">
-          <ColumnHead columnHeadTag="SPORT" />
+          {midCards?.length > 0 && <ColumnHead columnHeadTag="SPORT" />}
           {midCards &&
             midCards?.map((card, index) => (
               <MidCard
@@ -148,7 +148,7 @@ const SixthSection: FC = () => {
         {/* Second Column (1 part) */}
         <div className="w-full sm:w-1/2 md:w-1/3 lg:w-1/3 p-4">
           {/* Content for the second column */}
-          <ColumnHead columnHeadTag="STYLE" />
+          {midCard2?.length > 0 && <ColumnHead columnHeadTag="STYLE" />}
           {midCard2 &&
             midCard2?.map((card, index) => (
               <MidCard
@@ -179,7 +179,9 @@ const SixthSection: FC = () => {
         {/* Third Column (1 part) */}
         <div className="w-full sm:w-1/2 md:w-1/3 lg:w-1/3 p-4">
           {/* Content for the third column */}
-          <ColumnHead columnHeadTag="SEXUAL HEALTH & WELLNESS" />
+          {midCard3?.length > 0 && (
+            <ColumnHead columnHeadTag="SEXUAL HEALTH & WELLNESS" />
+          )}
           {midCard3 &&
             midCard3?.map((card, index) => (
               <MidCard

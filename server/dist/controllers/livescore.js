@@ -10,36 +10,55 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.liveScores = void 0;
-const liveScores = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const response = yield fetch("https://api.football-data.org/v4/matches", {
-            headers: {
-                "X-Auth-Token": process.env.FOOTBALL_API_TOKEN,
-            },
-        });
-        if (!response.ok) {
-            return res
-                .status(response.status)
-                .json({ error: "Failed to fetch matches" });
+const groupMatches = (matches) => {
+    return matches.reduce((acc, match) => {
+        const { competition, stage } = match;
+        if (!acc[competition.name]) {
+            acc[competition.name] = {};
         }
-        const data = yield response.json();
-        const allMatches = data.matches;
-        const groupedMatches = allMatches.reduce((acc, match) => {
-            const competitionName = match.competition.name;
-            const stageName = match.stage;
-            if (!acc[competitionName]) {
-                acc[competitionName] = {};
-            }
-            if (!acc[competitionName][stageName]) {
-                acc[competitionName][stageName] = [];
-            }
-            acc[competitionName][stageName].push(match);
-            return acc;
-        }, {});
-        return res.json({ groupedMatches });
+        if (!acc[competition.name][stage]) {
+            acc[competition.name][stage] = [];
+        }
+        acc[competition.name][stage].push(match);
+        return acc;
+    }, {});
+};
+const fetchLiveScores = () => __awaiter(void 0, void 0, void 0, function* () {
+    if (!process.env.FOOTBALL_API_TOKEN) {
+        throw new Error("Football API token is missing in environment variables.");
+    }
+    const response = yield fetch("https://api.football-data.org/v4/matches", {
+        headers: { "X-Auth-Token": process.env.FOOTBALL_API_TOKEN },
+    });
+    if (!response.ok) {
+        const errorText = yield response.text();
+        throw new Error(`Failed to fetch matches: ${response.status} ${errorText}`);
+    }
+    return response.json();
+});
+const liveScores = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const data = yield fetchLiveScores();
+        if (!((_a = data === null || data === void 0 ? void 0 : data.matches) === null || _a === void 0 ? void 0 : _a.length)) {
+            return res.status(200).json({
+                success: true,
+                message: "No matches available at the moment.",
+                groupedMatches: {},
+            });
+        }
+        const groupedMatches = groupMatches(data.matches);
+        return res.status(200).json({
+            success: true,
+            groupedMatches,
+        });
     }
     catch (error) {
-        return res.status(500).json({ error: "An unexpected error occurred" });
+        console.error("LiveScores Error:", error.message);
+        return res.status(500).json({
+            success: false,
+            error: error.message || "An unexpected error occurred.",
+        });
     }
 });
 exports.liveScores = liveScores;

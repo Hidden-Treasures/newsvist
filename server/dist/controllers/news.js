@@ -109,7 +109,7 @@ const getLastFiveLiveUpdateNewsType = function (req, res) {
 };
 exports.getLastFiveLiveUpdateNewsType = getLastFiveLiveUpdateNewsType;
 const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b;
+    var _a, _b, _c, _d;
     try {
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
         const role = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;
@@ -171,17 +171,38 @@ const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const day = String(newNews.createdAt.getDate()).padStart(2, "0");
         const category = newNews.newsCategory;
         const baseUrl = "https://www.newsvist.com";
-        const articleUrl = `${baseUrl}/${year}/${month}/${day}/${category}/${newNews._id}`;
+        const articleUrl = `${baseUrl}/${year}/${month}/${day}/${category}/${newNews.slug}`;
+        const categoryDisplay = newNews.newsCategory || "News";
         const payload = JSON.stringify({
-            title: "New Article Available from NewsVist",
-            body: `We are pleased to announce a new article titled "${newNews.title}" has been published. Click here to read it.`,
+            title: `NewsVist: ${categoryDisplay}`,
+            body: `New: "${newNews.title}". Tap to read.`,
             url: articleUrl,
+            image: ((_c = newNews.file) === null || _c === void 0 ? void 0 : _c.url) || ((_d = newNews.images) === null || _d === void 0 ? void 0 : _d[0]) || undefined,
         });
-        const subscriptions = yield Subscription_1.default.find();
-        subscriptions.forEach((subscription) => {
-            webpush.sendNotification(subscription, payload).catch((error) => {
-                console.error("Error sending notification:", error);
-            });
+        let query = {
+            $or: [
+                { categories: { $exists: false } },
+                { categories: { $size: 0 } },
+                { categories: newNews.newsCategory },
+            ],
+        };
+        if (newNews.type === "BreakingNews") {
+            query = {};
+        }
+        const subscriptions = yield Subscription_1.default.find(query);
+        subscriptions.forEach((subDoc) => {
+            const subscription = subDoc.toObject();
+            webpush
+                .sendNotification(subscription, payload, { TTL: 60 })
+                .catch((err) => __awaiter(void 0, void 0, void 0, function* () {
+                if (err.statusCode === 404 || err.statusCode === 410) {
+                    console.log("Removing expired subscription:", subscription.endpoint);
+                    yield Subscription_1.default.deleteOne({ endpoint: subscription.endpoint });
+                }
+                else {
+                    console.error("Push error:", err);
+                }
+            }));
         });
         res.status(201).json({ news: { id: newNews._id, title } });
     }
@@ -442,7 +463,7 @@ exports.writerNewsList = writerNewsList;
 //   }
 // };
 const updateNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d;
+    var _a, _b, _c, _d, _e;
     const { newsId } = req.params;
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     if (!isValidObjectId(newsId))
@@ -487,13 +508,20 @@ const updateNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             news.video = { url: videoFile.url, public_id: videoFile.public_id };
         }
         // Delete existing image if new images are provided
-        if (imageFiles.length > 0 && ((_c = news.file) === null || _c === void 0 ? void 0 : _c.public_id)) {
-            const { result } = yield cloud_1.cloudinary.uploader.destroy(news.file.public_id);
-            if (result !== "ok") {
-                return (0, helper_1.sendError)(res, "Could not delete existing image!");
-            }
-        }
         if (imageFiles.length > 0) {
+            // Delete existing images
+            if ((_c = news.file) === null || _c === void 0 ? void 0 : _c.public_id) {
+                yield cloud_1.cloudinary.uploader.destroy(news.file.public_id);
+            }
+            if (news.images && news.images.length > 0) {
+                for (const imgUrl of news.images) {
+                    // Extract public_id from URL or keep a mapping in DB
+                    const publicId = (_d = imgUrl.split("/").pop()) === null || _d === void 0 ? void 0 : _d.split(".")[0];
+                    if (publicId)
+                        yield cloud_1.cloudinary.uploader.destroy(publicId);
+                }
+            }
+            // Save new images
             news.file = {
                 url: imageFiles[0].url,
                 public_id: imageFiles[0].public_id,
@@ -508,7 +536,7 @@ const updateNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         news: {
             id: news._id,
             title: news.title,
-            file: (_d = news.file) === null || _d === void 0 ? void 0 : _d.url,
+            file: (_e = news.file) === null || _e === void 0 ? void 0 : _e.url,
             newsCategory: news.newsCategory,
             type: news.type,
             name: news.name,

@@ -1,39 +1,77 @@
 import { Request, Response } from "express";
 
-export const liveScores = async (req: Request, res: Response) => {
-  try {
-    const response = await fetch("https://api.football-data.org/v4/matches", {
-      headers: {
-        "X-Auth-Token": process.env.FOOTBALL_API_TOKEN!,
-      },
-    });
+interface Match {
+  competition: { name: string };
+  stage: string;
+  [key: string]: any;
+}
 
-    if (!response.ok) {
-      return res
-        .status(response.status)
-        .json({ error: "Failed to fetch matches" });
-    }
+interface ApiResponse {
+  matches: Match[];
+}
 
-    const data = await response.json();
-    const allMatches = data.matches;
+const groupMatches = (matches: Match[]) => {
+  return matches.reduce<Record<string, Record<string, Match[]>>>(
+    (acc, match) => {
+      const { competition, stage } = match;
 
-    const groupedMatches = allMatches.reduce((acc: any, match: any) => {
-      const competitionName = match.competition.name;
-      const stageName = match.stage;
-
-      if (!acc[competitionName]) {
-        acc[competitionName] = {};
+      if (!acc[competition.name]) {
+        acc[competition.name] = {};
       }
-      if (!acc[competitionName][stageName]) {
-        acc[competitionName][stageName] = [];
+
+      if (!acc[competition.name][stage]) {
+        acc[competition.name][stage] = [];
       }
-      acc[competitionName][stageName].push(match);
+
+      acc[competition.name][stage].push(match);
 
       return acc;
-    }, {});
+    },
+    {}
+  );
+};
 
-    return res.json({ groupedMatches });
-  } catch (error) {
-    return res.status(500).json({ error: "An unexpected error occurred" });
+const fetchLiveScores = async (): Promise<ApiResponse> => {
+  if (!process.env.FOOTBALL_API_TOKEN) {
+    throw new Error("Football API token is missing in environment variables.");
+  }
+
+  const response = await fetch("https://api.football-data.org/v4/matches", {
+    headers: { "X-Auth-Token": process.env.FOOTBALL_API_TOKEN },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to fetch matches: ${response.status} ${errorText}`);
+  }
+
+  return response.json();
+};
+
+export const liveScores = async (req: Request, res: Response) => {
+  try {
+    const data = await fetchLiveScores();
+
+    if (!data?.matches?.length) {
+      return res.status(200).json({
+        success: true,
+        message: "No matches available at the moment.",
+        groupedMatches: {},
+      });
+    }
+
+    const groupedMatches = groupMatches(data.matches);
+
+    return res.status(200).json({
+      success: true,
+      groupedMatches,
+    });
+  } catch (error: any) {
+    console.error("LiveScores Error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      error: error.message || "An unexpected error occurred.",
+    });
   }
 };
