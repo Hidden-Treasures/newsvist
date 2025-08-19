@@ -2,7 +2,6 @@ import LiveUpdateClient from "@/components/LiveUpdateClient";
 
 export interface LiveNewsProps {
   params: {
-    newsCategory: string;
     liveUpdateType: string;
     day: string;
     month: string;

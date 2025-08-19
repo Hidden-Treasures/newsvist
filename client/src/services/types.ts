@@ -175,3 +175,41 @@ export interface GroupedMatchesResponse {
   message?: string;
   groupedMatches: Record<string, Record<string, any[]>>;
 }
+
+export type LiveEvent = {
+  _id: string;
+  liveUpdateType: string;
+  title: string;
+  headline: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type LiveEntry = {
+  _id: string;
+  event: LiveEvent;
+  title: string;
+  content: string;
+  author?: {
+    _id: string;
+    username: string;
+    profilePhoto?: string;
+  };
+  file?: {
+    url: string;
+    public_id: string;
+    responsive: string[];
+  };
+  video?: {
+    url: string;
+    public_id: string;
+  };
+
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type GetLiveEventEntriesResponse = {
+  event: LiveEvent;
+  entries: LiveEntry[];
+};

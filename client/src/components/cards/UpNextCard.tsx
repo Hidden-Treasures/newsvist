@@ -1,3 +1,5 @@
+"use client";
+
 import FileDisplay from "@/helper/FileDisplay";
 import VideoDisplay from "@/helper/VideoDisplay";
 import getDateString from "@/hooks/useDateString";

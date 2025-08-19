@@ -267,9 +267,9 @@ export default function Toolbar({ editor, description = "" }: ToolbarProps) {
           onClick={() => {
             const previousUrl = editor.getAttributes("link").href || "";
             const url = prompt("Enter URL", previousUrl);
-            if (url === null) return; // cancel
+            if (url === null) return;
             if (url === "") {
-              editor.chain().focus().unsetLink().run(); // remove link
+              editor.chain().focus().unsetLink().run();
               return;
             }
             editor
@@ -292,7 +292,7 @@ export default function Toolbar({ editor, description = "" }: ToolbarProps) {
           <FaUnlink className="w-5 h-5 text-red-500" />
         </ToolbarButton>
         {/* Color mode toggles */}
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
           <button
             onClick={() => setColorMode("text")}
             className={`p-2 rounded-lg ${
@@ -312,7 +312,7 @@ export default function Toolbar({ editor, description = "" }: ToolbarProps) {
             <RiPaintFill className="w-5 h-5" />
           </button>
           {/* Background Color Controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <input
               type="color"
               onInput={(event) =>

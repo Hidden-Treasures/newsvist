@@ -22,10 +22,13 @@ const MongoDBStore = connectMongoDBSession(session);
 
 interface ServerToClientEvents {
   liveNewsUpdate: (data: LiveUpdatePayload) => void;
+  "new-entry": (entry: any) => void;
 }
 
 interface ClientToServerEvents {
   liveUpdate: (data: LiveUpdatePayload) => void;
+  "join-room": (room: string) => void;
+  "leave-room": (room: string) => void;
 }
 
 interface InterServerEvents {
@@ -111,6 +114,24 @@ io.on("connection", async (socket) => {
   socket.on("liveUpdate", async (data) => {
     // console.log("Live News Received:", data);
     io.emit("liveNewsUpdate", data);
+  });
+
+  io.on("connection", (socket) => {
+    console.log("A user connected");
+
+    socket.on("join-room", (room: string) => {
+      socket.join(room);
+      console.log(`User joined room: ${room}`);
+    });
+
+    socket.on("leave-room", (room: string) => {
+      socket.leave(room);
+      console.log(`User left room: ${room}`);
+    });
+
+    socket.on("disconnect", () => {
+      console.log("A user disconnected");
+    });
   });
 
   socket.on("disconnect", () => {

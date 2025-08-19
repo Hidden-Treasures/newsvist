@@ -84,6 +84,20 @@ io.on("connection", (socket) => __awaiter(void 0, void 0, void 0, function* () {
         // console.log("Live News Received:", data);
         io.emit("liveNewsUpdate", data);
     }));
+    io.on("connection", (socket) => {
+        console.log("A user connected");
+        socket.on("join-room", (room) => {
+            socket.join(room);
+            console.log(`User joined room: ${room}`);
+        });
+        socket.on("leave-room", (room) => {
+            socket.leave(room);
+            console.log(`User left room: ${room}`);
+        });
+        socket.on("disconnect", () => {
+            console.log("A user disconnected");
+        });
+    });
     socket.on("disconnect", () => {
         console.log("A user disconnected");
     });

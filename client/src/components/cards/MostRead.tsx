@@ -1,3 +1,5 @@
+"use client";
+
 import api from "@/app/lib/api";
 import getDateString from "@/hooks/useDateString";
 import Link from "next/link";

@@ -5,8 +5,11 @@ import {
   Category,
   CreateNewsResponse,
   GetArticlesQuery,
+  GetLiveEventEntriesResponse,
   GetRelatedNewsParams,
   GroupedMatchesResponse,
+  LiveEntry,
+  LiveEvent,
   News,
   PaginationParams,
   RelatedNewsResponse,
@@ -313,15 +316,10 @@ export const getLastFiveLiveUpdateNewsType = async (): Promise<APIResponse> => {
 
 // getLiveUpdateHeadLine
 export const getLiveUpdateHeadLine = async (
-  showHeadLine: string
+  selectedLiveUpdateType: string
 ): Promise<APIResponse> => {
   try {
-    const { data } = await api.get(`/getHeadline/${showHeadLine}`, {
-      withCredentials: true,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const { data } = await api.get(`/getHeadline/${selectedLiveUpdateType}`);
     return data;
   } catch (error: any) {
     return handleError(error);
@@ -445,7 +443,6 @@ export const getUpNextArticle = async (slug: string): Promise<APIResponse> => {
       withCredentials: true,
       headers: { "Content-Type": "application/json" },
     });
-    console.log("🚀 ~ getUpNextArticle ~ data:", data);
     return data.upNextArticles;
   } catch (error) {
     return handleError(error);
@@ -453,10 +450,7 @@ export const getUpNextArticle = async (slug: string): Promise<APIResponse> => {
 };
 export const getArticleBySlug = async (slug: string): Promise<APIResponse> => {
   try {
-    const { data } = await api.get(`/getNewsBySlug/${slug}`, {
-      withCredentials: true,
-      headers: { "Content-Type": "application/json" },
-    });
+    const { data } = await api.get(`/getNewsBySlug/${slug}`);
     return data;
   } catch (error) {
     return handleError(error);
@@ -688,6 +682,40 @@ export const fetchLiveScores = async (): Promise<GroupedMatchesResponse> => {
   const response = await api.get("/live-scores");
   return response.data;
 };
+
+export const getAllLiveEvents = async (): Promise<LiveEvent[]> => {
+  const res = await api.get("/live-events");
+  return res.data;
+};
+
+export const createLiveEvent = async (payload: {
+  liveUpdateType: string;
+  headline: string;
+}) => {
+  const { data } = await api.post<LiveEvent>("/live-event", payload);
+  return data;
+};
+
+export const addLiveUpdateEntry = async (type: string, formData: FormData) => {
+  const { data } = await api.post<LiveEntry>(
+    `/live-event/${encodeURIComponent(type)}/entry`,
+    formData,
+    {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+  return data;
+};
+
+export async function getLiveEventEntries(type: string) {
+  const { data } = await api.get<GetLiveEventEntriesResponse>(
+    `/live-event/${encodeURIComponent(type)}`
+  );
+  return data;
+}
 
 // Common error handler
 export function handleError(error: any): APIResponse {

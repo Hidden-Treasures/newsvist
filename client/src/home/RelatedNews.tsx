@@ -1,3 +1,5 @@
+"use client";
+
 import RelatedCard from "@/components/cards/RelatedCard";
 import getDateString from "@/hooks/useDateString";
 import { useRelatedNews } from "@/hooks/useNews";

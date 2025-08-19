@@ -1,20 +1,24 @@
 import {
   addCategory,
+  addLiveUpdateEntry,
   AllCategoriesWithSubCategory,
   approveNews,
   assignRole,
   createImage,
+  createLiveEvent,
   deleteCategory,
   deleteImageByUser,
   deleteSubCategory,
   deleteUsersManually,
   getAdvertisements,
   getAllImages,
+  getAllLiveEvents,
   getAnalytics,
   getApprovedNews,
   getImageArticlesByCategory,
   getImages,
   getImagesByCategoryOrTag,
+  getLiveEventEntries,
   getMostReadArticles,
   getNews,
   getNewsAndBuzz,
@@ -67,6 +71,7 @@ import {
 } from "../controllers/news";
 import {
   bulkUpdateUserStatus,
+  getProfileByUsername,
   getUserAnalytics,
   getUserDetails,
   initiatePasswordReset,
@@ -267,8 +272,9 @@ route.get("/comments/:articleId", getComments);
 // ..............COMMENT ROUTE ...........
 
 // ..............USER ROUTE............
-// Route for updating user profile
+// Route for user profiles
 route.get("/my-profile", isAuth, getUserDetails);
+route.get("/profiles/:username", isAuth, getProfileByUsername);
 route.put(
   "/me/:userId",
   isAuth,
@@ -320,7 +326,19 @@ route.put(
 route.get("/biography/:bioName", getBioByName);
 route.get("/biography-articles", getArticlesByBiography);
 route.delete("/bio/:id", isAuth, canCreateRead, deleteBiography);
-
 // ..............BIOGRAPHY ROUTE END............
+
+// LIVE UPDATE
+route.post("/live-event", isAuth, createLiveEvent);
+route.post(
+  "/live-event/:type/entry",
+  isAuth,
+  upload.single("file"),
+  validate,
+  uploadToCloudinary,
+  addLiveUpdateEntry
+);
+route.get("/live-event/:type", isAuth, getLiveEventEntries);
+route.get("/live-events", isAuth, getAllLiveEvents);
 
 export default route;

@@ -8,6 +8,7 @@ import NewsForm from "./forms/News";
 import ModalContainer from "./modals/Container";
 import { useCreateNews, useVideoUpload } from "@/hooks/useNews";
 import { Colors } from "@/utils/Colors";
+import NewsOrLiveUpdate from "./forms/NewsOrLiveUpdate";
 
 interface NewsUploadProps {
   visible: boolean;
@@ -147,7 +148,11 @@ const NewsUpload: FC<NewsUploadProps> = ({ visible, onClose }) => {
       {uploadVideo && !videoSelected ? (
         <VideoSelector visible={!videoSelected} handleChange={handleChange} />
       ) : (
-        <NewsForm busy={busy} onSubmit={handleSubmit} btnTitle="Publish" />
+        <NewsOrLiveUpdate
+          busy={busy}
+          onSubmit={handleSubmit}
+          btnTitle="Publish"
+        />
       )}
     </ModalContainer>
   );

@@ -7,6 +7,7 @@ import { UploadCloud } from "react-feather";
 import NewsForm from "./News";
 import { useCreateNews, useVideoUpload } from "@/hooks/useNews";
 import { Colors } from "@/utils/Colors";
+import NewsOrLiveUpdate from "./NewsOrLiveUpdate";
 
 interface VideoInfo {
   url: string;
@@ -151,7 +152,7 @@ const CreateNewsForm: FC = () => {
         <VideoSelector visible={!videoSelected} handleChange={handleChange} />
       ) : (
         <div>
-          <NewsForm
+          <NewsOrLiveUpdate
             busy={busy}
             onSubmit={handleSubmit}
             btnTitle="Publish"

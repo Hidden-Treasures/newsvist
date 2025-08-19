@@ -1,3 +1,5 @@
+"use client";
+
 import TagSmallCard from "@/components/cards/TagSmallCard";
 import getDateString from "@/hooks/useDateString";
 import { useNewsAndBuzz } from "@/hooks/useNews";

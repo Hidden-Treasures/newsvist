@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import ResetToken from "../models/ResetToken";
 import { sendEmail } from "../utils/email";
-import { generateResetToken } from "../utils/helper";
+import { generateResetToken, generateUniqueUsername } from "../utils/helper";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -28,7 +28,10 @@ export const register = async (req: Request, res: Response) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = new User({ email, password: hashedPassword });
+    const emailBase = email.split("@")[0];
+    const username = await generateUniqueUsername(emailBase);
+
+    const newUser = new User({ email, password: hashedPassword, username });
 
     await newUser.save();
 
@@ -161,6 +164,30 @@ export const getUserDetails = async (req: Request, res: Response) => {
 
     res.status(200).json(user);
   } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+export const getProfileByUsername = async (req: Request, res: Response) => {
+  try {
+    const { username } = req.params;
+
+    if (!username) {
+      return res.status(400).json({ message: "Username is required" });
+    }
+
+    // Find user by username and exclude sensitive fields
+    const user = await User.findOne({ username }).select(
+      "-password -resetToken -__v"
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
     res.status(500).json({ message: "Server error", error });
   }
 };

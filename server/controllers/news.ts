@@ -14,6 +14,9 @@ import Image from "../models/Image";
 import Comment from "../models/Comment";
 import slugify from "slugify";
 import { cloudinary } from "../cloud";
+import LiveEvent from "../models/LiveEvent";
+import io from "../server";
+import LiveUpdateEntry from "../models/LiveUpdateEntry";
 
 declare global {
   namespace Express {
@@ -92,10 +95,6 @@ export const createNews = async (req: Request, res: Response) => {
       type,
       tags,
       editorText,
-      authorName,
-      isLiveUpdate,
-      liveUpdateType,
-      liveUpdateHeadline,
       video,
       city,
       name,
@@ -123,10 +122,7 @@ export const createNews = async (req: Request, res: Response) => {
       type,
       tags: Array.isArray(tags) ? tags : [tags],
       editorText,
-      authorName,
-      isLiveUpdate,
-      liveUpdateType,
-      liveUpdateHeadline,
+      authorName: userId,
       city,
       video,
       user: userId,
@@ -215,6 +211,105 @@ export const createNews = async (req: Request, res: Response) => {
   } catch (err) {
     console.error("Error saving news:", err);
     res.status(500).json({ error: "Failed to save news" });
+  }
+};
+
+// LIVE UPDATES
+export const createLiveEvent = async (req: Request, res: Response) => {
+  try {
+    const { liveUpdateType, headline } = req.body;
+
+    if (!liveUpdateType || !headline) {
+      return res
+        .status(400)
+        .json({ error: "liveUpdateType and headline are required" });
+    }
+
+    const event = await LiveEvent.create({ liveUpdateType, headline });
+    res.status(201).json(event);
+  } catch (error: any) {
+    console.error("Error creating live event:", error);
+    res.status(500).json({ error: "Failed to create live event" });
+  }
+};
+export const addLiveUpdateEntry = async (req: Request, res: Response) => {
+  try {
+    const { type } = req.params;
+    const { title, content } = req.body;
+    const userId = (req.user as any)?._id;
+
+    const event = await LiveEvent.findOne({ liveUpdateType: type });
+    if (!event) return res.status(404).json({ error: "Event not found" });
+
+    const newEntry = new LiveUpdateEntry({
+      event: event._id,
+      title,
+      content,
+      author: userId,
+    });
+
+    // uploading Image file
+    if (req.body.cloudinaryUrls && req.body.cloudinaryUrls.length > 0) {
+      const cloudinaryUrls: FileObject[] = req.body.cloudinaryUrls;
+
+      const videoFile = cloudinaryUrls.find((file) =>
+        file.url.match(/\.mp4|\.mov|\.avi$/i)
+      );
+      const imageFiles = cloudinaryUrls.filter((file) =>
+        file.url.match(/\.(jpg|jpeg|png|webp|avif|gif)$/i)
+      );
+
+      if (videoFile) {
+        newEntry.video = { url: videoFile.url, public_id: videoFile.public_id };
+      }
+
+      if (imageFiles.length > 0) {
+        newEntry.file = {
+          url: imageFiles[0].url,
+          public_id: imageFiles[0].public_id,
+          responsive: imageFiles[0].responsive || [],
+        };
+      }
+    }
+    await newEntry.save();
+
+    // 🔥 emit new entry to all clients subscribed to this event
+    io.to(type).emit("new-entry", newEntry);
+
+    res.status(201).json(newEntry);
+  } catch (error: any) {
+    console.error("Error adding live update entry:", error);
+    res.status(500).json({ error: "Failed to add entry" });
+  }
+};
+
+export const getLiveEventEntries = async (req: Request, res: Response) => {
+  try {
+    const { type } = req.params;
+
+    const event = await LiveEvent.findOne({ liveUpdateType: type });
+    if (!event) return res.status(404).json({ error: "Event not found" });
+
+    const entries = await LiveUpdateEntry.find({ event: event._id })
+      .sort({
+        createdAt: -1,
+      })
+      .populate("event")
+      .populate("author", "username profilePhoto");
+
+    res.json({ event, entries });
+  } catch (error: any) {
+    console.error("Error fetching live event:", error);
+    res.status(500).json({ error: "Failed to fetch event entries" });
+  }
+};
+export const getAllLiveEvents = async (req: Request, res: Response) => {
+  try {
+    const events = await LiveEvent.find().sort({ createdAt: -1 });
+    res.json(events);
+  } catch (error: any) {
+    console.error("Error fetching live events:", error);
+    res.status(500).json({ error: "Failed to fetch live events" });
   }
 };
 
@@ -1026,7 +1121,7 @@ export const getHeadLine = async function (req: Request, res: Response) {
       isLiveUpdate: true,
     }).sort({ createdAt: -1 });
     if (lastLiveUpdate) {
-      res.json(lastLiveUpdate.liveUpdateHeadline);
+      res.json({ title: lastLiveUpdate.liveUpdateHeadline });
     } else {
       res.status(404).json({ error: "Live update not found" });
     }

@@ -15,15 +15,25 @@ export const loginUser = async (data: Data) => {
   return response.data;
 };
 export const getProfile = async () => {
-  const { data } = await api.get("/my-profile", { withCredentials: true });
+  const { data } = await api.get("/my-profile");
   return data;
 };
+
+export const getProfileByUsername = async (username: string) => {
+  try {
+    const { data } = await api.get(`/profiles/${username}`);
+    return data.user;
+  } catch (err) {
+    return null;
+  }
+};
+
 export const logoutUser = async () => {
   const response = await api.post("/logout", {}, { withCredentials: true });
   return response.data;
 };
 export const checkAuth = async () => {
-  const response = await api.get("/check-auth", { withCredentials: true });
+  const response = await api.get("/check-auth");
   return response.data;
 };
 

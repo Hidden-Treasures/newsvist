@@ -17,6 +17,7 @@ import {
 import { cities } from "@/utils/Cities";
 import { Colors } from "@/utils/Colors";
 import { useCategories, useSubCategories } from "@/hooks/useCategories";
+import { Select } from "../ui/select";
 
 interface TagOption {
   label: string;
@@ -35,7 +36,6 @@ interface InitialState {
   newsCategory?: string;
   subCategory?: string;
   tags?: Array<string | { name: string; _id: string }>;
-  authorName?: string;
   name?: { stageName: string };
   file?: string;
 }
@@ -48,6 +48,8 @@ interface NewsFormProps {
   videoUploaded?: boolean;
   isAdvertisement?: boolean;
   setIsAdvertisement?: (value: boolean) => void;
+  selectedType: string;
+  onTypeChange: (val: string) => void;
 }
 
 const NewsForm: FC<NewsFormProps> = ({
@@ -56,23 +58,20 @@ const NewsForm: FC<NewsFormProps> = ({
   initialState,
   onSubmit,
   videoUploaded,
+  selectedType,
+  onTypeChange,
 }) => {
   const [title, setTitle] = useState<string>("");
   const [city, setCity] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
-  const [selectedType, setSelectedType] = useState<string>("");
   const [selectedNewsCategory, setSelectedNewsCategory] = useState<string>("");
   const [selectedNewsSubCategory, setSelectedNewsSubCategory] =
     useState<string>("");
   const [selectedNewsTags, setSelectedNewsTags] = useState<TagOption[]>([]);
   const [editorText, setEditorText] = useState<string>("");
-  const [authorName, setAuthorName] = useState<string>("");
   const [bioName, setBioName] = useState<string>("");
   const [selectedLiveUpdateType, setSelectedLiveUpdateType] =
     useState<string>("");
-  const [liveUpdateHeadline, setLiveUpdateHeadline] = useState<string>("");
-  const [isLiveUpdate, setIsLiveUpdate] = useState<boolean>(false);
-  const [showHeadLine, setShowHeadLine] = useState<string>("");
   const [selectedImageForUI, setSelectedImageForUI] = useState<string>("");
   const [isFocused, setIsFocused] = useState(false);
   const [isAdvertisement, setIsAdvertisement] = useState<boolean>(false);
@@ -85,8 +84,9 @@ const NewsForm: FC<NewsFormProps> = ({
     isLoading: subCategoriesLoading,
     refetch: refetchSubCategories,
   } = useSubCategories(selectedNewsCategory);
-  const { data: liveUpdateTypes = [] } = useLiveUpdateTypes();
-  const { data: liveUpdateHeadlineData } = useLiveUpdateHeadline(showHeadLine);
+  const { data: liveUpdateHeadlineData } = useLiveUpdateHeadline(
+    selectedLiveUpdateType
+  );
 
   const resetForm = () => {
     setTitle("");
@@ -96,23 +96,17 @@ const NewsForm: FC<NewsFormProps> = ({
       URL.revokeObjectURL(selectedImageForUI);
     }
     setSelectedImageForUI("");
-    setSelectedType("");
     setSelectedNewsCategory("");
     setSelectedNewsSubCategory("");
     setSelectedNewsTags([]);
     setEditorText("");
-    setAuthorName("");
     setBioName("");
-    setSelectedLiveUpdateType("");
-    setLiveUpdateHeadline("");
-    setIsLiveUpdate(false);
-    setShowHeadLine("");
     setIsFocused(false);
     setIsAdvertisement(false);
   };
 
   const handleNewsTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    setSelectedType(e.target.value);
+    // setSelectedType(e.target.value);
   };
 
   const handleNewsCategoryChange = (e: ChangeEvent<HTMLSelectElement>) => {
@@ -148,13 +142,6 @@ const NewsForm: FC<NewsFormProps> = ({
     }
   };
 
-  const handleLiveUpdateTypeChange = async (
-    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setSelectedLiveUpdateType(e.target.value);
-    setShowHeadLine(e.target.value);
-  };
-
   const handleSubmit = async () => {
     const tags = selectedNewsTags?.map((tag) => tag?.value || tag?.label);
     const formData = new FormData();
@@ -171,10 +158,7 @@ const NewsForm: FC<NewsFormProps> = ({
       toast.error("Please select a news Type");
       return;
     }
-    if (!authorName) {
-      toast.error("Please write the Author Name");
-      return;
-    }
+
     if (!selectedNewsTags || selectedNewsTags.length === 0) {
       toast.error("Please tag this article");
       return;
@@ -183,27 +167,16 @@ const NewsForm: FC<NewsFormProps> = ({
     formData.append("title", title);
     formData.append("city", city);
     formData.append("type", selectedType);
-    formData.append("isLiveUpdate", String(isLiveUpdate));
-    formData.append("liveUpdateType", selectedLiveUpdateType);
     formData.append("isAdvertisement", String(isAdvertisement));
-    formData.append("liveUpdateHeadline", liveUpdateHeadline);
     formData.append("newsCategory", selectedNewsCategory);
     formData.append("subCategory", selectedNewsSubCategory);
     formData.append("tags", JSON.stringify(tags));
     formData.append("editorText", editorText);
-    formData.append("authorName", authorName);
     formData.append("name", bioName);
     formData.append("folder", "news_assets");
 
     onSubmit(formData, resetForm);
-    socket.emit("liveUpdate", true);
   };
-
-  useEffect(() => {
-    if (liveUpdateHeadlineData) {
-      setLiveUpdateHeadline(liveUpdateHeadlineData.data);
-    }
-  }, [liveUpdateHeadlineData]);
 
   useEffect(() => {
     if (selectedNewsCategory) {
@@ -211,13 +184,6 @@ const NewsForm: FC<NewsFormProps> = ({
     }
   }, [selectedNewsCategory, refetchSubCategories]);
 
-  useEffect(() => {
-    if (selectedType === "LiveUpdate") {
-      setIsLiveUpdate(true);
-    } else {
-      setIsLiveUpdate(false);
-    }
-  }, [selectedType]);
   useEffect(() => {
     if (isAdvertisement) {
       setIsAdvertisement(true);
@@ -231,11 +197,8 @@ const NewsForm: FC<NewsFormProps> = ({
       setEditorText(initialState.editorText || "");
       setTitle(initialState.title || "");
       setCity(initialState.city || "");
-      setSelectedType(initialState.type || "");
-      setIsLiveUpdate(initialState.isLiveUpdate || false);
       setIsAdvertisement(initialState.isAdvertisement || false);
       setSelectedLiveUpdateType(initialState.liveUpdateType || "");
-      setLiveUpdateHeadline(initialState.liveUpdateHeadline || "");
       setSelectedNewsCategory(initialState.newsCategory || "");
       setSelectedNewsSubCategory(initialState.subCategory || "");
       setSelectedNewsTags(
@@ -247,7 +210,6 @@ const NewsForm: FC<NewsFormProps> = ({
             )
           : []
       );
-      setAuthorName(initialState.authorName || "");
       setBioName(initialState?.name?.stageName || "");
       setSelectedImageForUI(initialState.file || "");
       setFile(null);
@@ -255,8 +217,6 @@ const NewsForm: FC<NewsFormProps> = ({
       resetForm();
     }
   }, [initialState]);
-
-  // console.log("types::", types);
 
   return (
     <>
@@ -298,16 +258,16 @@ const NewsForm: FC<NewsFormProps> = ({
                 overflow: "hidden",
                 textOverflow: "ellipsis",
               }}
-              placeholder="Titanic"
+              placeholder="rivers in the ocean"
             />
           </div>
           <div>
             <Label htmlFor="type">News Type</Label>
-            <select
+            <Select
               id="NewsType"
               name="NewsType"
               value={selectedType}
-              onChange={handleNewsTypeChange}
+              onChange={(e) => onTypeChange(e.target.value)}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               className="w-full border-2 p-1 pr-10 outline-none transition rounded bg-transparent"
@@ -325,110 +285,7 @@ const NewsForm: FC<NewsFormProps> = ({
                     {type?.name}
                   </option>
                 ))}
-            </select>
-          </div>
-          <div>
-            {selectedType === "LiveUpdate" && (
-              <>
-                {liveUpdateTypes?.length !== 0 ? (
-                  <div className=" bg-yellow-100 px-4 mb-10 rounded">
-                    <div className="flex justify-between py-5">
-                      <div className=" w-full">
-                        <Label htmlFor="LiveUpdateType">
-                          Live Update News Type
-                        </Label>
-                        <input
-                          type="text"
-                          id="LiveUpdateType"
-                          name="LiveUpdateType"
-                          placeholder="eg: ukraine-russia-war"
-                          onChange={handleLiveUpdateTypeChange}
-                          className="mt-2 p-3 mr-2 bg-gray-200 focus:outline-none w-full border rounded-md text-black placeholder-gray-500"
-                          required
-                        />
-                      </div>
-                      <p className=" font-medium text-xs flex items-center mb-2 ml-2 text-gray-600">
-                        OR
-                      </p>
-                      <div className="w-full">
-                        <Label htmlFor="LiveUpdateType">
-                          Live Update News Type
-                        </Label>
-                        <select
-                          id="LiveUpdateType"
-                          name="LiveUpdateType"
-                          value={selectedLiveUpdateType}
-                          onChange={handleLiveUpdateTypeChange}
-                          className="mt-2 p-[0.95rem] ml-2 bg-gray-200 focus:outline-none w-full border rounded-md text-black placeholder-gray-500"
-                        >
-                          <option value="" disabled>
-                            Select Live News Type
-                          </option>
-                          {liveUpdateTypes?.map(
-                            (type: string, index: number) => (
-                              <option key={index} value={type}>
-                                {type}
-                              </option>
-                            )
-                          )}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="pb-5">
-                      <Label htmlFor="LiveUpdateType">
-                        Live Update Main Headline
-                      </Label>
-                      <input
-                        type="text"
-                        id="LiveUpdateType"
-                        name="LiveUpdateType"
-                        value={liveUpdateHeadline}
-                        onChange={(e) => {
-                          setLiveUpdateHeadline(e.target.value);
-                        }}
-                        placeholder="Live Update Main Headline"
-                        className="mt-2 p-3 bg-gray-200 focus:outline-none w-full border rounded-md text-black placeholder-gray-500"
-                        required
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className=" bg-yellow-200 px-4 mb-10 rounded">
-                    <div className="py-5">
-                      <Label htmlFor="LiveUpdateType">
-                        Live Update News Type
-                      </Label>
-                      <input
-                        type="text"
-                        id="LiveUpdateType"
-                        name="LiveUpdateType"
-                        placeholder="eg: ukraine-russia-war"
-                        onChange={handleLiveUpdateTypeChange}
-                        className="mt-2 p-3 bg-gray-200 focus:outline-none w-full border rounded-md text-black placeholder-gray-500"
-                        required
-                      />
-                    </div>
-                    <div className="pb-5">
-                      <Label htmlFor="LiveUpdateType">
-                        Live Update Main Headline
-                      </Label>
-                      <input
-                        type="text"
-                        id="LiveUpdateType"
-                        name="LiveUpdateType"
-                        value={liveUpdateHeadline}
-                        onChange={(e) => {
-                          setLiveUpdateHeadline(e.target.value);
-                        }}
-                        placeholder="Live Update Main Headline"
-                        className="mt-2 p-3 bg-gray-200 focus:outline-none w-full border rounded-md text-black placeholder-gray-500"
-                        required
-                      />
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
+            </Select>
           </div>
 
           <div>
@@ -450,26 +307,6 @@ const NewsForm: FC<NewsFormProps> = ({
               placeholder="Enter or select tags"
               className="border-2 p-1  outline-none transition rounded bg-transparent text-black"
               formatCreateLabel={(inputValue) => `Create tag: "${inputValue}"`}
-            />
-          </div>
-          <div className="w-full ml-2">
-            <Label htmlFor="author">Author</Label>
-            <input
-              type="text"
-              id="author"
-              name="author"
-              value={authorName}
-              onChange={(e) => setAuthorName(e.target.value)}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              className={
-                commonInputClasses + " border-b-2 font-semibold text-xl"
-              }
-              style={{
-                borderColor: isFocused ? Colors.primary : Colors.lightSubtle,
-                color: Colors.primary,
-              }}
-              required
             />
           </div>
 
@@ -496,7 +333,7 @@ const NewsForm: FC<NewsFormProps> = ({
           <div className="w-full">
             <div>
               <Label htmlFor="NewsCategory">Category</Label>
-              <select
+              <Select
                 id="NewsCategory"
                 name="NewsCategory"
                 value={selectedNewsCategory}
@@ -521,11 +358,11 @@ const NewsForm: FC<NewsFormProps> = ({
                       {category?.title}
                     </option>
                   ))}
-              </select>
+              </Select>
             </div>
             <div>
               <Label htmlFor="NewsSubCategory">Sub Category</Label>
-              <select
+              <Select
                 id="NewsSubCategory"
                 name="NewsSubCategory"
                 value={selectedNewsSubCategory}
@@ -549,7 +386,7 @@ const NewsForm: FC<NewsFormProps> = ({
                       {subcategory?.name}
                     </option>
                   ))}
-              </select>
+              </Select>
             </div>
             <div>
               <div>

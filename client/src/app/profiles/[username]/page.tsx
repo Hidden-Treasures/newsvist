@@ -1,16 +1,31 @@
 "use client";
 
+import { useProfileByUsername } from "@/hooks/useAuth";
 import { useProfileStore } from "@/store/profileStore";
 import Image from "next/image";
+import { useParams } from "next/navigation";
 import { FC } from "react";
 
 const ProfilePage: FC = () => {
-  const user = useProfileStore((state) => state.profileUser);
+  const params = useParams();
+  const usernameParam = params?.username;
 
-  const authorName = user?.username;
+  const username = Array.isArray(usernameParam)
+    ? usernameParam[0]
+    : usernameParam;
 
-  if (!user) {
-    return <div className="p-6">No profile information found.</div>;
+  const { data: user, isLoading, isError } = useProfileByUsername(username);
+
+  if (isLoading) {
+    return (
+      <div className="h-screen flex justify-center items-center">
+        <p className="animate-pulse">Loading profile...</p>
+      </div>
+    );
+  }
+
+  if (isError || !user) {
+    return <div className="p-6">Profile not found.</div>;
   }
 
   return (
@@ -20,7 +35,7 @@ const ProfilePage: FC = () => {
         <div className="flex rounded-t-lg bg-top-color sm:px-2 w-full">
           <div className="h-40 w-40 overflow-hidden sm:rounded-full sm:relative sm:p-0 top-10 left-5 p-3">
             <Image
-              src={user?.profilePhoto ? user?.profilePhoto : ""}
+              src={user?.profilePhoto || ""}
               alt="Profile Photo"
               fill
               className="object-cover w-full h-full rounded-full"
@@ -30,7 +45,7 @@ const ProfilePage: FC = () => {
             <p className="font-poppins font-bold text-heading sm:text-4xl text-2xl">
               {user?.username}
             </p>
-            <p className="text-heading">{authorName}</p>
+            <p className="text-heading">{user?.username}</p>
           </div>
         </div>
         {/* main content */}

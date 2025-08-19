@@ -1,3 +1,5 @@
+"use client";
+
 import FileDisplay from "@/helper/FileDisplay";
 import TruncateText from "@/helper/helper";
 import TextLoader from "@/helper/TextLoader";

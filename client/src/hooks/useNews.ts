@@ -1,9 +1,11 @@
 import { CommentType } from "@/components/comment/Comment";
 import {
   addComment,
+  addLiveUpdateEntry,
   addReply,
   addToRecycleBin,
   approveArticle,
+  createLiveEvent,
   createNews,
   deleteArticle,
   fetchAllLiveUpdates,
@@ -20,10 +22,12 @@ import {
   fetchPendingNewsList,
   fetchRejectedNewsList,
   getAdvertisements,
+  getAllLiveEvents,
   getArticleBySlug,
   getCategories,
   getComments,
   getLastFiveLiveUpdateNewsType,
+  getLiveEventEntries,
   getLiveUpdateHeadLine,
   getNewsAndBuzz,
   getNewsById,
@@ -39,14 +43,17 @@ import {
 } from "@/services/news";
 import {
   APIResponse,
+  GetLiveEventEntriesResponse,
   GetRelatedNewsParams,
   GroupedMatchesResponse,
+  LiveEntry,
+  LiveEvent,
   PaginationParams,
   queryClient,
   SearchParams,
   UseRelatedNewsResult,
 } from "@/services/types";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useCreateNews = () => {
   return useMutation({
@@ -377,5 +384,45 @@ export const useLiveScores = () => {
     queryFn: fetchLiveScores,
     refetchInterval: 60 * 1000,
     staleTime: 30 * 1000,
+  });
+};
+
+export const useLiveEvents = () => {
+  return useQuery<LiveEvent[]>({
+    queryKey: ["live-events"],
+    queryFn: getAllLiveEvents,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useLiveEventEntries = (type: string) => {
+  return useQuery<GetLiveEventEntriesResponse>({
+    queryKey: ["live-event", type],
+    queryFn: () => getLiveEventEntries(type),
+    enabled: !!type,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useCreateLiveEvent = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { liveUpdateType: string; headline: string }) =>
+      createLiveEvent(payload),
+    onSuccess: (evt: LiveEvent) => {
+      qc.invalidateQueries({ queryKey: ["live-event", evt.liveUpdateType] });
+    },
+  });
+};
+
+export const useAddLiveEntry = (type: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ formData }: { formData: FormData }) => {
+      return addLiveUpdateEntry(type, formData);
+    },
+    onSuccess: (_: LiveEntry) => {
+      qc.invalidateQueries({ queryKey: ["live-event", type] });
+    },
   });
 };

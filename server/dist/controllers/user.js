@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.resetPassword = exports.initiatePasswordReset = exports.bulkUpdateUserStatus = exports.getUserAnalytics = exports.updateAccountStatus = exports.getUserDetails = exports.updateUser = exports.logout = exports.login = exports.register = void 0;
+exports.resetPassword = exports.initiatePasswordReset = exports.bulkUpdateUserStatus = exports.getUserAnalytics = exports.updateAccountStatus = exports.getProfileByUsername = exports.getUserDetails = exports.updateUser = exports.logout = exports.login = exports.register = void 0;
 const User_1 = __importDefault(require("../models/User"));
 const cloud_1 = require("../cloud");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
@@ -34,7 +34,9 @@ const register = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             });
         }
         const hashedPassword = yield bcryptjs_1.default.hash(password, 10);
-        const newUser = new User_1.default({ email, password: hashedPassword });
+        const emailBase = email.split("@")[0];
+        const username = yield (0, helper_1.generateUniqueUsername)(emailBase);
+        const newUser = new User_1.default({ email, password: hashedPassword, username });
         yield newUser.save();
         res
             .status(201)
@@ -158,6 +160,25 @@ const getUserDetails = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.getUserDetails = getUserDetails;
+const getProfileByUsername = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { username } = req.params;
+        if (!username) {
+            return res.status(400).json({ message: "Username is required" });
+        }
+        // Find user by username and exclude sensitive fields
+        const user = yield User_1.default.findOne({ username }).select("-password -resetToken -__v");
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.status(200).json({ user });
+    }
+    catch (error) {
+        console.error("Error fetching profile:", error);
+        res.status(500).json({ message: "Server error", error });
+    }
+});
+exports.getProfileByUsername = getProfileByUsername;
 const updateAccountStatus = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { userId, status } = req.body;

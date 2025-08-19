@@ -6,6 +6,7 @@ import {
   deleteBiography,
   getBiography,
   getProfile,
+  getProfileByUsername,
   loginUser,
   logoutUser,
   registerUser,
@@ -38,6 +39,18 @@ export const useProfile = () => {
     refetchOnWindowFocus: false,
   });
 };
+
+export const useProfileByUsername = (username?: string) => {
+  return useQuery({
+    queryKey: ["profile", username],
+    queryFn: () => getProfileByUsername(username!),
+    enabled: !!username,
+    retry: false,
+    staleTime: 1000 * 60 * 5,
+    refetchOnWindowFocus: false,
+  });
+};
+
 export const useCheckAuth = () => {
   return useQuery({
     queryKey: ["auth"],

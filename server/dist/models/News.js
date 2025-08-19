@@ -47,6 +47,10 @@ const NewsSchema = new mongoose_1.Schema({
         type: mongoose_1.default.Schema.Types.ObjectId,
         ref: "User",
     },
+    authorName: {
+        type: mongoose_1.default.Schema.Types.ObjectId,
+        ref: "User",
+    },
     name: {
         type: mongoose_1.default.Schema.Types.ObjectId,
         ref: "Biography",
@@ -93,9 +97,6 @@ const NewsSchema = new mongoose_1.Schema({
     },
     tags: [{ type: String }],
     editorText: {
-        type: String,
-    },
-    authorName: {
         type: String,
     },
     isLiveUpdate: {

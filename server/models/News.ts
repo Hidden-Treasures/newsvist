@@ -10,6 +10,7 @@ interface FileObject {
 interface INews extends Document {
   title: string;
   user: mongoose.Types.ObjectId;
+  authorName?: mongoose.Types.ObjectId;
   name: mongoose.Types.ObjectId;
   slug: string;
   publishedAt?: Date;
@@ -24,7 +25,6 @@ interface INews extends Document {
   type?: string;
   tags: string[];
   editorText?: string;
-  authorName?: string;
   isLiveUpdate?: boolean;
   liveUpdateType?: string;
   views: number;
@@ -44,6 +44,10 @@ const NewsSchema = new Schema<INews>(
       required: true,
     },
     user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    authorName: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
@@ -96,9 +100,7 @@ const NewsSchema = new Schema<INews>(
     editorText: {
       type: String,
     },
-    authorName: {
-      type: String,
-    },
+
     isLiveUpdate: {
       type: Boolean,
     },

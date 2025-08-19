@@ -99,8 +99,9 @@ route.post("/comment", validator_1.commentValidation, comment_1.createComment);
 route.get("/comments/:articleId", comment_1.getComments);
 // ..............COMMENT ROUTE ...........
 // ..............USER ROUTE............
-// Route for updating user profile
+// Route for user profiles
 route.get("/my-profile", auth_1.isAuth, user_1.getUserDetails);
+route.get("/profiles/:username", auth_1.isAuth, user_1.getProfileByUsername);
 route.put("/me/:userId", auth_1.isAuth, multer_1.upload.single("profilePhoto"), multer_1.uploadToCloudinary, user_1.updateUser);
 route.put("/update-status", auth_1.isAuth, user_1.updateAccountStatus);
 route.get("/user-analytics", auth_1.isAuth, user_1.getUserAnalytics);
@@ -128,4 +129,9 @@ route.get("/biography/:bioName", biography_1.getBioByName);
 route.get("/biography-articles", biography_1.getArticlesByBiography);
 route.delete("/bio/:id", auth_1.isAuth, auth_1.canCreateRead, biography_1.deleteBiography);
 // ..............BIOGRAPHY ROUTE END............
+// LIVE UPDATE
+route.post("/live-event", auth_1.isAuth, news_1.createLiveEvent);
+route.post("/live-event/:type/entry", auth_1.isAuth, multer_1.upload.single("file"), validator_1.validate, multer_1.uploadToCloudinary, news_1.addLiveUpdateEntry);
+route.get("/live-event/:type", auth_1.isAuth, news_1.getLiveEventEntries);
+route.get("/live-events", auth_1.isAuth, news_1.getAllLiveEvents);
 exports.default = route;

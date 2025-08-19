@@ -7,6 +7,7 @@ import ModalContainer from "./modals/Container";
 import NewsForm from "./forms/News";
 import { useGetNewsForUpdate, useUpdateNews } from "@/hooks/useNews";
 import { News } from "@/services/types";
+import NewsOrLiveUpdate from "./forms/NewsOrLiveUpdate";
 
 interface NewsUpdateProps {
   newsId: string | null;
@@ -56,7 +57,7 @@ export default function NewsUpdate({
           </p>
         </div>
       ) : isSuccess && data?.news ? (
-        <NewsForm
+        <NewsOrLiveUpdate
           initialState={data.news}
           btnTitle="Update"
           onSubmit={handleSubmit}

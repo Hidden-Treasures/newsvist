@@ -45,8 +45,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createImage = exports.moderateComment = exports.getAnalytics = exports.rejectNews = exports.approveNews = exports.getRejectedNews = exports.getApprovedNews = exports.getPendingNews = exports.getMostReadArticles = exports.getUpNextArticles = exports.getNewsAndBuzz = exports.getRelatedNews = exports.getImageArticlesByCategory = exports.getArticlesByCategory = exports.getNewsBySlug = exports.getNewsByTags = exports.getMissedNews = exports.getNews = exports.getMostRecentNews = exports.getHeadLine = exports.getUserbyID = exports.updateUserData = exports.deleteUsersManually = exports.users = exports.assignRole = exports.updateSubCategory = exports.updateCategory = exports.addCategory = exports.deleteSubCategory = exports.deleteCategory = exports.AllCategoriesWithSubCategory = exports.restoreNews = exports.deleteNews = exports.addToNewsRecycleBin = exports.getNewsById = exports.getNewsForUpdate = exports.updateNews = exports.writerNewsList = exports.editorNewsList = exports.allNewsList = exports.newsList = exports.getAllNewsSubCategories = exports.getAllNewsCategories = exports.getNewsType = exports.deleteType = exports.addType = exports.getAdvertisements = exports.createNews = exports.getLastFiveLiveUpdateNewsType = exports.videoUpload = void 0;
-exports.getAllLiveUpdates = exports.getNewsByLiveUpdateType = exports.getOldestNewsArticleByType = exports.mainSearch = exports.getDeletedNews = exports.getSingleImage = exports.images = exports.deleteImageByUser = exports.getImagesByCategoryOrTag = exports.getAllImages = exports.getImages = void 0;
+exports.approveNews = exports.getRejectedNews = exports.getApprovedNews = exports.getPendingNews = exports.getMostReadArticles = exports.getUpNextArticles = exports.getNewsAndBuzz = exports.getRelatedNews = exports.getImageArticlesByCategory = exports.getArticlesByCategory = exports.getNewsBySlug = exports.getNewsByTags = exports.getMissedNews = exports.getNews = exports.getMostRecentNews = exports.getHeadLine = exports.getUserbyID = exports.updateUserData = exports.deleteUsersManually = exports.users = exports.assignRole = exports.updateSubCategory = exports.updateCategory = exports.addCategory = exports.deleteSubCategory = exports.deleteCategory = exports.AllCategoriesWithSubCategory = exports.restoreNews = exports.deleteNews = exports.addToNewsRecycleBin = exports.getNewsById = exports.getNewsForUpdate = exports.updateNews = exports.writerNewsList = exports.editorNewsList = exports.allNewsList = exports.newsList = exports.getAllNewsSubCategories = exports.getAllNewsCategories = exports.getNewsType = exports.deleteType = exports.addType = exports.getAdvertisements = exports.getAllLiveEvents = exports.getLiveEventEntries = exports.addLiveUpdateEntry = exports.createLiveEvent = exports.createNews = exports.getLastFiveLiveUpdateNewsType = exports.videoUpload = void 0;
+exports.getAllLiveUpdates = exports.getNewsByLiveUpdateType = exports.getOldestNewsArticleByType = exports.mainSearch = exports.getDeletedNews = exports.getSingleImage = exports.images = exports.deleteImageByUser = exports.getImagesByCategoryOrTag = exports.getAllImages = exports.getImages = exports.createImage = exports.moderateComment = exports.getAnalytics = exports.rejectNews = void 0;
 const helper_1 = require("../utils/helper");
 const News_1 = __importDefault(require("../models/News"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
@@ -61,6 +61,9 @@ const Image_1 = __importDefault(require("../models/Image"));
 const Comment_1 = __importDefault(require("../models/Comment"));
 const slugify_1 = __importDefault(require("slugify"));
 const cloud_1 = require("../cloud");
+const LiveEvent_1 = __importDefault(require("../models/LiveEvent"));
+const server_1 = __importDefault(require("../server"));
+const LiveUpdateEntry_1 = __importDefault(require("../models/LiveUpdateEntry"));
 function generateUniqueSlug(title) {
     return __awaiter(this, void 0, void 0, function* () {
         const { nanoid } = yield Promise.resolve().then(() => __importStar(require("nanoid")));
@@ -115,7 +118,7 @@ const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const role = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;
         const isAdmin = role === "admin";
         const isEditor = role === "editor";
-        const { title, newsCategory, subCategory, type, tags, editorText, authorName, isLiveUpdate, liveUpdateType, liveUpdateHeadline, video, city, name, isAdvertisement, } = req.body;
+        const { title, newsCategory, subCategory, type, tags, editorText, video, city, name, isAdvertisement, } = req.body;
         let bioId = null;
         if (name) {
             const bio = yield Biography_1.default.findOne({
@@ -134,10 +137,7 @@ const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             type,
             tags: Array.isArray(tags) ? tags : [tags],
             editorText,
-            authorName,
-            isLiveUpdate,
-            liveUpdateType,
-            liveUpdateHeadline,
+            authorName: userId,
             city,
             video,
             user: userId,
@@ -212,6 +212,97 @@ const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.createNews = createNews;
+// LIVE UPDATES
+const createLiveEvent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { liveUpdateType, headline } = req.body;
+        if (!liveUpdateType || !headline) {
+            return res
+                .status(400)
+                .json({ error: "liveUpdateType and headline are required" });
+        }
+        const event = yield LiveEvent_1.default.create({ liveUpdateType, headline });
+        res.status(201).json(event);
+    }
+    catch (error) {
+        console.error("Error creating live event:", error);
+        res.status(500).json({ error: "Failed to create live event" });
+    }
+});
+exports.createLiveEvent = createLiveEvent;
+const addLiveUpdateEntry = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    try {
+        const { type } = req.params;
+        const { title, content } = req.body;
+        const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+        const event = yield LiveEvent_1.default.findOne({ liveUpdateType: type });
+        if (!event)
+            return res.status(404).json({ error: "Event not found" });
+        const newEntry = new LiveUpdateEntry_1.default({
+            event: event._id,
+            title,
+            content,
+            author: userId,
+        });
+        // uploading Image file
+        if (req.body.cloudinaryUrls && req.body.cloudinaryUrls.length > 0) {
+            const cloudinaryUrls = req.body.cloudinaryUrls;
+            const videoFile = cloudinaryUrls.find((file) => file.url.match(/\.mp4|\.mov|\.avi$/i));
+            const imageFiles = cloudinaryUrls.filter((file) => file.url.match(/\.(jpg|jpeg|png|webp|avif|gif)$/i));
+            if (videoFile) {
+                newEntry.video = { url: videoFile.url, public_id: videoFile.public_id };
+            }
+            if (imageFiles.length > 0) {
+                newEntry.file = {
+                    url: imageFiles[0].url,
+                    public_id: imageFiles[0].public_id,
+                    responsive: imageFiles[0].responsive || [],
+                };
+            }
+        }
+        yield newEntry.save();
+        // 🔥 emit new entry to all clients subscribed to this event
+        server_1.default.to(type).emit("new-entry", newEntry);
+        res.status(201).json(newEntry);
+    }
+    catch (error) {
+        console.error("Error adding live update entry:", error);
+        res.status(500).json({ error: "Failed to add entry" });
+    }
+});
+exports.addLiveUpdateEntry = addLiveUpdateEntry;
+const getLiveEventEntries = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { type } = req.params;
+        const event = yield LiveEvent_1.default.findOne({ liveUpdateType: type });
+        if (!event)
+            return res.status(404).json({ error: "Event not found" });
+        const entries = yield LiveUpdateEntry_1.default.find({ event: event._id })
+            .sort({
+            createdAt: -1,
+        })
+            .populate("event")
+            .populate("author", "username profilePhoto");
+        res.json({ event, entries });
+    }
+    catch (error) {
+        console.error("Error fetching live event:", error);
+        res.status(500).json({ error: "Failed to fetch event entries" });
+    }
+});
+exports.getLiveEventEntries = getLiveEventEntries;
+const getAllLiveEvents = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const events = yield LiveEvent_1.default.find().sort({ createdAt: -1 });
+        res.json(events);
+    }
+    catch (error) {
+        console.error("Error fetching live events:", error);
+        res.status(500).json({ error: "Failed to fetch live events" });
+    }
+});
+exports.getAllLiveEvents = getAllLiveEvents;
 const getAdvertisements = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const ads = yield News_1.default.find({ isAdvertisement: true, published: true })
@@ -932,7 +1023,7 @@ const getHeadLine = function (req, res) {
                 isLiveUpdate: true,
             }).sort({ createdAt: -1 });
             if (lastLiveUpdate) {
-                res.json(lastLiveUpdate.liveUpdateHeadline);
+                res.json({ title: lastLiveUpdate.liveUpdateHeadline });
             }
             else {
                 res.status(404).json({ error: "Live update not found" });
