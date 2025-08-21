@@ -60,7 +60,7 @@ export interface News {
   _id: string;
   title: string;
   name: string | null;
-  authorName: string | null;
+  author: string | { _id: string; username: string; email: string } | null;
   editorText: string | null;
   slug: string | null;
   newsCategory: string;

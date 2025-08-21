@@ -4,15 +4,15 @@ import Link from "next/link";
 import React from "react";
 
 interface AuthorLinkProps {
-  authorName?: string;
+  author?: string;
 }
 
-export default function AuthorLink({ authorName }: AuthorLinkProps) {
-  if (!authorName) return null;
+export default function AuthorLink({ author }: AuthorLinkProps) {
+  if (!author) return null;
 
   return (
-    <Link href={`/profiles/${authorName}`}>
-      <span className="underline cursor-pointer">{authorName}</span>
+    <Link href={`/profiles/${author}`}>
+      <span className="underline cursor-pointer">{author}</span>
     </Link>
   );
 }

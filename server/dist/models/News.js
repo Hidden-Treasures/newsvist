@@ -43,11 +43,7 @@ const NewsSchema = new mongoose_1.Schema({
         type: String,
         required: true,
     },
-    user: {
-        type: mongoose_1.default.Schema.Types.ObjectId,
-        ref: "User",
-    },
-    authorName: {
+    author: {
         type: mongoose_1.default.Schema.Types.ObjectId,
         ref: "User",
     },

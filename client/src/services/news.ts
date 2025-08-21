@@ -332,7 +332,6 @@ export const fetchNewsList = async ({
 }: PaginationParams) => {
   try {
     const { data } = await api.get("/article-list", {
-      withCredentials: true,
       params: { page: currentPage + 1, pageSize: itemsPerPage },
     });
     return data;
@@ -548,7 +547,6 @@ export const fetchDeletedArticles = async ({
 }: PaginationParams): Promise<APIResponse> => {
   try {
     const { data } = await api.get("/recycle-bin", {
-      withCredentials: true,
       params: { page: currentPage + 1, pageSize: itemsPerPage },
     });
     return data;

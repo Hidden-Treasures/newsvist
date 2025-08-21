@@ -4,7 +4,6 @@ import React, { FC, useState } from "react";
 import { toast } from "react-toastify";
 import { useDropzone } from "react-dropzone";
 import { UploadCloud } from "react-feather";
-import NewsForm from "./News";
 import { useCreateNews, useVideoUpload } from "@/hooks/useNews";
 import { Colors } from "@/utils/Colors";
 import NewsOrLiveUpdate from "./NewsOrLiveUpdate";
@@ -127,39 +126,36 @@ const CreateNewsForm: FC = () => {
   };
 
   return (
-    <div className={"mt-24 w-fit ml-10"}>
-      <div className="mb-5">
-        <div className="flex">
-          <label className="flex items-center space-x-3">
-            <input
-              type="checkbox"
-              checked={uploadVideo}
-              onChange={() => setUploadVideo(!uploadVideo)}
-              className="form-checkbox h-5 w-5 text-gray-600 cursor-pointer"
-            />
-            <span className="text-gray-400">Upload Video</span>
-          </label>
-        </div>
-        {uploadVideo && (
+    <div className="mt-16 max-w-4xl mx-auto p-6 bg-slate-900/70 border border-slate-800 rounded-2xl shadow-lg space-y-6">
+      <div className="flex items-center justify-between">
+        <label className="flex items-center gap-3 text-slate-200">
+          <input
+            type="checkbox"
+            checked={uploadVideo}
+            onChange={() => setUploadVideo(!uploadVideo)}
+            className="form-checkbox h-5 w-5 text-green-500 cursor-pointer"
+          />
+          Upload Video
+        </label>
+        {uploadVideo && videoSelected && !videoUploaded && (
           <UploadProgress
-            visible={!videoUploaded && videoSelected}
-            message={getUploadProgressValue()}
+            visible
             width={uploadProgress}
+            message={getUploadProgressValue()}
           />
         )}
       </div>
+
       {uploadVideo && !videoSelected ? (
-        <VideoSelector visible={!videoSelected} handleChange={handleChange} />
+        <VideoSelector visible handleChange={handleChange} />
       ) : (
-        <div>
-          <NewsOrLiveUpdate
-            busy={busy}
-            onSubmit={handleSubmit}
-            btnTitle="Publish"
-            videoUploaded={videoUploaded}
-            initialState={newsUploaded ? {} : undefined}
-          />
-        </div>
+        <NewsOrLiveUpdate
+          busy={busy}
+          onSubmit={handleSubmit}
+          btnTitle="Publish"
+          videoUploaded={videoUploaded}
+          initialState={newsUploaded ? {} : undefined}
+        />
       )}
     </div>
   );
@@ -167,34 +163,27 @@ const CreateNewsForm: FC = () => {
 
 const VideoSelector: FC<VideoSelectorProps> = ({ visible, handleChange }) => {
   const { getRootProps, getInputProps } = useDropzone({
-    accept: {
-      "video/mp4": [],
-      "video/x-msvideo": [],
-    },
+    accept: { "video/mp4": [], "video/x-msvideo": [] },
     multiple: false,
-    onDrop: (acceptedFiles) => {
-      const file = acceptedFiles[0];
-      if (file) {
-        handleChange(file);
-      }
-    },
-    onDropRejected: () => {
-      toast.error("Only .mp4 or .avi files are accepted.");
-    },
+    onDrop: (acceptedFiles) =>
+      acceptedFiles[0] && handleChange(acceptedFiles[0]),
+    onDropRejected: () => toast.error("Only .mp4 or .avi allowed"),
   });
 
   if (!visible) return null;
 
   return (
-    <div className="h-full flex items-center justify-center">
+    <div className="flex justify-center">
       <div
         {...getRootProps()}
-        className="w-48 h-48 border-2 border-dashed rounded-full flex flex-col items-center justify-center cursor-pointer transition-colors hover:bg-gray-50"
+        className="w-56 h-56 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center cursor-pointer transition hover:bg-slate-800/40"
         style={{ borderColor: Colors.lightSubtle, color: Colors.secondary }}
       >
         <input {...getInputProps()} />
-        <UploadCloud size={80} />
-        <p className="text-center">Drop your video here or click to upload</p>
+        <UploadCloud size={64} />
+        <p className="text-center text-slate-400 mt-2 text-sm">
+          Drop your video or click to upload
+        </p>
       </div>
     </div>
   );
@@ -206,27 +195,14 @@ const UploadProgress: FC<UploadProgressProps> = ({
   visible,
 }) => {
   if (!visible) return null;
-
   return (
-    <div
-      className="relative w-full h-12 rounded-lg overflow-hidden shadow-md text-center text-white font-semibold"
-      style={{
-        background: "#d1fae5",
-      }}
-    >
+    <div className="relative w-full h-4 rounded-full overflow-hidden bg-slate-800 mt-2">
       <div
-        className="absolute top-0 left-0 h-full transition-all duration-200 ease-in-out"
-        style={{
-          width: `${width}%`,
-          backgroundColor: "#10b981",
-        }}
+        className="absolute top-0 left-0 h-full transition-all duration-200 ease-in-out bg-green-500"
+        style={{ width: `${width}%` }}
       />
-      <div className="relative z-10 flex items-center justify-center h-full">
-        {typeof width === "number" && width < 100 ? (
-          <span style={{ color: "#065f46" }}>{width}%</span>
-        ) : (
-          <span style={{ color: "#065f46" }}>{message}</span>
-        )}
+      <div className="absolute w-full text-center text-xs text-slate-100 font-medium">
+        {width < 100 ? `${width}%` : message}
       </div>
     </div>
   );

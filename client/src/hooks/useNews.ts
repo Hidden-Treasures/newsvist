@@ -262,14 +262,14 @@ export const useAddToRecycleBin = () => {
   return useMutation({
     mutationFn: (id: string) => addToRecycleBin(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["deletedArticles"] });
+      queryClient.invalidateQueries({ queryKey: ["news"] });
     },
   });
 };
 
 export const useDeletedArticles = (params: PaginationParams) => {
   return useQuery({
-    queryKey: ["deletedArticles", params],
+    queryKey: ["news", params],
     queryFn: () => fetchDeletedArticles(params),
   });
 };

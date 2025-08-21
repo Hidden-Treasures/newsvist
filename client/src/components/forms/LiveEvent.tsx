@@ -130,7 +130,8 @@ const LiveEvents = () => {
   };
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="p-4 md:p-6 max-w-[1600px] mx-auto">
+      {/* Back Button */}
       <Button
         variant="secondary"
         className="mb-6 w-full md:w-auto"
@@ -144,13 +145,15 @@ const LiveEvents = () => {
         Back to News Form
       </Button>
 
-      <div className="flex flex-col md:flex-row md:space-x-6 space-y-6 md:space-y-0">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* LEFT SIDE: Forms */}
-        <div className="md:w-1/3 flex flex-col space-y-6">
-          {/* Create Event */}
-          <Card>
-            <CardHeader>Create New Live Event</CardHeader>
-            <CardContent className="flex flex-col space-y-3">
+        <div className="flex-1 lg:w-1/3 flex flex-col gap-6">
+          {/* CREATE NEW EVENT */}
+          <Card className="bg-slate-900 border-slate-700">
+            <CardHeader className="text-lg font-semibold text-gray-300">
+              Create New Live Event
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
               <Input
                 placeholder="Live Update Type (slug)"
                 value={newEventType}
@@ -159,12 +162,15 @@ const LiveEvents = () => {
               <Input
                 placeholder="Headline"
                 value={newEventHeadline}
-                className="flex items-center justify-center space-x-2"
                 onChange={(e) => setNewEventHeadline(e.target.value)}
               />
-              <Button variant="primary" onClick={handleCreateEvent}>
+              <Button
+                variant="default"
+                onClick={handleCreateEvent}
+                className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-900"
+              >
                 {pendingLiveEvent ? (
-                  <LuLoaderCircle className="animate-spin text-white w-5 h-5" />
+                  <LuLoaderCircle className="animate-spin w-5 h-5" />
                 ) : (
                   "Create Event"
                 )}
@@ -172,9 +178,11 @@ const LiveEvents = () => {
             </CardContent>
           </Card>
 
-          {/* Select Event */}
-          <Card>
-            <CardHeader>Select Live Event</CardHeader>
+          {/* SELECT EVENT */}
+          <Card className="bg-slate-900 border-slate-700">
+            <CardHeader className="text-lg font-semibold text-gray-300">
+              Select Live Event
+            </CardHeader>
             <CardContent>
               <Select
                 value={selectedEvent?._id || ""}
@@ -193,36 +201,37 @@ const LiveEvents = () => {
             </CardContent>
           </Card>
 
-          {/* Add Entry */}
+          {/* ADD ENTRY */}
           {selectedEvent && (
-            <Card>
-              <CardHeader>Add Live Update Entry</CardHeader>
-              <CardContent className="flex flex-col space-y-3">
+            <Card className="bg-slate-900 border-slate-700">
+              <CardHeader className="text-lg font-semibold text-gray-300">
+                Add Live Update Entry
+              </CardHeader>
+              <CardContent className="flex flex-col gap-3">
                 <Input
                   placeholder="Entry Title"
                   value={entryTitle}
                   onChange={(e) => setEntryTitle(e.target.value)}
+                  className="placeholder:text-gray-300 text-white"
                 />
                 <TextEditor
                   content={entryContent}
-                  onChange={(newContent) => setEntryContent(newContent)}
+                  onChange={setEntryContent}
                   description={entryContent}
                 />
-
                 <FileSelector
                   name="entryMedia"
                   label="Select an image or video"
                   selectedFile={filePreview || undefined}
                   onChange={handleFileChange}
                 />
-
                 <Button
-                  variant="success"
+                  variant="secondary"
                   onClick={handleAddEntry}
-                  className="flex items-center justify-center space-x-2"
+                  className="flex items-center justify-center gap-2"
                 >
                   {pendingLiveEntry ? (
-                    <LuLoaderCircle className="animate-spin text-white w-5 h-5" />
+                    <LuLoaderCircle className="animate-spin w-5 h-5" />
                   ) : (
                     "Add Entry"
                   )}
@@ -233,45 +242,48 @@ const LiveEvents = () => {
         </div>
 
         {/* RIGHT SIDE: Live Feed */}
-        <div className="md:w-2/3 flex flex-col space-y-4">
-          <Card className="overflow-y-auto max-h-[70vh]">
+        <div className="flex-1 lg:w-2/3 flex flex-col gap-4">
+          <Card className="bg-slate-900 border-slate-700 overflow-y-auto hide-scrollbar max-h-[75vh] text-white">
             {selectedEvent ? (
-              <>
-                <h2 className="text-xl font-bold mb-4">
+              <div className="p-4 space-y-4">
+                <h2 className="text-2xl font-bold sticky top-0 bg-slate-900 z-10 p-2 border-b border-slate-700">
                   {selectedEvent.headline}
                 </h2>
-                <div className="space-y-4">
-                  {entries?.map((entry) => (
+                <div className="space-y-6">
+                  {entries.length === 0 && (
+                    <p className="text-gray-400 text-center py-10">
+                      No updates yet for this event.
+                    </p>
+                  )}
+                  {entries.map((entry) => (
                     <div
                       key={entry._id}
-                      className="border-b pb-2 last:border-none"
+                      className="border-b border-slate-700 pb-3 last:border-none"
                     >
-                      <h3 className="font-semibold">{entry.title}</h3>
-                      <p className="text-base leading-relaxed mt-4 mb-6">
-                        <span
-                          style={{ whiteSpace: "pre-line" }}
-                          className="[&>*]:m-0 [&_a]:text-blue-600 [&_a]:underline [&_a]:cursor-pointer hover:[&_a]:text-blue-800"
-                          dangerouslySetInnerHTML={{
-                            __html: `${entry.content.replace(
-                              /^<p>|<\/p>$/g,
-                              ""
-                            )}`,
-                          }}
-                        />
-                      </p>
-                      {entry.file && <FileDisplay file={entry?.file} />}
+                      <h3 className="font-semibold text-lg">{entry.title}</h3>
+                      <p
+                        className="text-sm md:text-base text-gray-300 mt-2"
+                        style={{ whiteSpace: "pre-line" }}
+                        dangerouslySetInnerHTML={{
+                          __html: `${entry.content.replace(
+                            /^<p>|<\/p>$/g,
+                            ""
+                          )}`,
+                        }}
+                      />
+                      {entry.file && <FileDisplay file={entry.file} />}
                       {entry.video && (
-                        <VideoDisplay image={entry?.file} video={entry.video} />
+                        <VideoDisplay image={entry.file} video={entry.video} />
                       )}
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-500 block mt-1">
                         {new Date(entry.createdAt).toLocaleTimeString()}
                       </span>
                     </div>
                   ))}
                 </div>
-              </>
+              </div>
             ) : (
-              <p className="text-gray-400 text-center py-10">
+              <p className="text-gray-400 text-center py-20">
                 Select an event to see updates
               </p>
             )}

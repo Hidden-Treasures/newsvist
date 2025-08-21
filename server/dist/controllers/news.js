@@ -64,6 +64,8 @@ const cloud_1 = require("../cloud");
 const LiveEvent_1 = __importDefault(require("../models/LiveEvent"));
 const server_1 = __importDefault(require("../server"));
 const LiveUpdateEntry_1 = __importDefault(require("../models/LiveUpdateEntry"));
+const inmemory_1 = require("../lib/inmemory");
+const redis_1 = __importDefault(require("../lib/redis"));
 function generateUniqueSlug(title) {
     return __awaiter(this, void 0, void 0, function* () {
         const { nanoid } = yield Promise.resolve().then(() => __importStar(require("nanoid")));
@@ -137,7 +139,7 @@ const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             type,
             tags: Array.isArray(tags) ? tags : [tags],
             editorText,
-            authorName: userId,
+            author: userId,
             city,
             video,
             user: userId,
@@ -399,8 +401,14 @@ const newsList = function (req, res) {
                 page: page,
                 limit: pageSize,
                 sort: { createdAt: -1 },
+                populate: [
+                    {
+                        path: "author",
+                        select: "username email",
+                    },
+                ],
             };
-            const query = { user: userId, isDeleted: false };
+            const query = { author: userId, isDeleted: false };
             const paginatedNews = yield News_1.default.paginate(query, options);
             res.json({
                 news: paginatedNews.docs,
@@ -562,7 +570,7 @@ const updateNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     const news = yield News_1.default.findById(newsId);
     if (!news)
         return (0, helper_1.sendError)(res, "News Not Found!", 404);
-    const { title, editorText, newsCategory, subCategory, type, authorName, tags, city, video, name, } = req.body;
+    const { title, editorText, newsCategory, subCategory, type, author, tags, city, video, name, } = req.body;
     const slug = yield generateUniqueSlug(title);
     news.title = title;
     news.slug = slug;
@@ -571,7 +579,7 @@ const updateNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     news.newsCategory = newsCategory;
     news.subCategory = subCategory;
     news.type = type;
-    news.authorName = authorName;
+    news.author = author;
     news.video = video;
     news.city = city;
     news.editor = userId;
@@ -659,7 +667,7 @@ const getNewsForUpdate = (req, res) => __awaiter(void 0, void 0, void 0, functio
             subCategory: news.subCategory,
             type: news.type,
             tags: news.tags,
-            authorName: news.authorName,
+            author: news.author,
             editor: editorId,
             name: news.name,
         },
@@ -1208,11 +1216,51 @@ const getNewsByTags = (req, res) => __awaiter(void 0, void 0, void 0, function* 
 });
 exports.getNewsByTags = getNewsByTags;
 const getNewsBySlug = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
-        const article = yield News_1.default.findOneAndUpdate({ slug: req.params.slug }, { $inc: { views: 1 } }, { new: true }).populate("user");
+        const slug = req.params.slug;
+        // 1. Find article without increment first
+        const article = yield News_1.default.findOne({ slug }).populate("user");
         if (!article) {
             return res.status(404).json({ message: "Article not found" });
         }
+        // 2. Prevent bots
+        const userAgent = req.headers["user-agent"] || "";
+        if (!/bot|crawler|spider|crawling/i.test(userAgent)) {
+            const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+            const ip = req.headers["x-forwarded-for"] ||
+                req.socket.remoteAddress ||
+                "unknown";
+            const dedupeKey = `view:${article._id}:${userId || ip}`;
+            let alreadyViewed = false;
+            if (redis_1.default) {
+                try {
+                    alreadyViewed = !!(yield redis_1.default.get(dedupeKey));
+                    if (!alreadyViewed) {
+                        yield News_1.default.updateOne({ _id: article._id }, { $inc: { views: 1 } });
+                        yield redis_1.default.set(dedupeKey, "1", "EX", 300);
+                        article.views += 1;
+                    }
+                }
+                catch (err) {
+                    console.error("Redis error, falling back to in-memory:", err);
+                    alreadyViewed = (0, inmemory_1.hasRecentView)(dedupeKey);
+                    if (!alreadyViewed) {
+                        yield News_1.default.updateOne({ _id: article._id }, { $inc: { views: 1 } });
+                        article.views += 1;
+                    }
+                }
+            }
+            else {
+                // No Redis configured → use fallback
+                alreadyViewed = (0, inmemory_1.hasRecentView)(dedupeKey);
+                if (!alreadyViewed) {
+                    yield News_1.default.updateOne({ _id: article._id }, { $inc: { views: 1 } });
+                    article.views += 1;
+                }
+            }
+        }
+        // 3. Fetch related news
         const relatedNews = yield News_1.default.find({
             _id: { $ne: article._id },
             tags: { $in: article.tags },
@@ -1225,7 +1273,7 @@ const getNewsBySlug = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         res.json({ article, relatedNews });
     }
     catch (error) {
-        console.error(error);
+        console.error("getNewsBySlug error:", error);
         res.status(500).json({ message: "Internal server error" });
     }
 });
@@ -1442,7 +1490,7 @@ const getPendingNews = (req, res) => __awaiter(void 0, void 0, void 0, function*
         if (status) {
             query.status = status;
         }
-        const selectedFields = "_id file title slug authorName tags status newsCategory subCategory liveUpdateType createdAt";
+        const selectedFields = "_id file title slug author tags status newsCategory subCategory liveUpdateType createdAt";
         // Check if there are pending news articles in the database
         const pendingNewsCount = yield News_1.default.countDocuments({ status: "pending" });
         const totalPages = Math.ceil(pendingNewsCount / pageSize);
@@ -1494,7 +1542,7 @@ const getApprovedNews = (req, res) => __awaiter(void 0, void 0, void 0, function
         if (status) {
             query.status = status;
         }
-        const selectedFields = "_id file title slug authorName tags status newsCategory subCategory liveUpdateType createdAt";
+        const selectedFields = "_id file title slug author tags status newsCategory subCategory liveUpdateType createdAt";
         // Check if there are pending news articles in the database
         const pendingNewsCount = yield News_1.default.countDocuments({ status: "approved" });
         const totalPages = Math.ceil(pendingNewsCount / pageSize);
@@ -1546,7 +1594,7 @@ const getRejectedNews = (req, res) => __awaiter(void 0, void 0, void 0, function
         if (status) {
             query.status = status;
         }
-        const selectedFields = "_id file title slug authorName tags status newsCategory subCategory liveUpdateType createdAt";
+        const selectedFields = "_id file title slug author tags status newsCategory subCategory liveUpdateType createdAt";
         // Check if there are pending news articles in the database
         const pendingNewsCount = yield News_1.default.countDocuments({ status: "rejected" });
         const totalPages = Math.ceil(pendingNewsCount / pageSize);
@@ -1892,8 +1940,14 @@ const getDeletedNews = (req, res) => __awaiter(void 0, void 0, void 0, function*
             page: page,
             limit: pageSize,
             sort: { createdAt: -1 },
+            populate: [
+                {
+                    path: "author",
+                    select: "username email",
+                },
+            ],
         };
-        const query = { user: userId, isDeleted: true };
+        const query = { author: userId, isDeleted: true };
         const paginatedNews = yield News_1.default.paginate(query, options);
         res.json({
             news: paginatedNews.docs,
@@ -1918,7 +1972,7 @@ const mainSearch = function (req, res) {
                     { tags: { $regex: searchText, $options: "i" } },
                     { newsCategory: { $regex: searchText, $options: "i" } },
                     { subCategory: { $regex: searchText, $options: "i" } },
-                    { authorName: { $regex: searchText, $options: "i" } },
+                    { author: { $regex: searchText, $options: "i" } },
                 ],
                 isDeleted: false,
             };

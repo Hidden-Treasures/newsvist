@@ -1,7 +1,7 @@
 "use client";
-import { Colors } from "@/utils/Colors";
-import React, { MouseEvent, MouseEventHandler } from "react";
+import React, { MouseEventHandler } from "react";
 import { Loader } from "react-feather";
+import { Button } from "../ui/button";
 
 interface SubmitProps {
   value: string;
@@ -17,13 +17,12 @@ export default function Submit({
   onClick,
 }: SubmitProps) {
   return (
-    <button
+    <Button
       type={type}
-      className="w-full rounded text-white hover:bg-opacity-90 transition font-semibold text-lg cursor-pointer h-10 flex items-center justify-center"
+      className="w-full rounded text-white bg-blue-600 hover:bg-blue-900 transition font-semibold text-lg cursor-pointer h-10 flex items-center justify-center"
       onClick={onClick}
-      style={{ backgroundColor: Colors.secondary }}
     >
       {busy ? <Loader className="animate-spin" /> : value}
-    </button>
+    </Button>
   );
 }

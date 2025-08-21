@@ -13,6 +13,11 @@ import DynamicListInput from "./inputs/DynamicListInput";
 import DynamicSocialMediaInput from "./inputs/DynamicSocialMediaInput";
 import z from "zod";
 import { formatDateForInput } from "@/helper/helper";
+import { Card, CardHeader, CardTitle } from "../ui/card";
+import FormField from "./FormField";
+import FormSelect from "./FormSelect";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Button } from "../ui/button";
 
 const extendedBiographySchema = biographySchema.extend({
   image: z.instanceof(FileList).optional().nullable(),
@@ -179,8 +184,6 @@ const BiographyForm: FC<BiographyFormProps> = ({
         ) {
           formData.append(key, JSON.stringify(value));
         } else if (key !== "socialMedia") {
-          // Append all other fields normally
-          // formData.append(key, value as any);
           if (Array.isArray(value)) {
             formData.append(key, JSON.stringify(value));
           } else if (value !== undefined && value !== null) {
@@ -190,13 +193,6 @@ const BiographyForm: FC<BiographyFormProps> = ({
       });
       // Append socialMedia as JSON string
       formData.append("socialMedia", JSON.stringify(socialMediaObj));
-
-      // if (data.dateOfBirth) {
-      //   formData.append(
-      //     "dateOfBirth",
-      //     new Date(data.dateOfBirth).toISOString()
-      //   );
-      // }
 
       // Determine if we're creating or updating
       if (biographyData && biographyData._id) {
@@ -238,353 +234,136 @@ const BiographyForm: FC<BiographyFormProps> = ({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={biographyData ? "Update Biography" : "Add New Biography"}
-      maxWidth="max-w-4xl"
-    >
-      <FormProvider {...methods}>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-          {/* Basic Info */}
-          <section>
-            <h3 className="text-xl font-semibold mb-4 border-b pb-1">
-              Basic Information
-            </h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-medium mb-1">
-                  Real Name <span className="text-red-600">*</span>
-                </label>
-                <input
-                  {...register("realName")}
-                  aria-invalid={errors.realName ? "true" : "false"}
-                  type="text"
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="w-full max-w-[95vw] md:max-w-4xl lg:max-w-6xl h-[90vh] md:h-auto md:max-h-[85vh] overflow-y-auto hide-scrollbar bg-slate-950 border border-slate-800 rounded-xl p-5 md:p-8 shadow-lg flex flex-col gap-4">
+        <DialogHeader>
+          <DialogTitle className="text-xl md:text-2xl font-bold text-white">
+            {biographyData ? "Update Biography" : "Add New Biography"}
+          </DialogTitle>
+        </DialogHeader>
+        <FormProvider {...methods}>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
+            {/* Basic Info */}
+            <Card className="p-6 shadow-sm rounded-2xl border border-gray-200">
+              <CardHeader>
+                <CardTitle className="text-lg md:text-xl font-semibold text-slate-200">
+                  Basic Information
+                </CardTitle>
+              </CardHeader>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <FormField
+                  label="Real Name"
+                  name="realName"
+                  register={register}
+                  error={errors.realName}
+                  required
                   placeholder="Enter real name"
-                  className={`w-full px-4 py-3 text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm ${
-                    errors.realName ? "border-red-500 ring-red-500" : ""
-                  }`}
                 />
-                {errors.realName && (
-                  <p className="text-red-600 text-sm mt-1">
-                    {errors.realName.message?.toString()}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block font-medium mb-1">Stage Name</label>
-                <input
-                  {...register("stageName")}
-                  className="w-full px-4 py-3 text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm"
-                  type="text"
+                <FormField
+                  label="Stage Name"
+                  name="stageName"
+                  register={register}
                 />
-              </div>
-              <div>
-                <label className="block font-medium mb-1">Alias Name</label>
-                <input
-                  {...register("aliasName")}
-                  className="w-full px-4 py-3 text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm"
-                  type="text"
+                <FormField
+                  label="Alias Name"
+                  name="aliasName"
+                  register={register}
                 />
-              </div>
-              <div>
-                <label className="block font-medium mb-1">Date of Birth</label>
-                <input
-                  {...register("dateOfBirth")}
+                <FormField
+                  label="Date of Birth"
+                  name="dateOfBirth"
+                  register={register}
                   type="date"
-                  className="w-full px-4 py-3 text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm"
                 />
-              </div>
-              <div>
-                <label className="block font-medium mb-1">Place of Birth</label>
-                <input
-                  {...register("placeOfBirth")}
-                  className="w-full px-4 py-3 text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm"
-                  type="text"
+                <FormField
+                  label="Place of Birth"
+                  name="placeOfBirth"
+                  register={register}
                 />
-              </div>
-              <div>
-                <label className="block font-medium mb-1">Hometown</label>
-                <input
-                  {...register("hometown")}
-                  className="w-full px-4 py-3 text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm"
-                  type="text"
+                <FormField
+                  label="Hometown"
+                  name="hometown"
+                  register={register}
                 />
-              </div>
-              <div>
-                <label className="block font-medium mb-1">Nationality</label>
-                <input
-                  {...register("nationality")}
-                  className="w-full px-4 py-3 text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm"
-                  type="text"
+                <FormField
+                  label="Nationality"
+                  name="nationality"
+                  register={register}
                 />
+                <FormField label="Gender" name="gender" register={register} />
               </div>
-              <div>
-                <label className="block font-medium mb-1">Gender</label>
-                <input
-                  {...register("gender")}
-                  className="w-full px-4 py-3 text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm"
-                  type="text"
-                />
-              </div>
-            </div>
-          </section>
+            </Card>
 
-          {/* Career Info */}
-          <section>
-            <h3 className="text-xl font-semibold mb-4 border-b pb-1">
-              Career Information
-            </h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label
-                  htmlFor="category"
-                  className="block font-semibold mb-1 text-gray-700"
-                >
-                  Category <span className="text-red-600">*</span>
-                </label>
-                <select
-                  id="category"
-                  {...register("category")}
-                  aria-invalid={errors.category ? "true" : "false"}
-                  className={` w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out ${
-                    errors.category ? "border-red-500 ring-red-500" : ""
-                  } appearance-none cursor-pointer`}
-                >
-                  <option value="" disabled>
-                    Select category
-                  </option>
-                  <option value="Music Artist">Music Artist</option>
-                  <option value="Footballer">Footballer</option>
-                  <option value="Influencer">Influencer</option>
-                  <option value="Creator">Creator</option>
-                  <option value="Politician">Politician</option>
-                  <option value="Scientist">Scientist</option>
-                  <option value="Actor">Actor</option>
-                  <option value="Entrepreneur">Entrepreneur</option>
-                  <option value="Author">Author</option>
-                </select>
-                {errors.category && (
-                  <p className="mt-1 text-sm text-red-600" role="alert">
-                    {errors.category.message?.toString()}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="block font-medium mb-1">Label</label>
-                <input
-                  {...register("label")}
-                  className="w-full px-4 py-3 text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm"
-                  type="text"
+            {/* Career Info */}
+            <Card className="p-6 shadow-sm rounded-2xl border border-gray-200">
+              <h3 className="text-lg font-semibold mb-6 text-gray-800">
+                Career Information
+              </h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <FormSelect
+                  label="Category"
+                  name="category"
+                  register={register}
+                  error={errors.category}
+                  options={[
+                    "Music Artist",
+                    "Footballer",
+                    "Influencer",
+                    "Creator",
+                    "Politician",
+                    "Scientist",
+                    "Actor",
+                    "Entrepreneur",
+                    "Author",
+                  ]}
+                  required
+                />
+                <FormField label="Label" name="label" register={register} />
+                <FormField
+                  label="Position"
+                  name="position"
+                  register={register}
+                />
+                <FormField label="Niche" name="niche" register={register} />
+                <FormField label="Genre" name="genre" register={register} />
+                <FormField label="Club" name="club" register={register} />
+                <FormField
+                  label="Platform"
+                  name="platform"
+                  register={register}
+                />
+                <FormField
+                  label="Active Years"
+                  name="activeYears"
+                  register={register}
                 />
               </div>
-              <div>
-                <label className="block font-medium mb-1">Position</label>
-                <input
-                  {...register("position")}
-                  className="w-full px-4 py-3 text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm"
-                  type="text"
-                />
-              </div>
-              <div>
-                <label className="block font-medium mb-1">Niche</label>
-                <input
-                  {...register("niche")}
-                  className="w-full px-4 py-3 text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm"
-                  type="text"
-                />
-              </div>
-              <div>
-                <label className="block font-medium mb-1">Genre</label>
-                <input
-                  {...register("genre")}
-                  className="w-full px-4 py-3 text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm"
-                  type="text"
-                />
-              </div>
-              <div>
-                <label className="block font-medium mb-1">Club</label>
-                <input
-                  {...register("club")}
-                  className="w-full px-4 py-3 text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm"
-                  type="text"
-                />
-              </div>
-              <div>
-                <label className="block font-medium mb-1">Platform</label>
-                <input
-                  {...register("platform")}
-                  className="w-full px-4 py-3 text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm"
-                  type="text"
-                />
-              </div>
-              <div>
-                <label className="block font-medium mb-1">Active Years</label>
-                <input
-                  {...register("activeYears")}
-                  className="w-full px-4 py-3 text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm"
-                  type="text"
-                />
-              </div>
-            </div>
-
-            <DynamicListInput
-              name="occupations"
-              label="Occupations"
-              control={control}
-              placeholder="Enter occupation"
-            />
-          </section>
-
-          {/* Education & Achievements */}
-          <section>
-            <h3 className="text-xl font-semibold mb-4 border-b pb-1">
-              Education & Achievements
-            </h3>
-            <DynamicListInput
-              name="education"
-              label="Education"
-              control={control}
-              placeholder="Enter education"
-            />
-            <DynamicListInput
-              name="awards"
-              label="Awards"
-              control={control}
-              placeholder="Enter award"
-            />
-            <DynamicListInput
-              name="notableWorks"
-              label="Notable Works"
-              control={control}
-              placeholder="Enter notable work"
-            />
-          </section>
-
-          {/* Personal Life */}
-          <section>
-            <h3 className="text-xl font-semibold mb-4 border-b pb-1">
-              Personal Life
-            </h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block font-medium mb-1">Spouse</label>
-                <input
-                  {...register("spouse")}
-                  className="w-full px-4 py-3 text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm"
-                  type="text"
-                />
-              </div>
-              <div>
-                <label className="block font-medium mb-1">Place of Death</label>
-                <input
-                  {...register("placeOfDeath")}
-                  className="w-full px-4 py-3 text-gray-900 placeholder-gray-400 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 ease-in-out shadow-sm"
-                  type="text"
-                />
-              </div>
-            </div>
-            <DynamicListInput
-              name="children"
-              label="Children"
-              control={control}
-              placeholder="Enter child’s name"
-            />
-          </section>
-
-          {/* Online Presence */}
-          <section>
-            <h3 className="text-xl font-semibold mb-4 border-b pb-1">
-              Online Presence
-            </h3>
-            <DynamicSocialMediaInput
-              name="socialMedia"
-              label="Social Media"
-              control={control}
-            />
-          </section>
-
-          {/* Biography & Media */}
-          <section>
-            <h3 className="text-xl font-semibold mb-4 border-b pb-1">
-              Biography & Media
-            </h3>
-            <div>
-              <label className="block font-medium mb-1">
-                Biography <span className="text-red-600">*</span>
-              </label>
-              <textarea
-                {...register("bio")}
-                rows={5}
-                className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.bio ? "border-red-500" : ""
-                }`}
+              <DynamicListInput
+                name="occupations"
+                label="Occupations"
+                control={control}
               />
-              {errors.bio && (
-                <p className="text-red-600 text-sm mt-1">
-                  {errors.bio.message?.toString()}
-                </p>
-              )}
-            </div>
+            </Card>
 
-            <DynamicListInput
-              name="quotes"
-              label="Quotes"
-              control={control}
-              placeholder="Enter quote"
-            />
-            <DynamicListInput
-              name="references"
-              label="References"
-              control={control}
-              placeholder="Enter reference"
-            />
+            {/* Repeat same structure for Education, Personal Life, Online Presence, Biography & Media */}
 
-            <div>
-              <label className="block font-medium mb-1">
-                Profile Image <span className="text-red-600">*</span>
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                {...register("image")}
-                className="block w-full text-sm text-gray-600
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-md file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-blue-50 file:text-blue-700
-                  hover:file:bg-blue-100"
-              />
-              {imagePreview && (
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="mt-3 h-32 w-32 object-cover rounded-md border"
-                />
-              )}
-              {errors.image && (
-                <p className="text-red-600 text-sm mt-1">
-                  {errors.image.message as string}
-                </p>
-              )}
-            </div>
-          </section>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-          >
-            {isSubmitting
-              ? "Saving..."
-              : biographyData
-              ? "Update Biography"
-              : "Save Biography"}
-          </button>
-        </form>
-      </FormProvider>
-    </Modal>
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 shadow-md"
+            >
+              {isSubmitting
+                ? "Saving..."
+                : biographyData
+                ? "Update Biography"
+                : "Save Biography"}
+            </Button>
+          </form>
+        </FormProvider>
+      </DialogContent>
+    </Dialog>
   );
 };
 

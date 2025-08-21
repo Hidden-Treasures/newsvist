@@ -5,7 +5,6 @@ import CreatableSelect from "react-select/creatable";
 import { toast } from "react-toastify";
 import socket from "@/app/lib/socket";
 import { commonInputClasses } from "@/utils/Theme";
-import Label from "./Label";
 import ImageSelector from "@/utils/ImageSelector";
 import Submit from "./Submit";
 import TextEditor from "@/utils/TextEditor";
@@ -18,6 +17,7 @@ import { cities } from "@/utils/Cities";
 import { Colors } from "@/utils/Colors";
 import { useCategories, useSubCategories } from "@/hooks/useCategories";
 import { Select } from "../ui/select";
+import { Label } from "../ui/label";
 
 interface TagOption {
   label: string;
@@ -219,15 +219,156 @@ const NewsForm: FC<NewsFormProps> = ({
   }, [initialState]);
 
   return (
-    <>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit();
-        }}
-        className="md:flex space-x-3 md:mt-0 h-96 overflow-y-scroll hide-scrollbar mx-5"
-      >
-        <div className="md:w-[70%] space-y-5">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSubmit();
+      }}
+      className="flex flex-col md:flex-row gap-6 p-5 md:p-8 bg-slate-900 border-slate-700 rounded-xl shadow-lg max-w-6xl mx-auto"
+    >
+      {/* Left / Content */}
+      <div className="flex-1 space-y-5">
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={isAdvertisement}
+            onChange={(e) => setIsAdvertisement(e.target.checked)}
+            className="h-5 w-5 cursor-pointer"
+          />
+          <span className="text-gray-500">Post as Advertisement</span>
+        </label>
+
+        <div>
+          <Label htmlFor="title" className="text-gray-300">
+            Title
+          </Label>
+          <input
+            id="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className={`${commonInputClasses} w-full border-b-2 font-semibold text-lg md:text-xl placeholder:text-gray-500`}
+            placeholder="Enter headline"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="type" className="text-gray-300">
+            News Type
+          </Label>
+          <Select
+            value={selectedType}
+            onChange={(e) => onTypeChange(e.target.value)}
+            className="w-full border-2 p-2 rounded bg-transparent text-gray-500"
+          >
+            <option value="" disabled>
+              Select News Type
+            </option>
+            {types.map((t: any, i: number) => (
+              <option key={i} value={t.name}>
+                {t.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <div>
+          <Label className="text-gray-300">Content</Label>
+          <TextEditor
+            content={editorText}
+            onChange={setEditorText}
+            description={editorText}
+          />
+        </div>
+        <div>
+          <Label className="text-gray-300">Tags</Label>
+          <CreatableSelect
+            isMulti
+            value={selectedNewsTags}
+            onChange={handleTagChange}
+            placeholder="Enter or select tags"
+            className="border-2 rounded p-2"
+            formatCreateLabel={(input) => `Create tag: "${input}"`}
+          />
+        </div>
+      </div>
+
+      {/* Right / Sidebar */}
+      <div className="md:w-1/3 flex flex-col gap-5">
+        <div>
+          <Label className="text-gray-300">Upload Image</Label>
+          <ImageSelector
+            name="file"
+            selectedImage={selectedImageForUI}
+            onChange={handleFileChange}
+            label="Select image"
+            accept="image/*"
+          />
+        </div>
+        <div>
+          <Label className="text-gray-300">Category</Label>
+          <Select
+            value={selectedNewsCategory}
+            onChange={(e) => setSelectedNewsCategory(e.target.value)}
+            className="w-full border-2 p-2 rounded bg-transparent text-gray-500"
+          >
+            <option value="" disabled>
+              {categoriesLoading ? "Loading..." : "Select Category"}
+            </option>
+            {categories.map((c: any, i: number) => (
+              <option key={i} value={c.title}>
+                {c.title}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div>
+          <Label className="text-gray-300">Sub Category</Label>
+          <Select
+            value={selectedNewsSubCategory}
+            onChange={(e) => setSelectedNewsSubCategory(e.target.value)}
+            className="w-full border-2 p-2 rounded bg-transparent text-gray-500"
+          >
+            <option value="" disabled>
+              {subCategoriesLoading ? "Loading..." : "Select Sub Category"}
+            </option>
+            {subCategories.map((sc: any, i: number) => (
+              <option key={i} value={sc.name}>
+                {sc.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div>
+          <Label className="text-gray-300">City</Label>
+          <CreatableSelect
+            value={cities.find((c) => c.value === city)}
+            onChange={(option) => option?.value && setCity(option.value)}
+            options={cities}
+            className="border-2 p-2 rounded bg-transparent text-gray-500"
+            placeholder="Enter or select City"
+          />
+        </div>
+        <div>
+          <Label className="text-gray-300">Bio Name</Label>
+          <input
+            type="text"
+            value={bioName}
+            onChange={(e) => setBioName(e.target.value)}
+            className="w-full border-b-2 font-semibold p-2 bg-transparent text-gray-500"
+            placeholder="Artist / Celebrity / Player Name"
+          />
+        </div>
+        <div className="mt-auto">
+          <Submit
+            busy={busy}
+            value={btnTitle}
+            onClick={handleSubmit}
+            type="button"
+          />
+        </div>
+      </div>
+
+      {/* <div className="md:w-[70%] space-y-5">
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -438,9 +579,8 @@ const NewsForm: FC<NewsFormProps> = ({
               />
             </div>
           </div>
-        </div>
-      </form>
-    </>
+        </div> */}
+    </form>
   );
 };
 

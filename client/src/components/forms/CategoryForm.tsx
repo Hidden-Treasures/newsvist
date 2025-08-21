@@ -1,6 +1,10 @@
 "use client";
 import React, { FC, useEffect, useState } from "react";
-import { Loader } from "react-feather";
+import { Loader, X } from "react-feather";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
+import { Label } from "../ui/label";
+import { Select } from "../ui/select";
 
 interface Category {
   _id: string;
@@ -88,19 +92,30 @@ const CategoryForm: FC<CategoryFormProps> = ({
   return (
     <div>
       <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2">
+        <label className="block text-gray-400 text-sm font-bold mb-2">
           Category Name
         </label>
-        <input
-          type="text"
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          placeholder="Enter category name"
-          value={categoryName}
-          onChange={(e) => setCategoryName(e.target.value)}
-        />
+        <div className="relative">
+          <Input
+            type="text"
+            className="shadow appearance-none border rounded w-full py-2 pr-10 pl-3 text-gray-300 leading-tight focus:outline-none focus:shadow-outline"
+            placeholder="Enter category name"
+            value={categoryName}
+            onChange={(e) => setCategoryName(e.target.value)}
+          />
+          {categoryName && (
+            <button
+              type="button"
+              className="absolute inset-y-0 right-2 flex items-center justify-center w-5 h-5 my-auto rounded-full bg-gray-600 text-white hover:bg-gray-500"
+              onClick={() => setCategoryName("")}
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
       </div>
 
-      <button
+      <Button
         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
         onClick={handleAddCategory}
       >
@@ -111,13 +126,13 @@ const CategoryForm: FC<CategoryFormProps> = ({
         ) : (
           "Add Category"
         )}
-      </button>
+      </Button>
 
       <div className="my-8">
-        <label className="block text-gray-700 text-sm font-bold mb-2">
+        <Label className="block text-gray-400 text-sm font-bold mb-2">
           Parent Category
-        </label>
-        <select
+        </Label>
+        <Select
           className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           value={selectedParentCategory}
           onChange={(e) => setSelectedParentCategory(e.target.value)}
@@ -128,23 +143,34 @@ const CategoryForm: FC<CategoryFormProps> = ({
               {category.title}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-700 text-sm font-bold mb-2">
+        <Label className="block text-gray-400 text-sm font-bold mb-2">
           Subcategory Name
-        </label>
-        <input
-          type="text"
-          className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          placeholder="Enter subcategory name"
-          value={subcategoryName}
-          onChange={(e) => setSubcategoryName(e.target.value)}
-        />
+        </Label>
+        <div className="relative">
+          <Input
+            type="text"
+            className="shadow appearance-none border rounded w-full py-2 pr-10 pl-3 text-gray-300 leading-tight focus:outline-none focus:shadow-outline"
+            placeholder="Enter subcategory name"
+            value={subcategoryName}
+            onChange={(e) => setSubcategoryName(e.target.value)}
+          />
+          {subcategoryName && (
+            <button
+              type="button"
+              className="absolute inset-y-0 right-2 flex items-center justify-center w-5 h-5 my-auto rounded-full bg-gray-600 text-white hover:bg-gray-500"
+              onClick={() => setSubcategoryName("")}
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
       </div>
 
-      <button
+      <Button
         className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
         onClick={handleAddCategory}
       >
@@ -155,7 +181,7 @@ const CategoryForm: FC<CategoryFormProps> = ({
         ) : (
           "Add Subcategory"
         )}
-      </button>
+      </Button>
     </div>
   );
 };

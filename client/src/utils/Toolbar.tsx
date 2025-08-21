@@ -378,7 +378,7 @@ const ToolbarButton: FC<ToolbarButtonProps> = ({
     }}
     className="p-2 rounded-lg hover:bg-gray-100"
     style={{
-      color: isActive ? "#ffffff" : "#374151",
+      color: isActive ? "#ffffff" : "#6a7282",
       backgroundColor: isActive ? Colors.primary : "transparent",
     }}
     title={title}

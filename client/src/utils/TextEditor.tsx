@@ -87,8 +87,8 @@ export default function TextEditor({
     editorProps: {
       attributes: {
         class:
-          "flex flex-col px-4 py-3 justify-start min-h-80 border border-gray-300 text-gray-800 items-start w-full gap-3 font-medium text-[16px] pt-4 rounded-br-md rounded-bl-md outline-none",
-        style: "caret-color: black; min-height: 80px;",
+          "flex flex-col px-4 py-3 justify-start min-h-80 border border-gray-300 text-gray-200 items-start w-full gap-3 font-medium text-[16px] pt-4 rounded-br-md rounded-bl-md outline-none",
+        style: "caret-color: white; min-height: 80px;",
       },
     },
     onUpdate: ({ editor }) => {
@@ -104,7 +104,7 @@ export default function TextEditor({
         description={description}
       />
       <EditorContent
-        style={{ whiteSpace: "normal", caretColor: "black", minHeight: "80px" }}
+        style={{ whiteSpace: "normal", caretColor: "white", minHeight: "80px" }}
         editor={editor}
         className="prose max-w-full [&_a]:text-blue-600 [&_a]:underline [&_a]:cursor-pointer [&_a:hover]:text-blue-800"
       />

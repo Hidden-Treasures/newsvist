@@ -9,8 +9,7 @@ interface FileObject {
 
 interface INews extends Document {
   title: string;
-  user: mongoose.Types.ObjectId;
-  authorName?: mongoose.Types.ObjectId;
+  author?: mongoose.Types.ObjectId;
   name: mongoose.Types.ObjectId;
   slug: string;
   publishedAt?: Date;
@@ -43,11 +42,7 @@ const NewsSchema = new Schema<INews>(
       type: String,
       required: true,
     },
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-    },
-    authorName: {
+    author: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },

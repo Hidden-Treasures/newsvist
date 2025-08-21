@@ -26,7 +26,10 @@ export default function ModalContainer({
     if (ignoreContainer) return children;
 
     return (
-      <div className="bg-white rounded w-[45rem] h-96 overflow-auto p-2 hide-scrollbar">
+      <div
+        className="bg-slate-950 border border-slate-800 
+          rounded-2xl shadow-lg w-[45rem] max-w-[95vw] max-h-[85vh] overflow-y-auto hide-scrollbar p-6"
+      >
         {children}
       </div>
     );
@@ -38,7 +41,7 @@ export default function ModalContainer({
     <div
       onClick={handleClick}
       id="modal-container"
-      className={`fixed inset-0 bg-primary bg-opacity-50 backdrop-blur-sm flex items-center justify-center ${className}`}
+      className={`fixed inset-0 z-50 backdrop-blur-md bg-white/5 flex items-center justify-center px-4 ${className}`}
     >
       {renderChildren()}
     </div>

@@ -36,7 +36,7 @@ interface ArticleProps {
     file?: Media;
     video?: Media | null;
     user?: User;
-    authorName?: string;
+    author?: string;
     editor?: Author;
     city?: string;
     tags?: string[] | { _id: string; name: string }[];
@@ -107,11 +107,11 @@ export default function ArticleContent({ article, slug }: ArticleProps) {
           />
         </div>
         <div className="text-base text-gray-600 pl-2">
-          By <AuthorLink authorName={article.authorName} />
+          By <AuthorLink author={article.author} />
           {article?.editor?.username && (
             <>
               {" "}
-              | Editor: <AuthorLink authorName={article.editor.username} />
+              | Editor: <AuthorLink author={article.editor.username} />
             </>
           )}
           , NEWSVIST

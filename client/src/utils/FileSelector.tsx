@@ -81,7 +81,7 @@ interface FileUIProps {
 const FileUI = ({ label, className = "" }: FileUIProps) => {
   return (
     <div className={`${commonFileUI} ${className}`}>
-      <span style={{ color: Colors.lightSubtle }}>{label}</span>
+      <span className="text-gray-300">{label}</span>
     </div>
   );
 };

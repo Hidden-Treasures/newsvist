@@ -17,6 +17,8 @@ import { cloudinary } from "../cloud";
 import LiveEvent from "../models/LiveEvent";
 import io from "../server";
 import LiveUpdateEntry from "../models/LiveUpdateEntry";
+import { hasRecentView } from "../lib/inmemory";
+import redisClient from "../lib/redis";
 
 declare global {
   namespace Express {
@@ -122,7 +124,7 @@ export const createNews = async (req: Request, res: Response) => {
       type,
       tags: Array.isArray(tags) ? tags : [tags],
       editorText,
-      authorName: userId,
+      author: userId,
       city,
       video,
       user: userId,
@@ -406,8 +408,14 @@ export const newsList = async function (req: Request, res: Response) {
       page: page,
       limit: pageSize,
       sort: { createdAt: -1 },
+      populate: [
+        {
+          path: "author",
+          select: "username email",
+        },
+      ],
     };
-    const query = { user: userId, isDeleted: false };
+    const query = { author: userId, isDeleted: false };
 
     const paginatedNews = await News.paginate(query, options);
     res.json({
@@ -599,7 +607,7 @@ export const updateNews = async (req: Request, res: Response) => {
     newsCategory,
     subCategory,
     type,
-    authorName,
+    author,
     tags,
     city,
     video,
@@ -614,7 +622,7 @@ export const updateNews = async (req: Request, res: Response) => {
   news.newsCategory = newsCategory;
   news.subCategory = subCategory;
   news.type = type;
-  news.authorName = authorName;
+  news.author = author;
   news.video = video;
   news.city = city;
   news.editor = userId;
@@ -718,7 +726,7 @@ export const getNewsForUpdate = async (req: Request, res: Response) => {
       subCategory: news.subCategory,
       type: news.type,
       tags: news.tags,
-      authorName: news.authorName,
+      author: news.author,
       editor: editorId,
       name: news.name,
     },
@@ -1346,16 +1354,54 @@ export const getNewsByTags = async (req: Request, res: Response) => {
 
 export const getNewsBySlug = async (req: Request, res: Response) => {
   try {
-    const article = await News.findOneAndUpdate(
-      { slug: req.params.slug },
-      { $inc: { views: 1 } },
-      { new: true }
-    ).populate("user");
+    const slug = req.params.slug;
 
+    // 1. Find article without increment first
+    const article = await News.findOne({ slug }).populate("user");
     if (!article) {
       return res.status(404).json({ message: "Article not found" });
     }
 
+    // 2. Prevent bots
+    const userAgent = req.headers["user-agent"] || "";
+    if (!/bot|crawler|spider|crawling/i.test(userAgent)) {
+      const userId = (req as any).user?._id;
+      const ip =
+        (req.headers["x-forwarded-for"] as string) ||
+        req.socket.remoteAddress ||
+        "unknown";
+
+      const dedupeKey = `view:${article._id}:${userId || ip}`;
+
+      let alreadyViewed = false;
+
+      if (redisClient) {
+        try {
+          alreadyViewed = !!(await redisClient.get(dedupeKey));
+          if (!alreadyViewed) {
+            await News.updateOne({ _id: article._id }, { $inc: { views: 1 } });
+            await redisClient.set(dedupeKey, "1", "EX", 300);
+            article.views += 1;
+          }
+        } catch (err) {
+          console.error("Redis error, falling back to in-memory:", err);
+          alreadyViewed = hasRecentView(dedupeKey);
+          if (!alreadyViewed) {
+            await News.updateOne({ _id: article._id }, { $inc: { views: 1 } });
+            article.views += 1;
+          }
+        }
+      } else {
+        // No Redis configured → use fallback
+        alreadyViewed = hasRecentView(dedupeKey);
+        if (!alreadyViewed) {
+          await News.updateOne({ _id: article._id }, { $inc: { views: 1 } });
+          article.views += 1;
+        }
+      }
+    }
+
+    // 3. Fetch related news
     const relatedNews = await News.find({
       _id: { $ne: article._id },
       tags: { $in: article.tags },
@@ -1368,7 +1414,7 @@ export const getNewsBySlug = async (req: Request, res: Response) => {
 
     res.json({ article, relatedNews });
   } catch (error) {
-    console.error(error);
+    console.error("getNewsBySlug error:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -1622,7 +1668,7 @@ export const getPendingNews = async (
       query.status = status;
     }
     const selectedFields =
-      "_id file title slug authorName tags status newsCategory subCategory liveUpdateType createdAt";
+      "_id file title slug author tags status newsCategory subCategory liveUpdateType createdAt";
 
     // Check if there are pending news articles in the database
     const pendingNewsCount = await News.countDocuments({ status: "pending" });
@@ -1686,7 +1732,7 @@ export const getApprovedNews = async (
       query.status = status;
     }
     const selectedFields =
-      "_id file title slug authorName tags status newsCategory subCategory liveUpdateType createdAt";
+      "_id file title slug author tags status newsCategory subCategory liveUpdateType createdAt";
 
     // Check if there are pending news articles in the database
     const pendingNewsCount = await News.countDocuments({ status: "approved" });
@@ -1750,7 +1796,7 @@ export const getRejectedNews = async (
       query.status = status;
     }
     const selectedFields =
-      "_id file title slug authorName tags status newsCategory subCategory liveUpdateType createdAt";
+      "_id file title slug author tags status newsCategory subCategory liveUpdateType createdAt";
 
     // Check if there are pending news articles in the database
     const pendingNewsCount = await News.countDocuments({ status: "rejected" });
@@ -2142,8 +2188,14 @@ export const getDeletedNews = async (req: Request, res: Response) => {
       page: page,
       limit: pageSize,
       sort: { createdAt: -1 },
+      populate: [
+        {
+          path: "author",
+          select: "username email",
+        },
+      ],
     };
-    const query = { user: userId, isDeleted: true };
+    const query = { author: userId, isDeleted: true };
 
     const paginatedNews = await News.paginate(query, options);
     res.json({
@@ -2168,7 +2220,7 @@ export const mainSearch = async function (req: Request, res: Response) {
         { tags: { $regex: searchText, $options: "i" } },
         { newsCategory: { $regex: searchText, $options: "i" } },
         { subCategory: { $regex: searchText, $options: "i" } },
-        { authorName: { $regex: searchText, $options: "i" } },
+        { author: { $regex: searchText, $options: "i" } },
       ],
       isDeleted: false,
     };

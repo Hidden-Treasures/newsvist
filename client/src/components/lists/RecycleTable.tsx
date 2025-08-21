@@ -5,6 +5,19 @@ import React, { FC, useState } from "react";
 import { toast } from "react-toastify";
 import ConfirmModal from "../modals/confirmModal";
 import { formatDate } from "@/helper/helper";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../ui/table";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Trash2 } from "lucide-react";
+import { FaTrashRestore } from "react-icons/fa";
 
 const RecycleTable: FC<NewsTableProps> = ({
   data,
@@ -61,119 +74,76 @@ const RecycleTable: FC<NewsTableProps> = ({
 
   return (
     <>
-      <div className="flex justify-between items-center">
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="Search news..."
-            className="border p-2"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-      <div className="overflow-x-auto rounded-lg shadow-md border border-gray-200">
-        <table className="min-w-full bg-white">
-          <thead className="bg-gradient-to-r from-blue-50 to-blue-100 sticky top-0">
-            <tr>
-              <th className="py-3 px-4 text-left font-semibold text-gray-700">
-                Title
-              </th>
-              <th className="py-3 px-4 text-left font-semibold text-gray-700">
-                Category
-              </th>
-              <th className="py-3 px-4 text-left font-semibold text-gray-700">
-                Author
-              </th>
-              <th className="py-3 px-4 text-left font-semibold text-gray-700">
-                Delete Date
-              </th>
-              <th className="py-3 px-4 text-center font-semibold text-gray-700">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedData?.map((item, index) => (
-              <tr
-                key={index}
-                className="border-b hover:bg-blue-50 transition-colors even:bg-gray-50"
-              >
-                <td className="py-3 px-4">{item?.title}</td>
-                <td className="py-3 px-4">{item?.newsCategory}</td>
-                <td className="py-3 px-4">{item?.authorName}</td>
-                <td className="py-3 px-4">{formatDate(item?.deletedAt)}</td>
-                <td className="py-3 px-4 flex justify-center space-x-4">
-                  <button
-                    onClick={() => handleRestoreArticle(item._id)}
-                    className="flex items-center space-x-1 px-3 py-1 text-green-600 border border-green-300 rounded-md hover:bg-green-50 transition"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                      className="w-5 h-5"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M19.5 12h-15"
-                      />
-                    </svg>
-                    <span>Restore</span>
-                  </button>
-                  <button
-                    onClick={() => displayConfirmModal(item?._id)}
-                    className="flex items-center space-x-1 px-3 py-1 text-red-600 border border-red-300 rounded-md hover:bg-red-50 transition"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={1.5}
-                      stroke="currentColor"
-                      className="w-5 h-5"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="m14.74 9-.346 9m-4.788 0L9.26 9
-                     m9.968-3.21c.342.052.682.107 1.022.166
-                     m-1.022-.165L18.16 19.673a2.25 2.25 0 0
-                     1-2.244 2.077H8.084a2.25 2.25 0 0
-                     1-2.244-2.077L4.772 5.79
-                     m14.456 0a48.108 48.108 0 0
-                     0-3.478-.397m-12 .562c.34-.059.68-.114
-                     1.022-.165m0 0a48.11 48.11 0 0
-                     1 3.478-.397m7.5 0v-.916
-                     c0-1.18-.91-2.164-2.09-2.201
-                     a51.964 51.964 0 0 0-3.32 0
-                     c-1.18.037-2.09 1.022-2.09
-                     2.201v.916m7.5 0a48.667 48.667
-                     0 0 0-7.5 0"
-                      />
-                    </svg>
-                    <span>Trash</span>
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Card className="bg-slate-900/60 border-slate-800">
+        <CardHeader>
+          <CardTitle className="text-white">Recycle Bin</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-xl border border-slate-800 overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Title</TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    Category
+                  </TableHead>
+                  <TableHead className="hidden md:table-cell">Author</TableHead>
+                  <TableHead>Delete Date</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedData?.map((item) => (
+                  <TableRow key={item._id} className="hover:bg-slate-800/40">
+                    <TableCell className="font-medium truncate max-w-[220px] text-white">
+                      {item.title}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <Badge variant="secondary" className="rounded-full">
+                        {item.newsCategory}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-white">
+                      {typeof item.author === "object"
+                        ? item.author?.username
+                        : "—"}
+                    </TableCell>
+                    <TableCell className="text-slate-400">
+                      {formatDate(item.deletedAt)}
+                    </TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => handleRestoreArticle(item._id)}
+                        className="text-gray-400"
+                      >
+                        <FaTrashRestore className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => displayConfirmModal(item._id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
 
-      <div className="p-0">
-        <ConfirmModal
-          visible={showConfirmModal}
-          onConfirm={handleOnDeleteConfirm}
-          onCancel={hideConfirmModal}
-          title="Are you sure?"
-          subtitle="This action will remove this news permanently!"
-          busy={deleting}
-        />
-      </div>
+      <ConfirmModal
+        visible={showConfirmModal}
+        onConfirm={handleOnDeleteConfirm}
+        onCancel={hideConfirmModal}
+        title="Are you sure?"
+        subtitle="This action will remove this news permanently!"
+        busy={deleting}
+      />
     </>
   );
 };

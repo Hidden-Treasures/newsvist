@@ -2,6 +2,7 @@
 import React, { ChangeEvent } from "react";
 import { Colors } from "./Colors";
 import Image from "next/image";
+import { Label } from "@/components/ui/label";
 
 const commonImageUI =
   "flex justify-center items-center border border-dashed rounded aspect-video cursor-pointer";
@@ -63,7 +64,7 @@ interface ImageUIProps {
 const ImageUI = ({ label, className = "" }: ImageUIProps) => {
   return (
     <div className={`${commonImageUI} ${className}`}>
-      <span style={{ color: Colors.lightSubtle }}>{label}</span>
+      <span className="text-gray-300">{label}</span>
     </div>
   );
 };

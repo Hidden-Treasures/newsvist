@@ -49,7 +49,7 @@ export default function NewsUpdate({
   };
 
   return (
-    <ModalContainer visible={visible} onClose={onClose}>
+    <ModalContainer visible={visible} onClose={onClose} className="h-screen">
       {isLoading ? (
         <div className="w-full h-full flex justify-center items-center">
           <p className="text-light-subtle !bg-transparent animate-pulse text-xl">

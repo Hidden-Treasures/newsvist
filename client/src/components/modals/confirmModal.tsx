@@ -1,6 +1,7 @@
 import React from "react";
 import { Loader } from "react-feather";
 import ModalContainer from "./Container";
+import { Button } from "../ui/button";
 
 interface ConfirmModalProps {
   visible: boolean;
@@ -23,34 +24,41 @@ export default function ConfirmModal({
 
   return (
     <ModalContainer visible={visible} ignoreContainer>
-      <div className="dark:bg-black bg-white rounded p-3">
-        <h1 className="text-red-400 font-semibold text-lg">{title}</h1>
+      <div className="w-full max-w-md mx-auto bg-white dark:bg-slate-950 rounded-2xl shadow-xl p-6 border border-slate-200 dark:border-slate-800">
+        {/* Header */}
+        <h1 className="text-xl font-semibold text-red-500 dark:text-red-400">
+          {title}
+        </h1>
         {subtitle && (
-          <p className="text-red-300 dark:text-white text-sm">{subtitle}</p>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+            {subtitle}
+          </p>
         )}
 
-        <div className="flex items-center space-x-3 mt-3">
+        {/* Actions */}
+        <div className="flex items-center justify-end gap-3 mt-6">
           {busy ? (
-            <p className="flex items-center space-x-2 text-primary dark:text-white">
-              <Loader className="animate-spin" />
-              <span>Please wait</span>
-            </p>
+            <div className="flex items-center gap-2 text-primary dark:text-slate-200">
+              <Loader className="animate-spin w-5 h-5" />
+              <span className="text-sm font-medium">Please wait…</span>
+            </div>
           ) : (
             <>
-              <button
-                onClick={onConfirm}
-                type="button"
-                className={commonClass + " bg-red-400 hover:bg-red-500"}
-              >
-                Confirm
-              </button>
-              <button
+              <Button
+                variant={"outline"}
                 onClick={onCancel}
                 type="button"
-                className={commonClass + " bg-blue-400 hover:bg-blue-500"}
+                className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               >
                 Cancel
-              </button>
+              </Button>
+              <Button
+                onClick={onConfirm}
+                type="button"
+                className="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white font-medium shadow-sm transition"
+              >
+                Confirm
+              </Button>
             </>
           )}
         </div>
