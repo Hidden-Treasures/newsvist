@@ -31,7 +31,9 @@ import {
   getUserbyID,
   images,
   moderateComment,
+  recentArticles,
   rejectNews,
+  totalNewsStats,
   updateCategory,
   updateSubCategory,
   updateUserData,
@@ -168,6 +170,8 @@ route.get("/getsubcategories/:catName", isAuth, getAllNewsSubCategories);
 route.get("/allNewsList", isAuth, isAdmin, allNewsList);
 route.get("/editor-newsList", isAuth, isEditor, editorNewsList);
 route.get("/writer-newsList", isAuth, isJournalist, writerNewsList);
+route.get("/dashboard/stats", isAuth, isAdmin, totalNewsStats);
+route.get("/recent-articles", isAuth, isAdmin, recentArticles);
 
 route.delete("/news/:newsId", isAuth, canCreateRead, deleteNews);
 route.get("/recycle-bin", isAuth, getDeletedNews);

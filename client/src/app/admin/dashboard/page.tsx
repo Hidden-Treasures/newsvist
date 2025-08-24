@@ -59,9 +59,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useDashboardStats, useRecentArticles } from "@/hooks/useAdmin";
 
 // MOCK: Replace with real data hooks/selectors
-const useDashboardStats = () => {
+const useDashboardStatss = () => {
   // Ideally fetch from your API
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -80,14 +81,14 @@ const useDashboardStats = () => {
   });
 
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 450); // simulate
+    const t = setTimeout(() => setLoading(false), 450);
     return () => clearTimeout(t);
   }, []);
 
   return { loading, stats };
 };
 
-const recentArticles = [
+const recentArticless = [
   {
     id: "n1",
     title: "Supreme Court rules on major case",
@@ -154,8 +155,18 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [openCreate, setOpenCreate] = useState(false);
   const searchRef = useRef<HTMLInputElement | null>(null);
+  const { data: recentArticles = [], isLoading: articlesLoading } =
+    useRecentArticles();
 
-  const { loading, stats } = useDashboardStats();
+  const { data, isLoading, isError } = useDashboardStats();
+
+  const stats = data?.stats ?? {
+    totalArticles: 0,
+    drafts: 0,
+    liveEvents: 0,
+    reported: 0,
+    monthTrend: [],
+  };
 
   // keyboard shortcuts
   useEffect(() => {
@@ -232,8 +243,11 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {loading ? "—" : kpi.value}
+                    {isLoading ? "—" : kpi.value.toLocaleString()}
                   </div>
+                  {isError && (
+                    <p className="text-xs text-red-500">Error loading stats</p>
+                  )}
                   <p className="text-xs text-slate-500 mt-1">
                     Last 24h · auto-updates
                   </p>
@@ -336,7 +350,7 @@ export default function AdminDashboard() {
                   <Filter className="w-4 h-4" /> Filter
                 </Button>
                 <Button
-                  onClick={() => router.push("/admin/articles")}
+                  onClick={() => router.push("/admin/news-management/articles")}
                   variant="secondary"
                 >
                   View all
@@ -344,62 +358,66 @@ export default function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="rounded-xl border border-slate-800 overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead className="hidden md:table-cell">
-                        Author
-                      </TableHead>
-                      <TableHead className="hidden lg:table-cell">
-                        Category
-                      </TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="hidden sm:table-cell">
-                        Created
-                      </TableHead>
-                      <TableHead className="text-right">Views</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentArticles.map((a) => (
-                      <TableRow key={a.id} className="hover:bg-slate-800/40">
-                        <TableCell className="font-medium truncate max-w-[220px]">
-                          {a.title}
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          {a.author}
-                        </TableCell>
-                        <TableCell className="hidden lg:table-cell">
-                          <Badge variant="secondary" className="rounded-full">
-                            {a.category}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            className={`rounded-full ${
-                              a.status === "Published"
-                                ? "bg-emerald-600"
-                                : a.status === "Draft"
-                                ? "bg-slate-600"
-                                : "bg-blue-600"
-                            }`}
-                          >
-                            {a.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell text-slate-400">
-                          {a.createdAt}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {a.views.toLocaleString()}
-                        </TableCell>
+              {articlesLoading ? (
+                <p className="text-gray-400">Loading...</p>
+              ) : (
+                <div className="rounded-xl border border-slate-800 overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Title</TableHead>
+                        <TableHead className="hidden md:table-cell">
+                          Author
+                        </TableHead>
+                        <TableHead className="hidden lg:table-cell">
+                          Category
+                        </TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="hidden sm:table-cell">
+                          Created
+                        </TableHead>
+                        <TableHead className="text-right">Views</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {recentArticles.map((a) => (
+                        <TableRow key={a.id} className="hover:bg-slate-800/40">
+                          <TableCell className="font-medium truncate max-w-[220px]">
+                            {a.title}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            {a.author}
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            <Badge variant="secondary" className="rounded-full">
+                              {a.category}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              className={`rounded-full ${
+                                a.status === "Published"
+                                  ? "bg-emerald-600"
+                                  : a.status === "Draft"
+                                  ? "bg-slate-600"
+                                  : "bg-blue-600"
+                              }`}
+                            >
+                              {a.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell text-slate-400">
+                            {a.createdAt}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {a.views.toLocaleString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </CardContent>
           </Card>
 

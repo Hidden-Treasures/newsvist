@@ -519,78 +519,85 @@ export const writerNewsList = async function (req: Request, res: Response) {
   }
 };
 
-// export const filesForNewsByFilename = async function (req: Request, res: Response) {
-//   // console.log("From filesForNewsByFilename");
+export const totalNewsStats = async (req: Request, res: Response) => {
+  try {
+    // Aggregate articles trend (last 14 days)
+    const trend = await News.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000) },
+          isDeleted: false,
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%b %d", date: "$createdAt" } },
+          v: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
 
-//   client.connect().then(() => {
-//     // Get the database and the GridFS bucket
-//     const db = client.db("test");
-//     const bucket = new mongodb.GridFSBucket(db);
+    const monthTrend = trend.map((t) => ({ d: t._id, v: t.v }));
 
-//     // Get the filename from the request params
-//     const filename = req.params.filename;
-//     // Find the file by filename
-//     async function handleFile() {
-//       const file = await bucket.find({ filename }).toArray();
+    // Count stats
+    const totalArticles = await News.countDocuments({ isDeleted: false });
+    const drafts = await News.countDocuments({
+      status: "pending",
+      isDeleted: false,
+    });
+    const reported = await News.countDocuments({
+      status: "rejected",
+      isDeleted: false,
+    });
 
-//       if (file.length > 0) {
-//         const dataBuffer = [];
-//         const downloadStream = bucket.openDownloadStreamByName(filename);
+    const liveEvents = await LiveUpdateEntry.countDocuments();
 
-//         downloadStream.on("data", (chunk) => {
-//           dataBuffer.push(chunk);
-//         });
+    res.json({
+      success: true,
+      stats: {
+        totalArticles,
+        drafts,
+        reported,
+        liveEvents,
+        monthTrend,
+      },
+    });
+  } catch (err) {
+    console.error("Dashboard stats error", err);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch dashboard stats" });
+  }
+};
 
-//         downloadStream.on("end", () => {
-//           const data = Buffer.concat(dataBuffer);
-//           // Now 'data' contains the binary data of the file
-//           // Send the file data in the response
-//           res.send(data);
-//         });
-//       } else {
-//         console.log("File not found");
-//         // Handle accordingly, send an error response, etc.
-//       }
-//     }
+export const recentArticles = async (req: Request, res: Response) => {
+  try {
+    const articles = await News.find({ isDeleted: false })
+      .populate("author", "username")
+      .sort({ createdAt: -1 })
+      .limit(10);
 
-//     handleFile();
-//   });
-// };
+    const formatted = articles.map((a) => ({
+      id: a._id,
+      title: a.title,
+      author: (a as any).author?.username || "Unknown",
+      category: a.newsCategory || "General",
+      status: a.published
+        ? "Published"
+        : a.status === "pending"
+        ? "Draft"
+        : "Rejected",
+      createdAt: a.createdAt.toLocaleDateString(),
+      views: a.views,
+    }));
 
-// export const filesForNewsByFilename = async function (req: Request, res: Response) {
-//   const { filename } = req.params;
-
-//   const headObjectParams = {
-//     Bucket: process.env.S3_BUCKET_NAME,
-//     Key: filename,
-//   };
-
-//   try {
-//     // Check if the file exists
-//     await s3Client.send(new HeadObjectCommand(headObjectParams));
-
-//     const getObjectParams = {
-//       Bucket: process.env.S3_BUCKET_NAME,
-//       Key: filename,
-//     };
-
-//     const command = new GetObjectCommand(getObjectParams);
-//     const response = await s3Client.send(command);
-
-//     // Stream the file directly to the response
-//     const passThrough = new PassThrough();
-//     response.Body.pipe(passThrough).pipe(res);
-//   } catch (error) {
-//     console.error("Error fetching file from S3", error);
-
-//     // Handle specific S3 errors like NoSuchKey
-//     if (error.name === "NoSuchKey" || error.$metadata?.httpStatusCode === 404) {
-//       return res.status(404).send("File not found");
-//     }
-
-//     return res.status(500).send("Internal server error");
-//   }
-// };
+    res.json({ success: true, articles: formatted });
+  } catch (err) {
+    console.error("Recent articles error:", err);
+    res.status(500).json({ success: false });
+  }
+};
 
 export const updateNews = async (req: Request, res: Response) => {
   const { newsId } = req.params;

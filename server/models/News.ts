@@ -24,7 +24,6 @@ interface INews extends Document {
   type?: string;
   tags: string[];
   editorText?: string;
-  isLiveUpdate?: boolean;
   liveUpdateType?: string;
   views: number;
   status: "pending" | "approved" | "rejected";
@@ -94,10 +93,6 @@ const NewsSchema = new Schema<INews>(
 
     editorText: {
       type: String,
-    },
-
-    isLiveUpdate: {
-      type: Boolean,
     },
     liveUpdateType: {
       type: String,

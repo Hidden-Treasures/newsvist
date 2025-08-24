@@ -85,6 +85,16 @@ export interface SearchParams {
   pageSize?: number;
 }
 
+export interface RecentArticle {
+  id: string;
+  title: string;
+  author?: string;
+  category?: string;
+  status: string;
+  createdAt: string;
+  views: number;
+}
+
 export interface RelatedNewsResponse {
   relatedNews: News[];
 }
