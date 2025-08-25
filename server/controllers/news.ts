@@ -101,6 +101,7 @@ export const createNews = async (req: Request, res: Response) => {
       city,
       name,
       isAdvertisement,
+      publishDate,
     } = req.body;
 
     let bioId = null;
@@ -132,9 +133,16 @@ export const createNews = async (req: Request, res: Response) => {
       isAdvertisement,
     });
 
-    if (isAdmin || isEditor) {
-      newNews.status = "approved";
-      newNews.published = true;
+    if (publishDate && new Date(publishDate) > new Date()) {
+      newNews.publishedAt = new Date(publishDate);
+      newNews.status = "scheduled";
+      newNews.published = false;
+    } else {
+      if (isAdmin || isEditor) {
+        newNews.status = "approved";
+        newNews.published = true;
+        newNews.publishedAt = new Date();
+      }
     }
     // uploading Image file
     if (req.body.cloudinaryUrls && req.body.cloudinaryUrls.length > 0) {
@@ -576,7 +584,7 @@ export const recentArticles = async (req: Request, res: Response) => {
     const articles = await News.find({ isDeleted: false })
       .populate("author", "username")
       .sort({ createdAt: -1 })
-      .limit(10);
+      .limit(5);
 
     const formatted = articles.map((a) => ({
       id: a._id,
@@ -1150,7 +1158,7 @@ export const getMostRecentNews = async (req: Request, res: Response) => {
   try {
     // Fetch the most recent articles
     const recentArticles = await News.find({ published: true })
-      .populate("user")
+      .populate("author")
       .sort({ createdAt: -1 })
       .limit(6);
 
@@ -1160,7 +1168,7 @@ export const getMostRecentNews = async (req: Request, res: Response) => {
       newsCategory: "Sports",
       subCategory: "Football",
     })
-      .populate("user")
+      .populate("author")
       .sort({ createdAt: -1 })
       .limit(1);
 
@@ -1169,7 +1177,7 @@ export const getMostRecentNews = async (req: Request, res: Response) => {
       published: true,
       newsCategory: "Tech",
     })
-      .populate("user")
+      .populate("author")
       .sort({ createdAt: -1 })
       .limit(1);
 
@@ -1178,7 +1186,7 @@ export const getMostRecentNews = async (req: Request, res: Response) => {
       newsCategory: "Tech",
       ...(recentTechArticle ? { _id: { $ne: recentTechArticle._id } } : {}),
     })
-      .populate("user")
+      .populate("author")
       .sort({ createdAt: -1 })
       .limit(6);
     // Fetch articles from both World and Business categories
@@ -1186,7 +1194,7 @@ export const getMostRecentNews = async (req: Request, res: Response) => {
       published: true,
       newsCategory: { $in: ["World", "Business"] },
     })
-      .populate("user")
+      .populate("author")
       .sort({ createdAt: -1 })
       .limit(6);
 
@@ -1346,7 +1354,7 @@ export const getNewsByTags = async (req: Request, res: Response) => {
       .skip(skip)
       .limit(pageLimit)
       .sort({ createdAt: -1 })
-      .populate("user");
+      .populate("author");
 
     const totalNews = await News.countDocuments({
       tags: { $in: tagArray },
@@ -1364,7 +1372,7 @@ export const getNewsBySlug = async (req: Request, res: Response) => {
     const slug = req.params.slug;
 
     // 1. Find article without increment first
-    const article = await News.findOne({ slug }).populate("user");
+    const article = await News.findOne({ slug }).populate("author");
     if (!article) {
       return res.status(404).json({ message: "Article not found" });
     }
@@ -2261,7 +2269,7 @@ export const getOldestNewsArticleByType = async (
   try {
     const oldestNewsArticle = await News.findOne(query)
       .sort({ createdAt: 1 })
-      .populate("user");
+      .populate("author");
 
     if (oldestNewsArticle) {
       res.status(200).json(oldestNewsArticle);
@@ -2280,7 +2288,7 @@ export const getNewsByLiveUpdateType = async (req: Request, res: Response) => {
   try {
     const newsArticles = await News.find(query)
       .sort({ createdAt: -1 })
-      .populate("user");
+      .populate("author");
     if (newsArticles.length > 0) {
       res.status(200).json(newsArticles);
     } else {
@@ -2296,7 +2304,7 @@ export const getAllLiveUpdates = async (req: Request, res: Response) => {
   try {
     const liveUpdates = await News.find({ isLiveUpdate: true })
       .sort({ createdAt: -1 })
-      .populate("user");
+      .populate("author");
     if (liveUpdates.length > 0) {
       res.status(200).json(liveUpdates);
     } else {

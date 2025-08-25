@@ -74,6 +74,7 @@ const NewsForm: FC<NewsFormProps> = ({
     useState<string>("");
   const [selectedImageForUI, setSelectedImageForUI] = useState<string>("");
   const [isFocused, setIsFocused] = useState(false);
+  const [publishDate, setPublishDate] = useState<string>("");
   const [isAdvertisement, setIsAdvertisement] = useState<boolean>(false);
   // Using TanStack Query hooks
   const { data: types = [] } = useNewsTypes();
@@ -174,6 +175,10 @@ const NewsForm: FC<NewsFormProps> = ({
     formData.append("editorText", editorText);
     formData.append("name", bioName);
     formData.append("folder", "news_assets");
+
+    if (publishDate) {
+      formData.append("publishDate", publishDate);
+    }
 
     onSubmit(formData, resetForm);
   };
@@ -358,6 +363,16 @@ const NewsForm: FC<NewsFormProps> = ({
             placeholder="Artist / Celebrity / Player Name"
           />
         </div>
+        <div>
+          <Label className="text-gray-300">Publish Date & Time</Label>
+          <input
+            type="datetime-local"
+            value={publishDate}
+            onChange={(e) => setPublishDate(e.target.value)}
+            className="w-full border-2 p-2 rounded bg-transparent text-gray-500"
+          />
+        </div>
+
         <div className="mt-auto">
           <Submit
             busy={busy}
@@ -367,219 +382,6 @@ const NewsForm: FC<NewsFormProps> = ({
           />
         </div>
       </div>
-
-      {/* <div className="md:w-[70%] space-y-5">
-          <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={isAdvertisement}
-              onChange={(e) => setIsAdvertisement(e.target.checked)}
-              className="h-5 w-5 text-gray-300 cursor-pointer"
-            />
-            <span className="text-gray-400">Post as Advertisement</span>
-          </label>
-          <div>
-            <Label htmlFor="title">Title</Label>
-            <input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              name="title"
-              type="text"
-              className={
-                commonInputClasses + " border-b-2 font-semibold text-xl w-full"
-              }
-              style={{
-                borderColor: isFocused ? Colors.primary : Colors.lightSubtle,
-                color: Colors.primary,
-                whiteSpace: "normal",
-                wordWrap: "break-word",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-              placeholder="rivers in the ocean"
-            />
-          </div>
-          <div>
-            <Label htmlFor="type">News Type</Label>
-            <Select
-              id="NewsType"
-              name="NewsType"
-              value={selectedType}
-              onChange={(e) => onTypeChange(e.target.value)}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              className="w-full border-2 p-1 pr-10 outline-none transition rounded bg-transparent"
-              style={{
-                borderColor: isFocused ? Colors.primary : Colors.lightSubtle,
-                color: Colors.primary,
-              }}
-            >
-              <option value="" disabled>
-                Select News Type
-              </option>
-              {types &&
-                types?.map((type: any, index: number) => (
-                  <option value={type?.name} key={index}>
-                    {type?.name}
-                  </option>
-                ))}
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="">Content</Label>
-            <TextEditor
-              content={editorText}
-              onChange={(newContent) => setEditorText(newContent)}
-              description={editorText}
-            />
-          </div>
-
-          <div className="w-full mr-2">
-            <Label htmlFor="tags">Tags</Label>
-            <CreatableSelect
-              id="tags"
-              isMulti
-              value={Array.isArray(selectedNewsTags) ? selectedNewsTags : []}
-              onChange={handleTagChange}
-              placeholder="Enter or select tags"
-              className="border-2 p-1  outline-none transition rounded bg-transparent text-black"
-              formatCreateLabel={(inputValue) => `Create tag: "${inputValue}"`}
-            />
-          </div>
-
-          <Submit
-            busy={busy}
-            value={btnTitle}
-            onClick={handleSubmit}
-            type="button"
-          />
-        </div>
-        <div className="md:w-[30%] space-y-5">
-          <div>
-            <div>
-              <Label htmlFor="">Upload Image</Label>
-              <ImageSelector
-                name="file"
-                onChange={handleFileChange}
-                selectedImage={selectedImageForUI}
-                label="Select image"
-                accept="image/jpg, image/jpeg, image/png, image/gif, image/webp"
-              />
-            </div>
-          </div>
-          <div className="w-full">
-            <div>
-              <Label htmlFor="NewsCategory">Category</Label>
-              <Select
-                id="NewsCategory"
-                name="NewsCategory"
-                value={selectedNewsCategory}
-                onChange={handleNewsCategoryChange}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                className="w-full border-2 p-1 pr-10 outline-none transition rounded bg-transparent"
-                required
-                style={{
-                  borderColor: isFocused ? Colors.primary : Colors.lightSubtle,
-                  color: Colors.primary,
-                }}
-              >
-                <option value="" disabled>
-                  {categoriesLoading
-                    ? "Loading categories..."
-                    : "Select News Category"}
-                </option>
-                {categories &&
-                  categories?.map((category: any, index: number) => (
-                    <option value={category?.title} key={index}>
-                      {category?.title}
-                    </option>
-                  ))}
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="NewsSubCategory">Sub Category</Label>
-              <Select
-                id="NewsSubCategory"
-                name="NewsSubCategory"
-                value={selectedNewsSubCategory}
-                onChange={handleNewsSubCategoryChange}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                className="w-full border-2 p-1 !pr-10 outline-none transition rounded bg-transparent"
-                style={{
-                  borderColor: isFocused ? Colors.primary : Colors.lightSubtle,
-                  color: Colors.primary,
-                }}
-              >
-                <option value="" disabled>
-                  {subCategoriesLoading
-                    ? "Loading subcategories..."
-                    : "Select News Sub Category"}
-                </option>
-                {subCategories &&
-                  subCategories?.map((subcategory: any, index: number) => (
-                    <option value={subcategory?.name} key={index}>
-                      {subcategory?.name}
-                    </option>
-                  ))}
-              </Select>
-            </div>
-            <div>
-              <div>
-                <Label htmlFor="city">
-                  City{" "}
-                  <span className="text-xs">
-                    (Which city does the incident happen?)
-                  </span>
-                </Label>
-                <CreatableSelect
-                  value={cities?.find((c) => c?.value === city)}
-                  onChange={(option) => {
-                    if (option?.value) {
-                      setCity(option.value);
-                    }
-                  }}
-                  options={cities}
-                  className="border-2 p-1  outline-none transition rounded bg-transparent text-black"
-                  placeholder="Enter or select City or Country"
-                />
-              </div>
-            </div>
-            <div className="w-full">
-              <div className="flex flex-wrap">
-                <Label htmlFor="bioName">Bio Name</Label>
-                <span
-                  className="text-[10px] font-bold italic"
-                  style={{ color: Colors.lightSubtle }}
-                >
-                  (artist name, player name, celebrity name, e.t.c)
-                </span>
-              </div>
-              <input
-                type="text"
-                id="bioName"
-                name="bioName"
-                value={bioName}
-                onChange={(e) => setBioName(e.target.value)}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                className={
-                  commonInputClasses + " border-b-2 font-semibold text-xl"
-                }
-                style={{
-                  borderColor: isFocused ? Colors.primary : Colors.lightSubtle,
-                  color: Colors.primary,
-                }}
-                required
-              />
-            </div>
-          </div>
-        </div> */}
     </form>
   );
 };

@@ -67,6 +67,24 @@ body::-webkit-scrollbar {
   display: none;
 }
 
+::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #475569;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b;
+}
+
 code {
   background-color: var(--purple-light);
   border-radius: 0.4rem;

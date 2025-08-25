@@ -45,8 +45,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.approveNews = exports.getRejectedNews = exports.getApprovedNews = exports.getPendingNews = exports.getMostReadArticles = exports.getUpNextArticles = exports.getNewsAndBuzz = exports.getRelatedNews = exports.getImageArticlesByCategory = exports.getArticlesByCategory = exports.getNewsBySlug = exports.getNewsByTags = exports.getMissedNews = exports.getNews = exports.getMostRecentNews = exports.getHeadLine = exports.getUserbyID = exports.updateUserData = exports.deleteUsersManually = exports.users = exports.assignRole = exports.updateSubCategory = exports.updateCategory = exports.addCategory = exports.deleteSubCategory = exports.deleteCategory = exports.AllCategoriesWithSubCategory = exports.restoreNews = exports.deleteNews = exports.addToNewsRecycleBin = exports.getNewsById = exports.getNewsForUpdate = exports.updateNews = exports.writerNewsList = exports.editorNewsList = exports.allNewsList = exports.newsList = exports.getAllNewsSubCategories = exports.getAllNewsCategories = exports.getNewsType = exports.deleteType = exports.addType = exports.getAdvertisements = exports.getAllLiveEvents = exports.getLiveEventEntries = exports.addLiveUpdateEntry = exports.createLiveEvent = exports.createNews = exports.getLastFiveLiveUpdateNewsType = exports.videoUpload = void 0;
-exports.getAllLiveUpdates = exports.getNewsByLiveUpdateType = exports.getOldestNewsArticleByType = exports.mainSearch = exports.getDeletedNews = exports.getSingleImage = exports.images = exports.deleteImageByUser = exports.getImagesByCategoryOrTag = exports.getAllImages = exports.getImages = exports.createImage = exports.moderateComment = exports.getAnalytics = exports.rejectNews = void 0;
+exports.getApprovedNews = exports.getPendingNews = exports.getMostReadArticles = exports.getUpNextArticles = exports.getNewsAndBuzz = exports.getRelatedNews = exports.getImageArticlesByCategory = exports.getArticlesByCategory = exports.getNewsBySlug = exports.getNewsByTags = exports.getMissedNews = exports.getNews = exports.getMostRecentNews = exports.getHeadLine = exports.getUserbyID = exports.updateUserData = exports.deleteUsersManually = exports.users = exports.assignRole = exports.updateSubCategory = exports.updateCategory = exports.addCategory = exports.deleteSubCategory = exports.deleteCategory = exports.AllCategoriesWithSubCategory = exports.restoreNews = exports.deleteNews = exports.addToNewsRecycleBin = exports.getNewsById = exports.getNewsForUpdate = exports.updateNews = exports.recentArticles = exports.totalNewsStats = exports.writerNewsList = exports.editorNewsList = exports.allNewsList = exports.newsList = exports.getAllNewsSubCategories = exports.getAllNewsCategories = exports.getNewsType = exports.deleteType = exports.addType = exports.getAdvertisements = exports.getAllLiveEvents = exports.getLiveEventEntries = exports.addLiveUpdateEntry = exports.createLiveEvent = exports.createNews = exports.getLastFiveLiveUpdateNewsType = exports.videoUpload = void 0;
+exports.getAllLiveUpdates = exports.getNewsByLiveUpdateType = exports.getOldestNewsArticleByType = exports.mainSearch = exports.getDeletedNews = exports.getSingleImage = exports.images = exports.deleteImageByUser = exports.getImagesByCategoryOrTag = exports.getAllImages = exports.getImages = exports.createImage = exports.moderateComment = exports.getAnalytics = exports.rejectNews = exports.approveNews = exports.getRejectedNews = void 0;
 const helper_1 = require("../utils/helper");
 const News_1 = __importDefault(require("../models/News"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
@@ -120,7 +120,7 @@ const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const role = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;
         const isAdmin = role === "admin";
         const isEditor = role === "editor";
-        const { title, newsCategory, subCategory, type, tags, editorText, video, city, name, isAdvertisement, } = req.body;
+        const { title, newsCategory, subCategory, type, tags, editorText, video, city, name, isAdvertisement, publishDate, } = req.body;
         let bioId = null;
         if (name) {
             const bio = yield Biography_1.default.findOne({
@@ -146,9 +146,17 @@ const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             name: bioId,
             isAdvertisement,
         });
-        if (isAdmin || isEditor) {
-            newNews.status = "approved";
-            newNews.published = true;
+        if (publishDate && new Date(publishDate) > new Date()) {
+            newNews.publishedAt = new Date(publishDate);
+            newNews.status = "scheduled";
+            newNews.published = false;
+        }
+        else {
+            if (isAdmin || isEditor) {
+                newNews.status = "approved";
+                newNews.published = true;
+                newNews.publishedAt = new Date();
+            }
         }
         // uploading Image file
         if (req.body.cloudinaryUrls && req.body.cloudinaryUrls.length > 0) {
@@ -503,64 +511,85 @@ const writerNewsList = function (req, res) {
     });
 };
 exports.writerNewsList = writerNewsList;
-// export const filesForNewsByFilename = async function (req: Request, res: Response) {
-//   // console.log("From filesForNewsByFilename");
-//   client.connect().then(() => {
-//     // Get the database and the GridFS bucket
-//     const db = client.db("test");
-//     const bucket = new mongodb.GridFSBucket(db);
-//     // Get the filename from the request params
-//     const filename = req.params.filename;
-//     // Find the file by filename
-//     async function handleFile() {
-//       const file = await bucket.find({ filename }).toArray();
-//       if (file.length > 0) {
-//         const dataBuffer = [];
-//         const downloadStream = bucket.openDownloadStreamByName(filename);
-//         downloadStream.on("data", (chunk) => {
-//           dataBuffer.push(chunk);
-//         });
-//         downloadStream.on("end", () => {
-//           const data = Buffer.concat(dataBuffer);
-//           // Now 'data' contains the binary data of the file
-//           // Send the file data in the response
-//           res.send(data);
-//         });
-//       } else {
-//         console.log("File not found");
-//         // Handle accordingly, send an error response, etc.
-//       }
-//     }
-//     handleFile();
-//   });
-// };
-// export const filesForNewsByFilename = async function (req: Request, res: Response) {
-//   const { filename } = req.params;
-//   const headObjectParams = {
-//     Bucket: process.env.S3_BUCKET_NAME,
-//     Key: filename,
-//   };
-//   try {
-//     // Check if the file exists
-//     await s3Client.send(new HeadObjectCommand(headObjectParams));
-//     const getObjectParams = {
-//       Bucket: process.env.S3_BUCKET_NAME,
-//       Key: filename,
-//     };
-//     const command = new GetObjectCommand(getObjectParams);
-//     const response = await s3Client.send(command);
-//     // Stream the file directly to the response
-//     const passThrough = new PassThrough();
-//     response.Body.pipe(passThrough).pipe(res);
-//   } catch (error) {
-//     console.error("Error fetching file from S3", error);
-//     // Handle specific S3 errors like NoSuchKey
-//     if (error.name === "NoSuchKey" || error.$metadata?.httpStatusCode === 404) {
-//       return res.status(404).send("File not found");
-//     }
-//     return res.status(500).send("Internal server error");
-//   }
-// };
+const totalNewsStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        // Aggregate articles trend (last 14 days)
+        const trend = yield News_1.default.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000) },
+                    isDeleted: false,
+                },
+            },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%b %d", date: "$createdAt" } },
+                    v: { $sum: 1 },
+                },
+            },
+            { $sort: { _id: 1 } },
+        ]);
+        const monthTrend = trend.map((t) => ({ d: t._id, v: t.v }));
+        // Count stats
+        const totalArticles = yield News_1.default.countDocuments({ isDeleted: false });
+        const drafts = yield News_1.default.countDocuments({
+            status: "pending",
+            isDeleted: false,
+        });
+        const reported = yield News_1.default.countDocuments({
+            status: "rejected",
+            isDeleted: false,
+        });
+        const liveEvents = yield LiveUpdateEntry_1.default.countDocuments();
+        res.json({
+            success: true,
+            stats: {
+                totalArticles,
+                drafts,
+                reported,
+                liveEvents,
+                monthTrend,
+            },
+        });
+    }
+    catch (err) {
+        console.error("Dashboard stats error", err);
+        res
+            .status(500)
+            .json({ success: false, message: "Failed to fetch dashboard stats" });
+    }
+});
+exports.totalNewsStats = totalNewsStats;
+const recentArticles = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const articles = yield News_1.default.find({ isDeleted: false })
+            .populate("author", "username")
+            .sort({ createdAt: -1 })
+            .limit(5);
+        const formatted = articles.map((a) => {
+            var _a;
+            return ({
+                id: a._id,
+                title: a.title,
+                author: ((_a = a.author) === null || _a === void 0 ? void 0 : _a.username) || "Unknown",
+                category: a.newsCategory || "General",
+                status: a.published
+                    ? "Published"
+                    : a.status === "pending"
+                        ? "Draft"
+                        : "Rejected",
+                createdAt: a.createdAt.toLocaleDateString(),
+                views: a.views,
+            });
+        });
+        res.json({ success: true, articles: formatted });
+    }
+    catch (err) {
+        console.error("Recent articles error:", err);
+        res.status(500).json({ success: false });
+    }
+});
+exports.recentArticles = recentArticles;
 const updateNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e;
     const { newsId } = req.params;
@@ -1048,7 +1077,7 @@ const getMostRecentNews = (req, res) => __awaiter(void 0, void 0, void 0, functi
     try {
         // Fetch the most recent articles
         const recentArticles = yield News_1.default.find({ published: true })
-            .populate("user")
+            .populate("author")
             .sort({ createdAt: -1 })
             .limit(6);
         // Fetch the most recent sports article in the Football subcategory
@@ -1057,7 +1086,7 @@ const getMostRecentNews = (req, res) => __awaiter(void 0, void 0, void 0, functi
             newsCategory: "Sports",
             subCategory: "Football",
         })
-            .populate("user")
+            .populate("author")
             .sort({ createdAt: -1 })
             .limit(1);
         // Fetch the most recent tech article and 5 other tech articles
@@ -1065,11 +1094,11 @@ const getMostRecentNews = (req, res) => __awaiter(void 0, void 0, void 0, functi
             published: true,
             newsCategory: "Tech",
         })
-            .populate("user")
+            .populate("author")
             .sort({ createdAt: -1 })
             .limit(1);
         const otherTechArticles = yield News_1.default.find(Object.assign({ published: true, newsCategory: "Tech" }, (recentTechArticle ? { _id: { $ne: recentTechArticle._id } } : {})))
-            .populate("user")
+            .populate("author")
             .sort({ createdAt: -1 })
             .limit(6);
         // Fetch articles from both World and Business categories
@@ -1077,7 +1106,7 @@ const getMostRecentNews = (req, res) => __awaiter(void 0, void 0, void 0, functi
             published: true,
             newsCategory: { $in: ["World", "Business"] },
         })
-            .populate("user")
+            .populate("author")
             .sort({ createdAt: -1 })
             .limit(6);
         res.json({
@@ -1203,7 +1232,7 @@ const getNewsByTags = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             .skip(skip)
             .limit(pageLimit)
             .sort({ createdAt: -1 })
-            .populate("user");
+            .populate("author");
         const totalNews = yield News_1.default.countDocuments({
             tags: { $in: tagArray },
             isDeleted: false,
@@ -1220,7 +1249,7 @@ const getNewsBySlug = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     try {
         const slug = req.params.slug;
         // 1. Find article without increment first
-        const article = yield News_1.default.findOne({ slug }).populate("user");
+        const article = yield News_1.default.findOne({ slug }).populate("author");
         if (!article) {
             return res.status(404).json({ message: "Article not found" });
         }
@@ -2002,7 +2031,7 @@ const getOldestNewsArticleByType = (req, res) => __awaiter(void 0, void 0, void 
     try {
         const oldestNewsArticle = yield News_1.default.findOne(query)
             .sort({ createdAt: 1 })
-            .populate("user");
+            .populate("author");
         if (oldestNewsArticle) {
             res.status(200).json(oldestNewsArticle);
         }
@@ -2022,7 +2051,7 @@ const getNewsByLiveUpdateType = (req, res) => __awaiter(void 0, void 0, void 0, 
     try {
         const newsArticles = yield News_1.default.find(query)
             .sort({ createdAt: -1 })
-            .populate("user");
+            .populate("author");
         if (newsArticles.length > 0) {
             res.status(200).json(newsArticles);
         }
@@ -2040,7 +2069,7 @@ const getAllLiveUpdates = (req, res) => __awaiter(void 0, void 0, void 0, functi
     try {
         const liveUpdates = yield News_1.default.find({ isLiveUpdate: true })
             .sort({ createdAt: -1 })
-            .populate("user");
+            .populate("author");
         if (liveUpdates.length > 0) {
             res.status(200).json(liveUpdates);
         }

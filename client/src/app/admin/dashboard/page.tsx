@@ -61,72 +61,6 @@ import {
 } from "@/components/ui/dialog";
 import { useDashboardStats, useRecentArticles } from "@/hooks/useAdmin";
 
-// MOCK: Replace with real data hooks/selectors
-const useDashboardStatss = () => {
-  // Ideally fetch from your API
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalArticles: 3254,
-    drafts: 118,
-    liveEvents: 7,
-    reported: 23,
-    monthTrend: [
-      { d: "Aug 01", v: 82 },
-      { d: "Aug 05", v: 104 },
-      { d: "Aug 09", v: 91 },
-      { d: "Aug 13", v: 120 },
-      { d: "Aug 17", v: 108 },
-      { d: "Aug 19", v: 137 },
-    ],
-  });
-
-  useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 450);
-    return () => clearTimeout(t);
-  }, []);
-
-  return { loading, stats };
-};
-
-const recentArticless = [
-  {
-    id: "n1",
-    title: "Supreme Court rules on major case",
-    author: "Ada N.",
-    category: "Politics",
-    status: "Published",
-    createdAt: "Aug 19, 09:14",
-    views: 12844,
-  },
-  {
-    id: "n2",
-    title: "Oil prices dip as talks resume",
-    author: "Ike O.",
-    category: "Business",
-    status: "Scheduled",
-    createdAt: "Aug 19, 08:31",
-    views: 8742,
-  },
-  {
-    id: "n3",
-    title: "Derby match ends in a thriller",
-    author: "Yemi K.",
-    category: "Sport",
-    status: "Draft",
-    createdAt: "Aug 18, 22:05",
-    views: 993,
-  },
-  {
-    id: "n4",
-    title: "New security directive announced",
-    author: "Chika U.",
-    category: "Security",
-    status: "Published",
-    createdAt: "Aug 18, 19:47",
-    views: 5212,
-  },
-];
-
 const moderationQueue = [
   {
     id: "m1",
@@ -361,7 +295,7 @@ export default function AdminDashboard() {
               {articlesLoading ? (
                 <p className="text-gray-400">Loading...</p>
               ) : (
-                <div className="rounded-xl border border-slate-800 overflow-hidden">
+                <div className="rounded-xl border border-slate-800 overflow-hidden md:overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>

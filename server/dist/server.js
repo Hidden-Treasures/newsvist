@@ -26,6 +26,7 @@ const socket_io_1 = require("socket.io");
 const router_1 = __importDefault(require("./router/router"));
 dotenv_1.default.config();
 require("./database/db");
+const scheduler_1 = require("./jobs/scheduler");
 const PORT = Number(process.env.PORT) || 8080;
 const app = (0, express_1.default)();
 const MongoDBStore = (0, connect_mongodb_session_1.default)(express_session_1.default);
@@ -67,6 +68,8 @@ app.get("/", (req, res) => {
     res.status(200).json({ message: "Backend is running" });
 });
 app.use("/api", router_1.default);
+// Start schedulers
+(0, scheduler_1.startSchedulers)();
 const server = app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
@@ -79,11 +82,6 @@ const io = new socket_io_1.Server(server, {
     transports: ["websocket", "polling"],
 });
 io.on("connection", (socket) => __awaiter(void 0, void 0, void 0, function* () {
-    // console.log("A user connected");
-    socket.on("liveUpdate", (data) => __awaiter(void 0, void 0, void 0, function* () {
-        // console.log("Live News Received:", data);
-        io.emit("liveNewsUpdate", data);
-    }));
     io.on("connection", (socket) => {
         console.log("A user connected");
         socket.on("join-room", (room) => {

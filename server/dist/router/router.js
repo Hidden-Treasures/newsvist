@@ -46,6 +46,8 @@ route.get("/getsubcategories/:catName", auth_1.isAuth, news_2.getAllNewsSubCateg
 route.get("/allNewsList", auth_1.isAuth, auth_1.isAdmin, news_2.allNewsList);
 route.get("/editor-newsList", auth_1.isAuth, auth_1.isEditor, news_2.editorNewsList);
 route.get("/writer-newsList", auth_1.isAuth, auth_1.isJournalist, news_2.writerNewsList);
+route.get("/dashboard/stats", auth_1.isAuth, auth_1.isAdmin, news_1.totalNewsStats);
+route.get("/recent-articles", auth_1.isAuth, auth_1.isAdmin, news_1.recentArticles);
 route.delete("/news/:newsId", auth_1.isAuth, auth_1.canCreateRead, news_2.deleteNews);
 route.get("/recycle-bin", auth_1.isAuth, news_2.getDeletedNews);
 route.delete("/recycle-bin/:newsId", auth_1.isAuth, auth_1.canCreateRead, news_2.addToNewsRecycleBin);

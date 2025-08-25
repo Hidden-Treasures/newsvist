@@ -15,6 +15,7 @@ import { Server as SocketIOServer } from "socket.io";
 import router from "./router/router";
 dotenv.config();
 import "./database/db";
+import { startSchedulers } from "./jobs/scheduler";
 
 const PORT = Number(process.env.PORT) || 8080;
 const app = express();
@@ -90,6 +91,9 @@ app.get("/", (req: Request, res: Response) => {
 });
 app.use("/api", router);
 
+// Start schedulers
+startSchedulers();
+
 const server = app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
@@ -109,13 +113,6 @@ const io = new SocketIOServer<
 });
 
 io.on("connection", async (socket) => {
-  // console.log("A user connected");
-
-  socket.on("liveUpdate", async (data) => {
-    // console.log("Live News Received:", data);
-    io.emit("liveNewsUpdate", data);
-  });
-
   io.on("connection", (socket) => {
     console.log("A user connected");
 

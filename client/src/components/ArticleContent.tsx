@@ -18,11 +18,6 @@ interface Media {
   [key: string]: any;
 }
 
-interface User {
-  profilePhoto?: string;
-  username?: string;
-}
-
 interface Author {
   username?: string;
   profilePhoto?: string;
@@ -35,8 +30,7 @@ interface ArticleProps {
     editorText: string;
     file?: Media;
     video?: Media | null;
-    user?: User;
-    author?: string;
+    author?: Author;
     editor?: Author;
     city?: string;
     tags?: string[] | { _id: string; name: string }[];
@@ -90,6 +84,12 @@ export default function ArticleContent({ article, slug }: ArticleProps) {
     typeof tag === "string" ? tag : tag._id
   );
 
+  const raw = article.editorText || "";
+
+  const m = raw.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
+  const firstPara = m ? m[1] : raw.replace(/^<p>|<\/p>$/g, "");
+  const rest = m ? raw.replace(m[0], "") : "";
+
   return (
     <div>
       <h1 className="md:text-4xl text-2xl font-bold m-4 pb-4 capitalize">
@@ -99,7 +99,7 @@ export default function ArticleContent({ article, slug }: ArticleProps) {
       <div className="author flex items-center mb-4">
         <div className="w-10 h-10 rounded-full overflow-hidden">
           <Image
-            src={article.user?.profilePhoto ?? ""}
+            src={article?.author?.profilePhoto ?? ""}
             alt="user"
             width={100}
             height={100}
@@ -107,7 +107,7 @@ export default function ArticleContent({ article, slug }: ArticleProps) {
           />
         </div>
         <div className="text-base text-gray-600 pl-2">
-          By <AuthorLink author={article.author} />
+          By <AuthorLink author={article?.author?.username} />
           {article?.editor?.username && (
             <>
               {" "}
@@ -154,18 +154,23 @@ export default function ArticleContent({ article, slug }: ArticleProps) {
           )}
         </div>
 
-        <p className="text-base leading-relaxed mt-4 mb-6">
+        <p className="text-base leading-relaxed mt-4 mb-2">
+          <strong>
+            <em>{cityText}</em>
+          </strong>{" "}
+          —{" "}
           <span
-            style={{ whiteSpace: "pre-line" }}
-            className="[&>*]:m-0 [&_a]:text-blue-600 [&_a]:underline [&_a]:cursor-pointer hover:[&_a]:text-blue-800"
-            dangerouslySetInnerHTML={{
-              __html: `<strong>${cityText} — </strong>${article.editorText.replace(
-                /^<p>|<\/p>$/g,
-                ""
-              )}`,
-            }}
+            className="[&_a]:text-blue-600 [&_a]:underline hover:[&_a]:text-blue-800 whitespace-pre-wrap"
+            dangerouslySetInnerHTML={{ __html: firstPara }}
           />
         </p>
+
+        {rest && (
+          <div
+            className="[&_p]:my-3 [&_a]:text-blue-600 hover:[&_a]:text-blue-800"
+            dangerouslySetInnerHTML={{ __html: rest }}
+          />
+        )}
 
         <div className="ml-2 md:ml-16 mr-2 md:mr-16 mt-4">
           <div className="flex flex-wrap mt-4">

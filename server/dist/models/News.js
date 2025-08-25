@@ -57,9 +57,7 @@ const NewsSchema = new mongoose_1.Schema({
         sparse: true,
         trim: true,
     },
-    publishedAt: {
-        type: Date,
-    },
+    publishedAt: { type: Date },
     isAdvertisement: {
         type: Boolean,
         default: false,
@@ -95,9 +93,6 @@ const NewsSchema = new mongoose_1.Schema({
     editorText: {
         type: String,
     },
-    isLiveUpdate: {
-        type: Boolean,
-    },
     liveUpdateType: {
         type: String,
     },
@@ -107,11 +102,8 @@ const NewsSchema = new mongoose_1.Schema({
     },
     status: {
         type: String,
-        enum: ["pending", "approved", "rejected"],
+        enum: ["pending", "approved", "rejected", "scheduled"],
         default: "pending",
-    },
-    liveUpdateHeadline: {
-        type: String,
     },
     editor: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "User" },
     isDeleted: { type: Boolean, default: false },
