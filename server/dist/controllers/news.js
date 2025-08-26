@@ -122,14 +122,14 @@ const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const isAdmin = role === "admin";
         const isEditor = role === "editor";
         const { title, newsCategory, subCategory, type, tags, editorText, video, city, name, isAdvertisement, publishDate, isDraft, } = req.body;
+        // Get bio id if name is provided
         let bioId = null;
         if (name) {
             const bio = yield Biography_1.default.findOne({
                 stageName: new RegExp(`^${name}$`, "i"),
             });
-            if (bio) {
+            if (bio)
                 bioId = bio._id;
-            }
         }
         const slug = yield generateUniqueSlug(title);
         const newNews = new News_1.default({
@@ -143,27 +143,30 @@ const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             author: userId,
             city,
             video,
-            user: userId,
             name: bioId,
             isAdvertisement,
         });
-        if (!isDraft && publishDate && new Date(publishDate) > new Date()) {
-            if (isAdmin || isEditor) {
-                newNews.publishedAt = new Date(publishDate);
+        // Determine publishing status
+        if (isAdmin || isEditor) {
+            // Admins and editors: publish immediately
+            newNews.status = "approved";
+            newNews.published = true;
+            newNews.publishedAt = new Date();
+        }
+        else {
+            // Journalists: may schedule or save as draft
+            if (!isDraft && publishDate && new Date(publishDate) > new Date()) {
                 newNews.status = "scheduled";
+                newNews.published = false;
+                newNews.publishedAt = new Date(publishDate);
+            }
+            else if (!isDraft) {
+                newNews.status = "pending";
                 newNews.published = false;
             }
             else {
-                return res
-                    .status(403)
-                    .json({ message: "You are not allowed to schedule articles." });
-            }
-        }
-        else if (!isDraft) {
-            if (isAdmin || isEditor) {
-                newNews.status = "approved";
-                newNews.published = true;
-                newNews.publishedAt = new Date();
+                newNews.status = "draft";
+                newNews.published = false;
             }
         }
         // uploading Image file
@@ -184,6 +187,7 @@ const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             }
         }
         yield newNews.save();
+        // Notify admin/editor if journalist created news
         if (role === "journalist") {
             const recipients = yield User_1.default.find({
                 role: { $in: ["admin", "editor"] },
@@ -197,15 +201,12 @@ const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 yield Notifications_1.default.insertMany(notifications);
             }
         }
-        const year = newNews.createdAt.getFullYear();
-        const month = String(newNews.createdAt.getMonth() + 1).padStart(2, "0");
-        const day = String(newNews.createdAt.getDate()).padStart(2, "0");
-        const category = newNews.newsCategory;
+        // Push notifications
         const baseUrl = "https://www.newsvist.com";
-        const articleUrl = `${baseUrl}/${year}/${month}/${day}/${category}/${newNews.slug}`;
-        const categoryDisplay = newNews.newsCategory || "News";
+        const dateObj = newNews.createdAt;
+        const articleUrl = `${baseUrl}/${dateObj.getFullYear()}/${String(dateObj.getMonth() + 1).padStart(2, "0")}/${String(dateObj.getDate()).padStart(2, "0")}/${newNews.newsCategory}/${newNews.slug}`;
         const payload = JSON.stringify({
-            title: `NewsVist: ${categoryDisplay}`,
+            title: `NewsVist: ${newNews.newsCategory || "News"}`,
             body: `New: "${newNews.title}". Tap to read.`,
             url: articleUrl,
             image: ((_c = newNews.file) === null || _c === void 0 ? void 0 : _c.url) || ((_d = newNews.images) === null || _d === void 0 ? void 0 : _d[0]) || undefined,
@@ -217,9 +218,8 @@ const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
                 { categories: newNews.newsCategory },
             ],
         };
-        if (newNews.type === "BreakingNews") {
+        if (newNews.type === "BreakingNews")
             query = {};
-        }
         const subscriptions = yield Subscription_1.default.find(query);
         subscriptions.forEach((subDoc) => {
             const subscription = subDoc.toObject();
@@ -422,10 +422,16 @@ const getAllNewsSubCategories = function (req, res) {
 exports.getAllNewsSubCategories = getAllNewsSubCategories;
 const newsList = function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        var _a, _b;
         try {
             const page = parseInt(typeof req.query.page === "string" ? req.query.page : "1") || 1;
             const pageSize = parseInt(typeof req.query.pageSize === "string" ? req.query.pageSize : "5") || 5;
-            const userId = req.user._id;
+            const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
+            const role = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;
+            const isAdmin = role === "admin";
+            const query = isAdmin
+                ? { isDeleted: false }
+                : { author: userId, isDeleted: false };
             const options = {
                 page: page,
                 limit: pageSize,
@@ -437,7 +443,6 @@ const newsList = function (req, res) {
                     },
                 ],
             };
-            const query = { author: userId, isDeleted: false };
             const paginatedNews = yield News_1.default.paginate(query, options);
             res.json({
                 news: paginatedNews.docs,
@@ -484,25 +489,33 @@ const allNewsList = function (req, res) {
 exports.allNewsList = allNewsList;
 const editorNewsList = function (req, res) {
     return __awaiter(this, void 0, void 0, function* () {
+        var _a;
         try {
             const page = parseInt(typeof req.query.page === "string" ? req.query.page : "1") || 1;
             const pageSize = parseInt(typeof req.query.pageSize === "string" ? req.query.pageSize : "5") || 5;
             const userId = req.user._id;
-            // Build query based on role
-            const query = { isDeleted: false };
-            if (req.user.role === "editor") {
-                query.editor = userId;
+            const role = (_a = req.user) === null || _a === void 0 ? void 0 : _a.role;
+            let query = { isDeleted: false };
+            if (role === "editor") {
+                query = {
+                    isDeleted: false,
+                    $or: [{ author: userId }, { editor: userId }],
+                };
             }
-            else {
-                query.author = userId;
+            else if (role !== "admin") {
+                query = { author: userId, isDeleted: false };
             }
             const options = {
-                page: page,
+                page,
                 limit: pageSize,
                 sort: { createdAt: -1 },
                 populate: [
                     {
                         path: "author",
+                        select: "username email",
+                    },
+                    {
+                        path: "editor",
                         select: "username email",
                     },
                 ],
@@ -597,31 +610,50 @@ const totalNewsStats = (req, res) => __awaiter(void 0, void 0, void 0, function*
 });
 exports.totalNewsStats = totalNewsStats;
 const editorNewsStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     try {
-        const filter = { isDeleted: false };
-        // If the user is an editor, only fetch their own news
-        if (req.user.role === "editor") {
-            filter.editor = req.user._id;
+        const userId = req.user._id;
+        const role = (_a = req.user) === null || _a === void 0 ? void 0 : _a.role;
+        // Base filter: non-deleted articles
+        let filter = { isDeleted: false };
+        if (role === "editor") {
+            // Editor sees news they authored OR edited
+            filter.$or = [{ author: userId }, { editor: userId }];
         }
-        // Aggregate articles trend (last 14 days)
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 13);
+        // Aggregate article trends (last 14 days)
         const trend = yield News_1.default.aggregate([
             {
-                $match: Object.assign(Object.assign({}, filter), { createdAt: { $gte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000) } }),
+                $match: Object.assign(Object.assign({}, filter), { createdAt: { $gte: startDate } }),
             },
             {
                 $group: {
-                    _id: { $dateToString: { format: "%b %d", date: "$createdAt" } },
-                    v: { $sum: 1 },
+                    _id: {
+                        $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+                    },
+                    count: { $sum: 1 },
                 },
             },
             { $sort: { _id: 1 } },
         ]);
-        const monthTrend = trend.map((t) => ({ d: t._id, v: t.v }));
-        // Count stats
-        const totalArticles = yield News_1.default.countDocuments(filter);
-        const drafts = yield News_1.default.countDocuments(Object.assign(Object.assign({}, filter), { status: "draft" }));
-        const reported = yield News_1.default.countDocuments(Object.assign(Object.assign({}, filter), { status: "rejected" }));
-        const liveEvents = yield LiveUpdateEntry_1.default.countDocuments(req.user.role === "editor" ? { editor: req.user._id } : {});
+        const monthTrend = Array.from({ length: 14 }).map((_, i) => {
+            const d = new Date();
+            d.setDate(d.getDate() - (13 - i));
+            const dateStr = d.toISOString().split("T")[0];
+            const found = trend.find((t) => t._id === dateStr);
+            return {
+                d: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+                v: found ? found.count : 0,
+            };
+        });
+        // Count overall stats
+        const [totalArticles, drafts, reported, liveEvents] = yield Promise.all([
+            News_1.default.countDocuments(filter),
+            News_1.default.countDocuments(Object.assign(Object.assign({}, filter), { status: "draft" })),
+            News_1.default.countDocuments(Object.assign(Object.assign({}, filter), { status: "rejected" })),
+            LiveUpdateEntry_1.default.countDocuments(role === "editor" ? { editor: userId } : {}),
+        ]);
         res.json({
             success: true,
             stats: {
@@ -635,9 +667,10 @@ const editorNewsStats = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
     catch (err) {
         console.error("Dashboard stats error", err);
-        res
-            .status(500)
-            .json({ success: false, message: "Failed to fetch dashboard stats" });
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch dashboard stats",
+        });
     }
 });
 exports.editorNewsStats = editorNewsStats;
@@ -707,7 +740,7 @@ const editorRecentArticles = (req, res) => __awaiter(void 0, void 0, void 0, fun
 });
 exports.editorRecentArticles = editorRecentArticles;
 const updateNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a, _b, _c, _d, _e;
+    var _a, _b, _c, _d, _e, _f;
     const { newsId } = req.params;
     const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
     if (!isValidObjectId(newsId))
@@ -715,7 +748,7 @@ const updateNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     const news = yield News_1.default.findById(newsId);
     if (!news)
         return (0, helper_1.sendError)(res, "News Not Found!", 404);
-    const { title, editorText, newsCategory, subCategory, type, author, tags, city, video, name, } = req.body;
+    const { title, editorText, newsCategory, subCategory, type, tags, city, video, name, } = req.body;
     const slug = yield generateUniqueSlug(title);
     news.title = title;
     news.slug = slug;
@@ -724,10 +757,11 @@ const updateNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     news.newsCategory = newsCategory;
     news.subCategory = subCategory;
     news.type = type;
-    news.author = author;
     news.video = video;
     news.city = city;
-    news.editor = userId;
+    if (((_b = news.author) === null || _b === void 0 ? void 0 : _b.toString()) !== userId.toString()) {
+        news.editor = userId;
+    }
     if (name) {
         const bio = yield Biography_1.default.findOne({ stageName: name });
         if (!bio) {
@@ -740,7 +774,7 @@ const updateNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const videoFile = cloudinaryUrls.find((file) => file.url.match(/\.mp4|\.mov|\.avi$/i));
         const imageFiles = cloudinaryUrls.filter((file) => file.url.match(/\.jpg|\.jpeg|\.png$/i));
         // Delete existing video if new video is provided
-        if (videoFile && ((_b = news.video) === null || _b === void 0 ? void 0 : _b.public_id)) {
+        if (videoFile && ((_c = news.video) === null || _c === void 0 ? void 0 : _c.public_id)) {
             const { result } = yield cloud_1.cloudinary.uploader.destroy(news.video.public_id, {
                 resource_type: "video",
             });
@@ -754,13 +788,13 @@ const updateNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         // Delete existing image if new images are provided
         if (imageFiles.length > 0) {
             // Delete existing images
-            if ((_c = news.file) === null || _c === void 0 ? void 0 : _c.public_id) {
+            if ((_d = news.file) === null || _d === void 0 ? void 0 : _d.public_id) {
                 yield cloud_1.cloudinary.uploader.destroy(news.file.public_id);
             }
             if (news.images && news.images.length > 0) {
                 for (const imgUrl of news.images) {
                     // Extract public_id from URL or keep a mapping in DB
-                    const publicId = (_d = imgUrl.split("/").pop()) === null || _d === void 0 ? void 0 : _d.split(".")[0];
+                    const publicId = (_e = imgUrl.split("/").pop()) === null || _e === void 0 ? void 0 : _e.split(".")[0];
                     if (publicId)
                         yield cloud_1.cloudinary.uploader.destroy(publicId);
                 }
@@ -780,10 +814,12 @@ const updateNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         news: {
             id: news._id,
             title: news.title,
-            file: (_e = news.file) === null || _e === void 0 ? void 0 : _e.url,
+            file: (_f = news.file) === null || _f === void 0 ? void 0 : _f.url,
             newsCategory: news.newsCategory,
             type: news.type,
             name: news.name,
+            author: news.author,
+            editor: news.editor,
         },
     });
 });
@@ -1251,9 +1287,11 @@ const getNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             }
         }
         if (category)
-            query.newsCategory = category;
+            query.newsCategory = { $regex: new RegExp(`^${category.trim()}$`, "i") };
         if (subcategory)
-            query.subCategory = subcategory;
+            query.subCategory = {
+                $regex: new RegExp(`^${subcategory.trim()}$`, "i"),
+            };
         if (type)
             query.type = type;
         if (tags) {

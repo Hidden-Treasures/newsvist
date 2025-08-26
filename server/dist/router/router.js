@@ -139,7 +139,7 @@ route.delete("/bio/:id", auth_1.isAuth, auth_1.canCreateRead, biography_1.delete
 route.post("/live-event", auth_1.isAuth, news_1.createLiveEvent);
 route.post("/live-event/:type/entry", auth_1.isAuth, multer_1.upload.single("file"), validator_1.validate, multer_1.uploadToCloudinary, news_1.addLiveUpdateEntry);
 route.get("/live-event/:type", auth_1.isAuth, news_1.getLiveEventEntries);
-route.get("/live-events", auth_1.isAuth, news_1.getAllLiveEvents);
+route.get("/live-events", news_1.getAllLiveEvents);
 route.get("/notifications", auth_1.isAuth, notifications_1.getNotifications);
 route.patch("/notifications/:id/read", auth_1.isAuth, notifications_1.markAsRead);
 exports.default = route;

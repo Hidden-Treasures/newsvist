@@ -42,11 +42,13 @@ const Header: FC<HeaderProps> = ({ setMobileOpen, searchRef, user }) => {
         >
           <Menu className="w-5 h-5" />
         </Button>
-        <Link href="/admin" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-2xl bg-slate-800 grid place-items-center">
             <ChartArea className="w-4 h-4" />
           </div>
-          <span className="font-semibold tracking-tight">News Admin</span>
+          <span className="font-semibold tracking-tight">
+            News {editor ? "Editor" : "Admin"}
+          </span>
         </Link>
 
         {/* Search */}

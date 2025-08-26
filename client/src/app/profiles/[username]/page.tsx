@@ -35,7 +35,7 @@ const ProfilePage: FC = () => {
         <div className="flex rounded-t-lg bg-top-color sm:px-2 w-full">
           <div className="h-40 w-40 overflow-hidden sm:rounded-full sm:relative sm:p-0 top-10 left-5 p-3">
             <Image
-              src={user?.profilePhoto || ""}
+              src={user?.profilePhoto?.url || ""}
               alt="Profile Photo"
               fill
               className="object-cover w-full h-full rounded-full"

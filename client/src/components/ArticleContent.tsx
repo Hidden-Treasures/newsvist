@@ -20,7 +20,7 @@ interface Media {
 
 interface Author {
   username?: string;
-  profilePhoto?: string;
+  profilePhoto?: Media;
 }
 
 interface ArticleProps {
@@ -57,7 +57,7 @@ export default function ArticleContent({ article, slug }: ArticleProps) {
 
   const cityText =
     article?.city && article.city !== "undefined"
-      ? `${article.city} (Newsvist)`
+      ? `(Newsvist) ${article.city}`
       : "(Newsvist)";
 
   const wordsPerMinute = 200;
@@ -99,7 +99,7 @@ export default function ArticleContent({ article, slug }: ArticleProps) {
       <div className="author flex items-center mb-4">
         <div className="w-10 h-10 rounded-full overflow-hidden">
           <Image
-            src={article?.author?.profilePhoto ?? ""}
+            src={article?.author?.profilePhoto?.url ?? ""}
             alt="user"
             width={100}
             height={100}

@@ -88,6 +88,7 @@ export const createNews = async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any)?._id;
     const role = (req.user as any)?.role;
+
     const isAdmin = role === "admin";
     const isEditor = role === "editor";
 
@@ -106,15 +107,13 @@ export const createNews = async (req: Request, res: Response) => {
       isDraft,
     } = req.body;
 
+    // Get bio id if name is provided
     let bioId = null;
-
     if (name) {
       const bio = await Biography.findOne({
         stageName: new RegExp(`^${name}$`, "i"),
       });
-      if (bio) {
-        bioId = bio._id;
-      }
+      if (bio) bioId = bio._id;
     }
 
     const slug = await generateUniqueSlug(title);
@@ -130,28 +129,31 @@ export const createNews = async (req: Request, res: Response) => {
       author: userId,
       city,
       video,
-      user: userId,
       name: bioId,
       isAdvertisement,
     });
 
-    if (!isDraft && publishDate && new Date(publishDate) > new Date()) {
-      if (isAdmin || isEditor) {
-        newNews.publishedAt = new Date(publishDate);
+    // Determine publishing status
+    if (isAdmin || isEditor) {
+      // Admins and editors: publish immediately
+      newNews.status = "approved";
+      newNews.published = true;
+      newNews.publishedAt = new Date();
+    } else {
+      // Journalists: may schedule or save as draft
+      if (!isDraft && publishDate && new Date(publishDate) > new Date()) {
         newNews.status = "scheduled";
         newNews.published = false;
+        newNews.publishedAt = new Date(publishDate);
+      } else if (!isDraft) {
+        newNews.status = "pending";
+        newNews.published = false;
       } else {
-        return res
-          .status(403)
-          .json({ message: "You are not allowed to schedule articles." });
-      }
-    } else if (!isDraft) {
-      if (isAdmin || isEditor) {
-        newNews.status = "approved";
-        newNews.published = true;
-        newNews.publishedAt = new Date();
+        newNews.status = "draft";
+        newNews.published = false;
       }
     }
+
     // uploading Image file
     if (req.body.cloudinaryUrls && req.body.cloudinaryUrls.length > 0) {
       const cloudinaryUrls: FileObject[] = req.body.cloudinaryUrls;
@@ -179,6 +181,7 @@ export const createNews = async (req: Request, res: Response) => {
 
     await newNews.save();
 
+    // Notify admin/editor if journalist created news
     if (role === "journalist") {
       const recipients = await User.find({
         role: { $in: ["admin", "editor"] },
@@ -195,17 +198,17 @@ export const createNews = async (req: Request, res: Response) => {
       }
     }
 
-    const year = newNews.createdAt.getFullYear();
-    const month = String(newNews.createdAt.getMonth() + 1).padStart(2, "0");
-    const day = String(newNews.createdAt.getDate()).padStart(2, "0");
-    const category = newNews.newsCategory;
-
+    // Push notifications
     const baseUrl = "https://www.newsvist.com";
-    const articleUrl = `${baseUrl}/${year}/${month}/${day}/${category}/${newNews.slug}`;
-    const categoryDisplay = newNews.newsCategory || "News";
+    const dateObj = newNews.createdAt;
+    const articleUrl = `${baseUrl}/${dateObj.getFullYear()}/${String(
+      dateObj.getMonth() + 1
+    ).padStart(2, "0")}/${String(dateObj.getDate()).padStart(2, "0")}/${
+      newNews.newsCategory
+    }/${newNews.slug}`;
 
     const payload = JSON.stringify({
-      title: `NewsVist: ${categoryDisplay}`,
+      title: `NewsVist: ${newNews.newsCategory || "News"}`,
       body: `New: "${newNews.title}". Tap to read.`,
       url: articleUrl,
       image: newNews.file?.url || newNews.images?.[0] || undefined,
@@ -218,10 +221,7 @@ export const createNews = async (req: Request, res: Response) => {
         { categories: newNews.newsCategory },
       ],
     };
-
-    if (newNews.type === "BreakingNews") {
-      query = {};
-    }
+    if (newNews.type === "BreakingNews") query = {};
 
     const subscriptions = await Subscription.find(query);
     subscriptions.forEach((subDoc) => {
@@ -434,7 +434,13 @@ export const newsList = async function (req: Request, res: Response) {
       parseInt(
         typeof req.query.pageSize === "string" ? req.query.pageSize : "5"
       ) || 5;
-    const userId = (req.user as any)._id;
+    const userId = (req.user as any)?._id;
+    const role = (req.user as any)?.role;
+    const isAdmin = role === "admin";
+
+    const query = isAdmin
+      ? { isDeleted: false }
+      : { author: userId, isDeleted: false };
 
     const options = {
       page: page,
@@ -447,7 +453,6 @@ export const newsList = async function (req: Request, res: Response) {
         },
       ],
     };
-    const query = { author: userId, isDeleted: false };
 
     const paginatedNews = await News.paginate(query, options);
     res.json({
@@ -503,23 +508,31 @@ export const editorNewsList = async function (req: Request, res: Response) {
       parseInt(
         typeof req.query.pageSize === "string" ? req.query.pageSize : "5"
       ) || 5;
+
     const userId = (req.user as any)._id;
+    const role = (req.user as any)?.role;
 
-    // Build query based on role
-    const query: any = { isDeleted: false };
-    if (req.user.role === "editor") {
-      query.editor = userId;
-    } else {
-      query.author = userId;
+    let query: any = { isDeleted: false };
+
+    if (role === "editor") {
+      query = {
+        isDeleted: false,
+        $or: [{ author: userId }, { editor: userId }],
+      };
+    } else if (role !== "admin") {
+      query = { author: userId, isDeleted: false };
     }
-
     const options = {
-      page: page,
+      page,
       limit: pageSize,
       sort: { createdAt: -1 },
       populate: [
         {
           path: "author",
+          select: "username email",
+        },
+        {
+          path: "editor",
           select: "username email",
         },
       ],
@@ -538,6 +551,7 @@ export const editorNewsList = async function (req: Request, res: Response) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 export const writerNewsList = async function (req: Request, res: Response) {
   try {
     const page =
@@ -621,43 +635,59 @@ export const totalNewsStats = async (req: Request, res: Response) => {
 
 export const editorNewsStats = async (req: Request, res: Response) => {
   try {
-    const filter: any = { isDeleted: false };
+    const userId = (req.user as any)._id;
+    const role = (req.user as any)?.role;
 
-    // If the user is an editor, only fetch their own news
-    if (req.user.role === "editor") {
-      filter.editor = req.user._id;
+    // Base filter: non-deleted articles
+    let filter: any = { isDeleted: false };
+
+    if (role === "editor") {
+      // Editor sees news they authored OR edited
+      filter.$or = [{ author: userId }, { editor: userId }];
     }
 
-    // Aggregate articles trend (last 14 days)
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 13);
+
+    // Aggregate article trends (last 14 days)
     const trend = await News.aggregate([
       {
         $match: {
           ...filter,
-          createdAt: { $gte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000) },
+          createdAt: { $gte: startDate },
         },
       },
       {
         $group: {
-          _id: { $dateToString: { format: "%b %d", date: "$createdAt" } },
-          v: { $sum: 1 },
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+          },
+          count: { $sum: 1 },
         },
       },
       { $sort: { _id: 1 } },
     ]);
 
-    const monthTrend = trend.map((t) => ({ d: t._id, v: t.v }));
-
-    // Count stats
-    const totalArticles = await News.countDocuments(filter);
-    const drafts = await News.countDocuments({ ...filter, status: "draft" });
-    const reported = await News.countDocuments({
-      ...filter,
-      status: "rejected",
+    const monthTrend = Array.from({ length: 14 }).map((_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (13 - i));
+      const dateStr = d.toISOString().split("T")[0];
+      const found = trend.find((t) => t._id === dateStr);
+      return {
+        d: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        v: found ? found.count : 0,
+      };
     });
 
-    const liveEvents = await LiveUpdateEntry.countDocuments(
-      req.user.role === "editor" ? { editor: req.user._id } : {}
-    );
+    // Count overall stats
+    const [totalArticles, drafts, reported, liveEvents] = await Promise.all([
+      News.countDocuments(filter),
+      News.countDocuments({ ...filter, status: "draft" }),
+      News.countDocuments({ ...filter, status: "rejected" }),
+      LiveUpdateEntry.countDocuments(
+        role === "editor" ? { editor: userId } : {}
+      ),
+    ]);
 
     res.json({
       success: true,
@@ -671,9 +701,10 @@ export const editorNewsStats = async (req: Request, res: Response) => {
     });
   } catch (err) {
     console.error("Dashboard stats error", err);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to fetch dashboard stats" });
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch dashboard stats",
+    });
   }
 };
 
@@ -755,7 +786,6 @@ export const updateNews = async (req: Request, res: Response) => {
     newsCategory,
     subCategory,
     type,
-    author,
     tags,
     city,
     video,
@@ -770,10 +800,11 @@ export const updateNews = async (req: Request, res: Response) => {
   news.newsCategory = newsCategory;
   news.subCategory = subCategory;
   news.type = type;
-  news.author = author;
   news.video = video;
   news.city = city;
-  news.editor = userId;
+  if (news.author?.toString() !== userId.toString()) {
+    news.editor = userId;
+  }
 
   if (name) {
     const bio = await Biography.findOne({ stageName: name });
@@ -845,6 +876,8 @@ export const updateNews = async (req: Request, res: Response) => {
       newsCategory: news.newsCategory,
       type: news.type,
       name: news.name,
+      author: news.author,
+      editor: news.editor,
     },
   });
 };
@@ -1361,8 +1394,13 @@ export const getNews = async (
       }
     }
 
-    if (category) query.newsCategory = category;
-    if (subcategory) query.subCategory = subcategory;
+    if (category)
+      query.newsCategory = { $regex: new RegExp(`^${category.trim()}$`, "i") };
+    if (subcategory)
+      query.subCategory = {
+        $regex: new RegExp(`^${subcategory.trim()}$`, "i"),
+      };
+
     if (type) query.type = type;
     if (tags) {
       (query as any).tags = { $in: (tags as string).split(",") };

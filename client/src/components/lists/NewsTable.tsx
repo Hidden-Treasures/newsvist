@@ -99,14 +99,26 @@ const NewsTable: FC<NewsTableProps> = ({ data, afterDelete, afterUpdate }) => {
                       </Badge>
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
-                      {typeof item.author === "object"
-                        ? item.author?.username
+                      {typeof item.author === "object" && item.author?.username
+                        ? item.author.username
+                        : typeof item.editor === "object" &&
+                          item.editor?.username
+                        ? item.editor.username
                         : "—"}
                     </TableCell>
 
-                    <TableCell className="text-slate-400">
-                      {formatDate(item.createdAt)}
+                    <TableCell className="text-slate-400 flex flex-col gap-1">
+                      <Badge
+                        variant={item.published ? "secondary" : "destructive"}
+                        className="rounded-full"
+                      >
+                        {item.published ? "Published" : "Unpublished"}
+                      </Badge>
+                      <span className="text-xs">
+                        {formatDate(item.publishedAt || item.createdAt)}
+                      </span>
                     </TableCell>
+
                     <TableCell className="text-right space-x-2">
                       <Button
                         variant="outline"

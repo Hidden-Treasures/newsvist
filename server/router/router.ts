@@ -355,7 +355,7 @@ route.post(
   addLiveUpdateEntry
 );
 route.get("/live-event/:type", isAuth, getLiveEventEntries);
-route.get("/live-events", isAuth, getAllLiveEvents);
+route.get("/live-events", getAllLiveEvents);
 
 route.get("/notifications", isAuth, getNotifications);
 route.patch("/notifications/:id/read", isAuth, markAsRead);

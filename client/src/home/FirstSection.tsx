@@ -38,10 +38,7 @@ const FirstSection: FC = () => {
     order: "desc",
   });
 
-  const excludedFromMidCards = useMemo(
-    () => midCards.map((article) => article._id),
-    [midCards]
-  );
+  const excludedFromMidCards = midCards?.map((a) => a._id) || [];
 
   const {
     data: breaking = [],
@@ -57,10 +54,10 @@ const FirstSection: FC = () => {
     excludeIds: excludedFromMidCards,
   });
 
-  const excludedFromBreaking = useMemo(
-    () => [...excludedFromMidCards, ...breaking.map((article) => article._id)],
-    [excludedFromMidCards, breaking]
-  );
+  const excludedFromBreaking = [
+    ...excludedFromMidCards,
+    ...(breaking?.map((a) => a._id) || []),
+  ];
 
   const {
     data: breakingNews = [],
@@ -76,13 +73,10 @@ const FirstSection: FC = () => {
     excludeIds: excludedFromBreaking,
   });
 
-  const excludedFromBreakingNews = useMemo(
-    () => [
-      ...excludedFromBreaking,
-      ...(breakingNews?.map((article) => article._id) || []),
-    ],
-    [excludedFromBreaking, breakingNews]
-  );
+  const excludedFromBreakingNews = [
+    ...excludedFromBreaking,
+    ...(breakingNews?.map((a) => a._id) || []),
+  ];
 
   const {
     data: textOnly = [],
@@ -98,35 +92,11 @@ const FirstSection: FC = () => {
     excludeIds: excludedFromBreakingNews,
   });
 
-  const excludedFromTextOnly = useMemo(
-    () => [
-      ...excludedFromBreakingNews,
-      ...(textOnly?.map((article) => article._id) || []),
-    ],
-    [excludedFromBreakingNews, textOnly]
-  );
-
-  const {
-    data: liveUpdate = [],
-    loading: loading4,
-    error: error4,
-  } = useNewsFetch({
-    category: undefined,
-    subcategory: undefined,
-    type: "LiveUpdate",
-    tags: undefined,
-    limit: 1,
-    order: "desc",
-    excludeIds: excludedFromTextOnly,
-  });
-
   const midCardsList = midCards.slice(0, 1);
   const midCardsVisual = midCards.slice(1);
 
-  // console.log("liveUpdate[0]::", liveUpdate[0]);
-
   return (
-    <div className="flex flex-col md:flex-row">
+    <div className="flex flex-col">
       {/* Left Section */}
       {breaking?.length > 1 && (
         <div className="w-full md:w-2/3 p-4">

@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import CreateNewsForm from "@/components/forms/CreateNews";
 import RecycleBin from "@/components/RecycleBin";
+import { Select } from "@/components/ui/select";
 
 const NewsList: FC = () => {
   const itemsPerPage = 10;
@@ -29,6 +30,8 @@ const NewsList: FC = () => {
   const searchRef = useRef<HTMLInputElement | null>(null);
   const [openCreate, setOpenCreate] = useState(false);
   const [openRecycle, setOpenRecycle] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string | "all">("all");
+  const [publishedFilter, setPublishedFilter] = useState<string | "all">("all");
 
   const { data, isLoading, isError, refetch } = useNewsList({
     currentPage,
@@ -68,6 +71,7 @@ const NewsList: FC = () => {
               className="pl-9 bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-400"
             />
           </div>
+
           <Button onClick={() => setOpenCreate(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Create
@@ -82,12 +86,44 @@ const NewsList: FC = () => {
           </Button>
         </div>
       </div>
+      <div className="flex gap-2 mt-2">
+        <Select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="bg-slate-800 text-white border border-slate-700 p-1 rounded"
+        >
+          <option value="all">All Status</option>
+          <option value="draft">Draft</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+          <option value="scheduled">Scheduled</option>
+        </Select>
 
+        <Select
+          value={publishedFilter}
+          onChange={(e) => setPublishedFilter(e.target.value)}
+          className="bg-slate-800 text-white border border-slate-700 p-1 rounded"
+        >
+          <option value="all">All</option>
+          <option value="true">Published</option>
+          <option value="false">Unpublished</option>
+        </Select>
+      </div>
       {/* Table */}
       <NewsTable
-        data={newsData.filter((n) =>
-          n.title.toLowerCase().includes(searchTerm.toLowerCase())
-        )}
+        data={newsData
+          .filter((n) =>
+            n.title.toLowerCase().includes(searchTerm.toLowerCase())
+          )
+          .filter((n) =>
+            statusFilter === "all" ? true : n.status === statusFilter
+          )
+          .filter((n) =>
+            publishedFilter === "all"
+              ? true
+              : n.published.toString() === publishedFilter
+          )}
         afterDelete={handleUIUpdate}
         afterUpdate={handleUIUpdate}
         currentPage={currentPage}

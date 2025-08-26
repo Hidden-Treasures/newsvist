@@ -61,6 +61,7 @@ export interface News {
   title: string;
   name: string | null;
   author: string | { _id: string; username: string; email: string } | null;
+  editor: string | { _id: string; username: string; email: string } | null;
   editorText: string | null;
   slug: string | null;
   newsCategory: string;
@@ -78,6 +79,9 @@ export interface News {
   };
   createdAt: string;
   deletedAt: string;
+  published: boolean;
+  status: "draft" | "pending" | "approved" | "rejected" | "scheduled"; // ✅ add this
+  publishedAt?: string;
 }
 export interface SearchParams {
   searchText: string;

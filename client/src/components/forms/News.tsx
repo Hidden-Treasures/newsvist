@@ -89,9 +89,6 @@ const NewsForm: FC<NewsFormProps> = ({
     isLoading: subCategoriesLoading,
     refetch: refetchSubCategories,
   } = useSubCategories(selectedNewsCategory);
-  const { data: liveUpdateHeadlineData } = useLiveUpdateHeadline(
-    selectedLiveUpdateType
-  );
 
   const resetForm = () => {
     setTitle("");
@@ -108,18 +105,6 @@ const NewsForm: FC<NewsFormProps> = ({
     setBioName("");
     setIsFocused(false);
     setIsAdvertisement(false);
-  };
-
-  const handleNewsTypeChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    // setSelectedType(e.target.value);
-  };
-
-  const handleNewsCategoryChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    setSelectedNewsCategory(e.target.value);
-  };
-
-  const handleNewsSubCategoryChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    setSelectedNewsSubCategory(e.target.value);
   };
 
   const handleTagChange = (newValue: any) => {
@@ -256,7 +241,7 @@ const NewsForm: FC<NewsFormProps> = ({
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className={`${commonInputClasses} w-full border-b-2 font-semibold text-lg md:text-xl placeholder:text-gray-500`}
+            className={`${commonInputClasses} w-full border-b-2 font-semibold text-lg md:text-xl placeholder:text-gray-500 text-gray-300`}
             placeholder="Enter headline"
           />
         </div>
