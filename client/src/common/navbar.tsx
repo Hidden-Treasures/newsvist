@@ -311,65 +311,73 @@ const Navbar: FC<NavbarProps> = ({ onSearchButtonClick }) => {
       {/* Mobile menu */}
       <div className="md:hidden block">
         <div
-          className={`flex flex-col lg:flex flex-grow items-center  bg-black pb-4 ${
-            isMenuOpen ? "block" : "hidden"
+          className={`overflow-hidden transition-max-height duration-300 bg-black px-4 ${
+            isMenuOpen ? "max-h-screen py-4" : "max-h-0"
           }`}
         >
-          <NavLink
-            href="/"
-            // exact
-            className="text-white text-[0.937rem] font-bold"
-          >
-            Home
-          </NavLink>
-          {isLoading ? (
-            <>
-              {[
-                "US",
-                "World",
-                "Politics",
-                "Business",
-                "Opinion",
-                "Health",
-                "Entertainment",
-                "Sports",
-              ].map((cat) => (
+          {/* Categories + Home */}
+          <nav className="flex flex-wrap gap-3 justify-center">
+            {/* Home link */}
+            <NavLink
+              href="/"
+              className="bg-gray-800 hover:bg-gray-700 transition text-white px-2 py-2 rounded-md font-semibold shadow-md text-sm"
+            >
+              Home
+            </NavLink>
+
+            {/* Categories */}
+            {(isLoading
+              ? [
+                  "Business",
+                  "Entertainment",
+                  "Health",
+                  "Opinion",
+                  "Politics",
+                  "Sports",
+                  "US",
+                  "World",
+                ]
+              : categories.map((cat: any) => cat.title)
+            )
+              .sort((a: string, b: string) => a.localeCompare(b))
+              .map((cat: string) => (
                 <NavLink
                   key={cat}
                   href={`/category/${cat}`}
-                  className="text-white text-[0.937rem] font-bold"
+                  className="bg-gray-800 hover:bg-gray-700 transition text-white px-2 py-2 rounded-md font-semibold shadow-md text-sm"
                 >
                   {cat}
                 </NavLink>
               ))}
-            </>
-          ) : (
-            categories.map((cat: any) => (
-              <NavLink
-                key={cat._id}
-                href={`/category/${cat.title}`}
-                className="text-white text-[0.937rem] font-bold"
-              >
-                {cat.title}
-              </NavLink>
-            ))
-          )}
 
-          {isAuthenticated ? (
-            <button
-              onClick={handleProfileClick}
-              className="text-white p-1 rounded text-[0.937rem] border border-white font-bold cursor-pointer"
-            >
-              Profile
-            </button>
-          ) : (
-            <NavLink
-              href="/login"
-              className="text-white p-1 rounded text-[0.937rem] border border-white font-bold mt-2 cursor-pointer"
-            >
-              Log In
-            </NavLink>
-          )}
+            {/* Static Links */}
+            {["Watch", "Listen", "Live TV"].map((link) => (
+              <NavLink
+                key={link}
+                href={`/category/${link.toLowerCase().replace(" ", "-")}`}
+                className="bg-gray-800 hover:bg-gray-700 transition text-white px-2 py-2 rounded-md font-semibold shadow-md text-sm"
+              >
+                {link}
+              </NavLink>
+            ))}
+
+            {/* Auth Buttons */}
+            {isAuthenticated ? (
+              <button
+                onClick={handleProfileClick}
+                className="bg-transparent hover:bg-white text-white hover:text-black border border-white px-4 py-2 rounded-md font-bold shadow-md text-sm transition"
+              >
+                Profile
+              </button>
+            ) : (
+              <NavLink
+                href="/login"
+                className="bg-transparent hover:bg-white text-white hover:text-black border border-white px-4 py-2 rounded-md font-bold shadow-md text-sm transition"
+              >
+                Log In
+              </NavLink>
+            )}
+          </nav>
         </div>
       </div>
     </>

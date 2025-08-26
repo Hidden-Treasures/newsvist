@@ -20,7 +20,7 @@ export default function Home() {
 
   return (
     <div className="overflow-x-hidden overflow-y-scroll hide-scrollbar">
-      <PushNotification />
+      {/* <PushNotification /> */}
       <Header onSearchButtonClick={onSearchButtonClick} />
       {!showFooterSearch && (
         <>
