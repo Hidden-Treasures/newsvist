@@ -1,4 +1,9 @@
-import { fetchDashboardStats, fetchRecentArticles } from "@/services/admin";
+import {
+  fetchDashboardStats,
+  fetchRecentArticles,
+  getEditorDashboardStats,
+  getEditorRecentArticles,
+} from "@/services/admin";
 import { RecentArticle } from "@/services/types";
 import { useQuery } from "@tanstack/react-query";
 
@@ -15,6 +20,23 @@ export const useRecentArticles = () => {
     queryKey: ["recent-articles"],
     queryFn: async () => {
       const data = await fetchRecentArticles();
+      return data.articles;
+    },
+  });
+};
+export const useEditorDashboardStats = () => {
+  return useQuery({
+    queryKey: ["editorDashboardStats"],
+    queryFn: getEditorDashboardStats,
+    staleTime: 1000 * 60,
+  });
+};
+
+export const useEditorRecentArticles = () => {
+  return useQuery<RecentArticle[]>({
+    queryKey: ["editor-recent-articles"],
+    queryFn: async () => {
+      const data = await getEditorRecentArticles();
       return data.articles;
     },
   });

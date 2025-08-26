@@ -90,6 +90,9 @@ export const canCreateRead = async (
       case "journalist":
         next();
         break;
+      case "editor":
+        next();
+        break;
       default:
         return res.status(403).send("Unauthorized");
     }

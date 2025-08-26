@@ -45,8 +45,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getApprovedNews = exports.getPendingNews = exports.getMostReadArticles = exports.getUpNextArticles = exports.getNewsAndBuzz = exports.getRelatedNews = exports.getImageArticlesByCategory = exports.getArticlesByCategory = exports.getNewsBySlug = exports.getNewsByTags = exports.getMissedNews = exports.getNews = exports.getMostRecentNews = exports.getHeadLine = exports.getUserbyID = exports.updateUserData = exports.deleteUsersManually = exports.users = exports.assignRole = exports.updateSubCategory = exports.updateCategory = exports.addCategory = exports.deleteSubCategory = exports.deleteCategory = exports.AllCategoriesWithSubCategory = exports.restoreNews = exports.deleteNews = exports.addToNewsRecycleBin = exports.getNewsById = exports.getNewsForUpdate = exports.updateNews = exports.recentArticles = exports.totalNewsStats = exports.writerNewsList = exports.editorNewsList = exports.allNewsList = exports.newsList = exports.getAllNewsSubCategories = exports.getAllNewsCategories = exports.getNewsType = exports.deleteType = exports.addType = exports.getAdvertisements = exports.getAllLiveEvents = exports.getLiveEventEntries = exports.addLiveUpdateEntry = exports.createLiveEvent = exports.createNews = exports.getLastFiveLiveUpdateNewsType = exports.videoUpload = void 0;
-exports.getAllLiveUpdates = exports.getNewsByLiveUpdateType = exports.getOldestNewsArticleByType = exports.mainSearch = exports.getDeletedNews = exports.getSingleImage = exports.images = exports.deleteImageByUser = exports.getImagesByCategoryOrTag = exports.getAllImages = exports.getImages = exports.createImage = exports.moderateComment = exports.getAnalytics = exports.rejectNews = exports.approveNews = exports.getRejectedNews = void 0;
+exports.getMostReadArticles = exports.getUpNextArticles = exports.getNewsAndBuzz = exports.getRelatedNews = exports.getMediaArticlesByCategory = exports.getArticlesByCategory = exports.getNewsBySlug = exports.getNewsByTags = exports.getMissedNews = exports.getNews = exports.getMostRecentNews = exports.getHeadLine = exports.getUserbyID = exports.updateUserData = exports.deleteUsersManually = exports.users = exports.assignRole = exports.updateSubCategory = exports.updateCategory = exports.addCategory = exports.deleteSubCategory = exports.deleteCategory = exports.AllCategoriesWithSubCategory = exports.restoreNews = exports.deleteNews = exports.addToNewsRecycleBin = exports.getNewsById = exports.getNewsForUpdate = exports.updateNews = exports.editorRecentArticles = exports.recentArticles = exports.editorNewsStats = exports.totalNewsStats = exports.writerNewsList = exports.editorNewsList = exports.allNewsList = exports.newsList = exports.getAllNewsSubCategories = exports.getAllNewsCategories = exports.getNewsType = exports.deleteType = exports.addType = exports.getAdvertisements = exports.getAllLiveEvents = exports.getLiveEventEntries = exports.addLiveUpdateEntry = exports.createLiveEvent = exports.createNews = exports.getLastFiveLiveUpdateNewsType = exports.videoUpload = void 0;
+exports.getAllLiveUpdates = exports.getNewsByLiveUpdateType = exports.getOldestNewsArticleByType = exports.mainSearch = exports.getDeletedNews = exports.getSingleMedia = exports.medias = exports.deleteMediaByUser = exports.getMediasByCategoryOrTag = exports.getAllMedias = exports.getMedias = exports.createMedia = exports.moderateComment = exports.getAnalytics = exports.rejectNews = exports.approveNews = exports.getRejectedNews = exports.getApprovedNews = exports.getPendingNews = void 0;
 const helper_1 = require("../utils/helper");
 const News_1 = __importDefault(require("../models/News"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
@@ -57,7 +57,7 @@ const Category_1 = __importDefault(require("../models/Category"));
 const Subcategory_1 = __importDefault(require("../models/Subcategory"));
 const mongoose_1 = __importDefault(require("mongoose"));
 const User_1 = __importDefault(require("../models/User"));
-const Image_1 = __importDefault(require("../models/Image"));
+const Media_1 = __importDefault(require("../models/Media"));
 const Comment_1 = __importDefault(require("../models/Comment"));
 const slugify_1 = __importDefault(require("slugify"));
 const cloud_1 = require("../cloud");
@@ -66,6 +66,7 @@ const server_1 = __importDefault(require("../server"));
 const LiveUpdateEntry_1 = __importDefault(require("../models/LiveUpdateEntry"));
 const inmemory_1 = require("../lib/inmemory");
 const redis_1 = __importDefault(require("../lib/redis"));
+const Notifications_1 = __importDefault(require("../models/Notifications"));
 function generateUniqueSlug(title) {
     return __awaiter(this, void 0, void 0, function* () {
         const { nanoid } = yield Promise.resolve().then(() => __importStar(require("nanoid")));
@@ -120,7 +121,7 @@ const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         const role = (_b = req.user) === null || _b === void 0 ? void 0 : _b.role;
         const isAdmin = role === "admin";
         const isEditor = role === "editor";
-        const { title, newsCategory, subCategory, type, tags, editorText, video, city, name, isAdvertisement, publishDate, } = req.body;
+        const { title, newsCategory, subCategory, type, tags, editorText, video, city, name, isAdvertisement, publishDate, isDraft, } = req.body;
         let bioId = null;
         if (name) {
             const bio = yield Biography_1.default.findOne({
@@ -146,12 +147,19 @@ const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             name: bioId,
             isAdvertisement,
         });
-        if (publishDate && new Date(publishDate) > new Date()) {
-            newNews.publishedAt = new Date(publishDate);
-            newNews.status = "scheduled";
-            newNews.published = false;
+        if (!isDraft && publishDate && new Date(publishDate) > new Date()) {
+            if (isAdmin || isEditor) {
+                newNews.publishedAt = new Date(publishDate);
+                newNews.status = "scheduled";
+                newNews.published = false;
+            }
+            else {
+                return res
+                    .status(403)
+                    .json({ message: "You are not allowed to schedule articles." });
+            }
         }
-        else {
+        else if (!isDraft) {
             if (isAdmin || isEditor) {
                 newNews.status = "approved";
                 newNews.published = true;
@@ -176,6 +184,19 @@ const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             }
         }
         yield newNews.save();
+        if (role === "journalist") {
+            const recipients = yield User_1.default.find({
+                role: { $in: ["admin", "editor"] },
+            }).select("_id");
+            const notifications = recipients.map((recipient) => ({
+                user: recipient._id,
+                message: `New article submitted by journalist: "${newNews.title}"`,
+                type: "article",
+            }));
+            if (notifications.length > 0) {
+                yield Notifications_1.default.insertMany(notifications);
+            }
+        }
         const year = newNews.createdAt.getFullYear();
         const month = String(newNews.createdAt.getMonth() + 1).padStart(2, "0");
         const day = String(newNews.createdAt.getDate()).padStart(2, "0");
@@ -467,16 +488,31 @@ const editorNewsList = function (req, res) {
             const page = parseInt(typeof req.query.page === "string" ? req.query.page : "1") || 1;
             const pageSize = parseInt(typeof req.query.pageSize === "string" ? req.query.pageSize : "5") || 5;
             const userId = req.user._id;
+            // Build query based on role
+            const query = { isDeleted: false };
+            if (req.user.role === "editor") {
+                query.editor = userId;
+            }
+            else {
+                query.author = userId;
+            }
             const options = {
                 page: page,
                 limit: pageSize,
                 sort: { createdAt: -1 },
+                populate: [
+                    {
+                        path: "author",
+                        select: "username email",
+                    },
+                ],
             };
-            const query = { user: userId, isDeleted: false };
             const paginatedNews = yield News_1.default.paginate(query, options);
             res.json({
                 news: paginatedNews.docs,
                 totalPages: paginatedNews.totalPages,
+                currentPage: paginatedNews.page,
+                totalDocs: paginatedNews.totalDocs,
             });
         }
         catch (error) {
@@ -533,7 +569,7 @@ const totalNewsStats = (req, res) => __awaiter(void 0, void 0, void 0, function*
         // Count stats
         const totalArticles = yield News_1.default.countDocuments({ isDeleted: false });
         const drafts = yield News_1.default.countDocuments({
-            status: "pending",
+            status: "draft",
             isDeleted: false,
         });
         const reported = yield News_1.default.countDocuments({
@@ -560,6 +596,51 @@ const totalNewsStats = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.totalNewsStats = totalNewsStats;
+const editorNewsStats = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const filter = { isDeleted: false };
+        // If the user is an editor, only fetch their own news
+        if (req.user.role === "editor") {
+            filter.editor = req.user._id;
+        }
+        // Aggregate articles trend (last 14 days)
+        const trend = yield News_1.default.aggregate([
+            {
+                $match: Object.assign(Object.assign({}, filter), { createdAt: { $gte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000) } }),
+            },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%b %d", date: "$createdAt" } },
+                    v: { $sum: 1 },
+                },
+            },
+            { $sort: { _id: 1 } },
+        ]);
+        const monthTrend = trend.map((t) => ({ d: t._id, v: t.v }));
+        // Count stats
+        const totalArticles = yield News_1.default.countDocuments(filter);
+        const drafts = yield News_1.default.countDocuments(Object.assign(Object.assign({}, filter), { status: "draft" }));
+        const reported = yield News_1.default.countDocuments(Object.assign(Object.assign({}, filter), { status: "rejected" }));
+        const liveEvents = yield LiveUpdateEntry_1.default.countDocuments(req.user.role === "editor" ? { editor: req.user._id } : {});
+        res.json({
+            success: true,
+            stats: {
+                totalArticles,
+                drafts,
+                reported,
+                liveEvents,
+                monthTrend,
+            },
+        });
+    }
+    catch (err) {
+        console.error("Dashboard stats error", err);
+        res
+            .status(500)
+            .json({ success: false, message: "Failed to fetch dashboard stats" });
+    }
+});
+exports.editorNewsStats = editorNewsStats;
 const recentArticles = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const articles = yield News_1.default.find({ isDeleted: false })
@@ -590,6 +671,41 @@ const recentArticles = (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
 });
 exports.recentArticles = recentArticles;
+const editorRecentArticles = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const filter = { isDeleted: false };
+        // If the user is an editor, only show their own articles
+        if (req.user.role === "editor") {
+            filter.editor = req.user._id;
+        }
+        const articles = yield News_1.default.find(filter)
+            .populate("author", "username")
+            .sort({ createdAt: -1 })
+            .limit(5);
+        const formatted = articles.map((a) => {
+            var _a;
+            return ({
+                id: a._id,
+                title: a.title,
+                author: ((_a = a.author) === null || _a === void 0 ? void 0 : _a.username) || "Unknown",
+                category: a.newsCategory || "General",
+                status: a.published
+                    ? "Published"
+                    : a.status === "pending"
+                        ? "Draft"
+                        : "Rejected",
+                createdAt: a.createdAt.toLocaleDateString(),
+                views: a.views,
+            });
+        });
+        res.json({ success: true, articles: formatted });
+    }
+    catch (err) {
+        console.error("Recent articles error:", err);
+        res.status(500).json({ success: false });
+    }
+});
+exports.editorRecentArticles = editorRecentArticles;
 const updateNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d, _e;
     const { newsId } = req.params;
@@ -1351,7 +1467,7 @@ const getArticlesByCategory = (req, res) => __awaiter(void 0, void 0, void 0, fu
     }
 });
 exports.getArticlesByCategory = getArticlesByCategory;
-const getImageArticlesByCategory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getMediaArticlesByCategory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { category, subcategory, excludeIds } = req.query;
         const { tags, limit, order } = req.query;
@@ -1370,7 +1486,7 @@ const getImageArticlesByCategory = (req, res) => __awaiter(void 0, void 0, void 
             query._id = { $nin: excludeIds.split(",") };
         }
         // Run query
-        let articles = Image_1.default.find(query);
+        let articles = Media_1.default.find(query);
         // Apply sort order if provided
         if (order) {
             articles = articles.sort({ [order]: -1 });
@@ -1390,7 +1506,7 @@ const getImageArticlesByCategory = (req, res) => __awaiter(void 0, void 0, void 
         res.status(500).json({ message: "Server error", error: err.message });
     }
 });
-exports.getImageArticlesByCategory = getImageArticlesByCategory;
+exports.getMediaArticlesByCategory = getMediaArticlesByCategory;
 const getRelatedNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { slug, tags, category } = req.query;
@@ -1787,7 +1903,7 @@ const moderateComment = (req, res) => __awaiter(void 0, void 0, void 0, function
     }
 });
 exports.moderateComment = moderateComment;
-const createImage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const createMedia = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     var _a;
     try {
         const userId = (_a = req.user) === null || _a === void 0 ? void 0 : _a._id;
@@ -1798,75 +1914,82 @@ const createImage = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         if (!altText || !title) {
             return res.status(400).send({ error: "Alt text and title are required" });
         }
-        const imageFiles = req.body.cloudinaryUrls || [];
-        if (imageFiles.length === 0) {
+        const mediaFiles = req.body.cloudinaryUrls || [];
+        if (!Array.isArray(mediaFiles) || mediaFiles.length === 0) {
             return res
                 .status(400)
-                .json({ error: "At least one image file is required" });
+                .json({ error: "At least one media file is required" });
         }
-        const newImage = new Image_1.default({
+        const newMedia = new Media_1.default({
+            author: userId,
             title,
-            files: imageFiles,
+            files: mediaFiles.map((f) => ({
+                url: f.url,
+                public_id: f.public_id,
+                format: f.format || null,
+                size: f.size || null,
+                type: f.type || "other",
+                responsive: f.responsive || [],
+            })),
             caption,
             category,
             subCategory,
             tags: Array.isArray(tags) ? tags : [tags],
             altText,
-            user: userId,
         });
-        const savedImage = yield newImage.save();
+        const savedMedia = yield newMedia.save();
         res.status(201).json({
             success: true,
-            message: "Images uploaded and saved successfully",
-            image: savedImage,
+            message: "Medias uploaded and saved successfully",
+            media: savedMedia,
         });
     }
     catch (error) {
-        console.error("Error uploading images:", error);
-        res.status(500).json({ error: "Failed to upload images" });
+        console.error("Error uploading medias:", error);
+        res.status(500).json({ error: "Failed to upload medias" });
     }
 });
-exports.createImage = createImage;
-// Fetch all images
-const getImages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.createMedia = createMedia;
+// Fetch all Medias
+const getMedias = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        let images;
+        let medias;
         if (req.user.role === "admin") {
-            // Admin can see all images
-            images = yield Image_1.default.find()
+            // Admin can see all medias
+            medias = yield Media_1.default.find()
                 .populate("category")
                 .populate("subCategory")
                 .sort({ createdAt: -1 });
         }
         else {
-            // Non-admin users can only see their own images
-            images = yield Image_1.default.find({ user: req.user._id })
+            // Non-admin users can only see their own medias
+            medias = yield Media_1.default.find({ user: req.user._id })
                 .populate("category")
                 .populate("subCategory")
                 .sort({ createdAt: -1 });
         }
-        res.status(200).json(images);
+        res.status(200).json(medias);
     }
     catch (error) {
-        res.status(500).json({ error: "Failed to fetch images" });
+        res.status(500).json({ error: "Failed to fetch medias" });
     }
 });
-exports.getImages = getImages;
-const getAllImages = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getMedias = getMedias;
+const getAllMedias = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const images = yield Image_1.default.find()
+        const medias = yield Media_1.default.find()
             .populate("category")
             .populate("subCategory")
             .sort({ createdAt: -1 });
-        res.status(200).json(images);
+        res.status(200).json(medias);
     }
     catch (error) {
-        res.status(500).json({ error: "Failed to fetch images" });
+        res.status(500).json({ error: "Failed to fetch medias" });
     }
 });
-exports.getAllImages = getAllImages;
-// Fetch images by category or tag
-const getImagesByCategoryOrTag = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getAllMedias = getAllMedias;
+// Fetch medias by category or tag
+const getMediasByCategoryOrTag = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { category, subCategory, tag } = req.query;
         let filter = {};
@@ -1876,32 +1999,32 @@ const getImagesByCategoryOrTag = (req, res) => __awaiter(void 0, void 0, void 0,
             filter.subCategory = subCategory;
         if (tag)
             filter.tags = tag;
-        const images = yield Image_1.default.find(filter)
+        const medias = yield Media_1.default.find(filter)
             .populate("category")
             .populate("subCategory")
             .sort({ createdAt: -1 });
-        res.status(200).json(images);
+        res.status(200).json(medias);
     }
     catch (error) {
-        res.status(500).json({ error: "Failed to fetch images" });
+        res.status(500).json({ error: "Failed to fetch medias" });
     }
 });
-exports.getImagesByCategoryOrTag = getImagesByCategoryOrTag;
-// Delete an image and all associated files from Cloudinary
-const deleteImageByUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.getMediasByCategoryOrTag = getMediasByCategoryOrTag;
+// Delete an media and all associated files from Cloudinary
+const deleteMediaByUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        // Find the image by ID in the database
-        const image = yield Image_1.default.findById(id);
-        if (!image) {
-            return res.status(404).json({ error: "Image not found" });
+        // Find the media by ID in the database
+        const media = yield Media_1.default.findById(id);
+        if (!media) {
+            return res.status(404).json({ error: "Media not found" });
         }
-        // Delete each image in the files array using its public_id
-        const deleteResults = yield Promise.all(image.files.map((file) => __awaiter(void 0, void 0, void 0, function* () {
-            console.log("Deleting image with public_id:", file.public_id);
+        // Delete each media in the files array using its public_id
+        const deleteResults = yield Promise.all(media.files.map((file) => __awaiter(void 0, void 0, void 0, function* () {
+            console.log("Deleting media with public_id:", file.public_id);
             const result = yield cloud_1.cloudinary.uploader.destroy(file.public_id);
             if (result.result !== "ok") {
-                console.error(`Failed to delete image: ${file.public_id}`, result);
+                console.error(`Failed to delete media: ${file.public_id}`, result);
                 return result;
             }
             return result;
@@ -1910,32 +2033,32 @@ const deleteImageByUser = (req, res) => __awaiter(void 0, void 0, void 0, functi
         if (failedDeletions.length > 0) {
             return res
                 .status(500)
-                .json({ error: "Failed to delete some images from Cloudinary" });
+                .json({ error: "Failed to delete some medias from Cloudinary" });
         }
-        // Remove the image document from MongoDB
-        yield Image_1.default.findByIdAndDelete(id);
+        // Remove the media document from MongoDB
+        yield Media_1.default.findByIdAndDelete(id);
         return res.status(200).json({
-            message: "All images and the associated image document deleted successfully",
+            message: "All medias and the associated media document deleted successfully",
         });
     }
     catch (error) {
-        console.error("Error deleting image:", error);
+        console.error("Error deleting media:", error);
         return res.status(500).json({ error: error.message });
     }
 });
-exports.deleteImageByUser = deleteImageByUser;
-// get all images by admin
-const images = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.deleteMediaByUser = deleteMediaByUser;
+// get all medias by admin
+const medias = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     try {
-        const images = yield Image_1.default.find()
+        const medias = yield Media_1.default.find()
             .skip((page - 1) * limit)
             .limit(limit);
-        const totalImages = yield Image_1.default.countDocuments();
+        const totalMedias = yield Media_1.default.countDocuments();
         res.json({
-            images,
-            totalPages: Math.ceil(totalImages / limit),
+            medias,
+            totalPages: Math.ceil(totalMedias / limit),
             currentPage: page,
         });
     }
@@ -1945,21 +2068,21 @@ const images = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             .send({ message: "Internal Server Error", error: error.message });
     }
 });
-exports.images = images;
-const getSingleImage = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.medias = medias;
+const getSingleMedia = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const image = yield Image_1.default.findById(req.params.id);
-        if (!image) {
-            return res.status(404).json({ message: "Image not found" });
+        const media = yield Media_1.default.findById(req.params.id);
+        if (!media) {
+            return res.status(404).json({ message: "Media not found" });
         }
-        res.status(200).json({ image });
+        res.status(200).json({ media });
     }
     catch (error) {
-        console.error("Error fetching image:", error);
-        res.status(500).json({ message: "Failed to fetch image details" });
+        console.error("Error fetching media:", error);
+        res.status(500).json({ message: "Failed to fetch media details" });
     }
 });
-exports.getSingleImage = getSingleImage;
+exports.getSingleMedia = getSingleMedia;
 const getDeletedNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const page = parseInt(typeof req.query.page === "string" ? req.query.page : "1") || 1;

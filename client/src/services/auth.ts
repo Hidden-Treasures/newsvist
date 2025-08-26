@@ -19,6 +19,19 @@ export const getProfile = async () => {
   return data;
 };
 
+export const updateUserService = async ({
+  userId,
+  formData,
+}: {
+  userId: string;
+  formData: FormData;
+}) => {
+  const { data } = await api.put(`/update/${userId}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+};
+
 export const getProfileByUsername = async (username: string) => {
   try {
     const { data } = await api.get(`/profiles/${username}`);

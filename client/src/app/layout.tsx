@@ -3,7 +3,6 @@ import "./globals.css";
 import { ToastContainer } from "react-toastify";
 import Providers from "./Providers";
 import { ReactNode } from "react";
-import PushNotification from "@/components/PushNotification";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

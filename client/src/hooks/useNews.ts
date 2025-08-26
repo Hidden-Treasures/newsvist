@@ -26,6 +26,7 @@ import {
   getArticleBySlug,
   getCategories,
   getComments,
+  getEditorNewsList,
   getLastFiveLiveUpdateNewsType,
   getLiveEventEntries,
   getLiveUpdateHeadLine,
@@ -39,6 +40,7 @@ import {
   rejectArticle,
   restoreArticle,
   updateNews,
+  uploadMedia,
   videoUpload,
 } from "@/services/news";
 import {
@@ -128,6 +130,12 @@ export const useNewsList = (params: PaginationParams) => {
   return useQuery({
     queryKey: ["news", params],
     queryFn: () => fetchNewsList(params),
+  });
+};
+export const useEditorNewsList = (params: PaginationParams) => {
+  return useQuery({
+    queryKey: ["news", params],
+    queryFn: () => getEditorNewsList(params),
   });
 };
 
@@ -424,5 +432,18 @@ export const useAddLiveEntry = (type: string) => {
     onSuccess: (_: LiveEntry) => {
       qc.invalidateQueries({ queryKey: ["live-event", type] });
     },
+  });
+};
+
+export const useUploadMedia = () => {
+  return useMutation({
+    mutationFn: (file: File) =>
+      uploadMedia(file, (progress) => {
+        // store progress inside mutation's meta
+        queryClient.setMutationDefaults(["upload", file.name], {
+          meta: { progress },
+        });
+      }),
+    meta: { progress: 0 },
   });
 };

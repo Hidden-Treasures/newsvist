@@ -26,7 +26,7 @@ interface INews extends Document {
   editorText?: string;
   liveUpdateType?: string;
   views: number;
-  status: "pending" | "approved" | "rejected" | "scheduled";
+  status: "draft" | "pending" | "approved" | "rejected" | "scheduled";
   liveUpdateHeadline?: string;
   editor?: mongoose.Types.ObjectId;
   isDeleted: boolean;
@@ -101,7 +101,7 @@ const NewsSchema = new Schema<INews>(
     },
     status: {
       type: String,
-      enum: ["pending", "approved", "rejected", "scheduled"],
+      enum: ["draft", "pending", "approved", "rejected", "scheduled"],
       default: "pending",
     },
     editor: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

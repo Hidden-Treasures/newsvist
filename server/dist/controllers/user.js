@@ -14,7 +14,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.resetPassword = exports.initiatePasswordReset = exports.bulkUpdateUserStatus = exports.getUserAnalytics = exports.updateAccountStatus = exports.getProfileByUsername = exports.getUserDetails = exports.updateUser = exports.logout = exports.login = exports.register = void 0;
 const User_1 = __importDefault(require("../models/User"));
-const cloud_1 = require("../cloud");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const ResetToken_1 = __importDefault(require("../models/ResetToken"));
@@ -98,7 +97,6 @@ const logout = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 });
 exports.logout = logout;
 const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     try {
         const { userId } = req.params;
         const { username, phone, email, bio, folder } = req.body;
@@ -114,25 +112,26 @@ const updateUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         user.bio = bio || user.bio;
         // If a new profile photo is uploaded
         if (req.body.cloudinaryUrls && req.body.cloudinaryUrls.length > 0) {
+            const cloudinaryUrls = req.body.cloudinaryUrls;
+            const imageFiles = cloudinaryUrls.filter((file) => file.url.match(/\.(jpg|jpeg|png|webp|avif|gif)$/i));
             // Delete the old profile photo from Cloudinary if it exists
-            if (user.profilePhoto &&
-                !user.profilePhoto.includes("default-profile_photos")) {
-                const publicId = (_a = user.profilePhoto.split("/").pop()) === null || _a === void 0 ? void 0 : _a.split(".")[0];
-                if (publicId) {
-                    yield cloud_1.cloudinary.uploader.destroy(publicId);
-                }
+            if (imageFiles.length > 0) {
+                user.profilePhoto = {
+                    url: imageFiles[0].url,
+                    public_id: imageFiles[0].public_id,
+                    responsive: imageFiles[0].responsive || [],
+                };
             }
-            // // Upload the new profile photo to Cloudinary
-            // const result = await cloudinary.uploader.upload(req.file.path, {
-            //   folder: "profile_photos",
-            //   public_id: `${userId}_${Date.now()}`,
-            // });
-            // if (!result || !result.secure_url) {
-            //   return res
-            //     .status(500)
-            //     .json({ message: "Failed to upload new profile photo" });
+            // if (
+            //   user.profilePhoto &&
+            //   !user.profilePhoto.includes("default-profile_photos")
+            // ) {
+            //   const publicId = user.profilePhoto.split("/").pop()?.split(".")[0];
+            //   if (publicId) {
+            //     await cloudinary.uploader.destroy(publicId);
+            //   }
             // }
-            user.profilePhoto = req.body.cloudinaryUrls[0];
+            // user.profilePhoto = req.body.cloudinaryUrls[0];
         }
         // Save the updated user
         yield user.save();

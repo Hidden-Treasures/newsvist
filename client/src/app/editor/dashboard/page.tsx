@@ -1,30 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import CreateNewsForm from "@/components/forms/CreateNews";
-
-// shadcn/ui
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-
-// icons
-import {
-  Calendar,
-  CheckCircle2,
-  FileText,
-  Filter,
-  Flag,
-  MoreVertical,
-  Pencil,
-  Plus,
-  Search,
-  Trash2,
-  Upload,
-  Video,
-} from "lucide-react";
-
-// charts (recharts)
+import React, { useEffect, useRef, useState } from "react";
 import {
   ResponsiveContainer,
   CartesianGrid,
@@ -34,12 +10,8 @@ import {
   Area,
   AreaChart,
 } from "recharts";
-
-// motion
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+
 import {
   Table,
   TableBody,
@@ -49,8 +21,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@headlessui/react";
+import {
+  FileText,
+  Flag,
+  MoreVertical,
+  Pencil,
+  Plus,
+  Search,
+  Video,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  useEditorDashboardStats,
+  useEditorRecentArticles,
+} from "@/hooks/useAdmin";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import {
   Dialog,
@@ -59,40 +46,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useDashboardStats, useRecentArticles } from "@/hooks/useAdmin";
+import CreateNewsForm from "@/components/forms/CreateNews";
+import LiveEventsModal from "@/components/modals/liveEvent";
+import UploadMediaModal from "@/components/modals/uploadMedia";
 
-const moderationQueue = [
-  {
-    id: "m1",
-    type: "Comment",
-    reason: "Hate speech",
-    by: "guest-3881",
-    on: "Aug 19, 10:01",
-  },
-  {
-    id: "m2",
-    type: "Article",
-    reason: "Copyright claim",
-    by: "DMCA Bot",
-    on: "Aug 19, 09:27",
-  },
-  {
-    id: "m3",
-    type: "Comment",
-    reason: "Spam",
-    by: "guest-2019",
-    on: "Aug 19, 08:45",
-  },
-];
-
-export default function AdminDashboard() {
+const page = () => {
   const router = useRouter();
   const [openCreate, setOpenCreate] = useState(false);
+  const [openLive, setOpenLive] = useState(false);
+  const [openUpload, setOpenUpload] = useState(false);
   const searchRef = useRef<HTMLInputElement | null>(null);
-  const { data: recentArticles = [], isLoading: articlesLoading } =
-    useRecentArticles();
 
-  const { data, isLoading, isError } = useDashboardStats();
+  const { data: recentArticles = [], isLoading: articlesLoading } =
+    useEditorRecentArticles();
+
+  const { data, isLoading, isError } = useEditorDashboardStats();
 
   const stats = data?.stats ?? {
     totalArticles: 0,
@@ -102,7 +70,6 @@ export default function AdminDashboard() {
     monthTrend: [],
   };
 
-  // keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "/") {
@@ -120,9 +87,7 @@ export default function AdminDashboard() {
 
   return (
     <>
-      {/* Main content */}
       <main className="space-y-6">
-        {/* Quick actions + search (mobile) */}
         <div className="flex md:hidden items-center gap-2">
           <div className="relative flex-1">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -234,7 +199,6 @@ export default function AdminDashboard() {
               </ResponsiveContainer>
             </CardContent>
           </Card>
-
           <Card className="bg-slate-900/60 border-slate-800">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Quick Actions</CardTitle>
@@ -250,26 +214,17 @@ export default function AdminDashboard() {
               <Button
                 variant="secondary"
                 className="w-full"
-                onClick={() => router.push("/admin/live")}
+                onClick={() => setOpenLive(true)}
               >
                 Start Live Event
               </Button>
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => router.push("/admin/media")}
+                onClick={() => setOpenUpload(true)}
               >
                 Upload Media
               </Button>
-              {/* <div className="pt-1">
-                <Label className="text-xs text-slate-400">
-                  Auto-publish to social
-                </Label>
-                <div className="flex items-center justify-between rounded-xl border border-slate-800 p-3 mt-1">
-                  <div className="text-sm">Share to X / Facebook</div>
-                  <Switch defaultChecked />
-                </div>
-              </div> */}
             </CardContent>
           </Card>
         </section>
@@ -351,137 +306,12 @@ export default function AdminDashboard() {
               )}
             </CardContent>
           </Card>
-
-          <Card className="bg-slate-900/60 border-slate-800">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Moderation Queue</CardTitle>
-              <Button variant="ghost" size="icon">
-                <Flag className="w-4 h-4" />
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {moderationQueue.map((m) => (
-                  <div
-                    key={m.id}
-                    className="flex items-start justify-between rounded-xl border border-slate-800 p-3"
-                  >
-                    {/* Left side */}
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 text-sm flex-wrap">
-                        <Badge variant="outline" className="rounded-full">
-                          {m.type}
-                        </Badge>
-                        <span className="text-slate-300 truncate">
-                          {m.reason}
-                        </span>
-                      </div>
-                      <div className="text-xs text-slate-400 mt-1">
-                        by {m.by} · {m.on}
-                      </div>
-                    </div>
-
-                    {/* Action buttons (icons only) */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Button variant="outline" size="icon" title="Resolve">
-                        <CheckCircle2 className="w-4 h-4" color="gray" />
-                      </Button>
-                      <Button variant="destructive" size="icon" title="Remove">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </section>
-
-        {/* Scheduling / Draft composer */}
-        {/* <Tabs defaultValue="schedule" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 lg:w-auto">
-            <TabsTrigger
-              value="schedule"
-              className="data-[state=active]:bg-slate-800"
-            >
-              Schedule
-            </TabsTrigger>
-            <TabsTrigger
-              value="quick-draft"
-              className="data-[state=active]:bg-slate-800"
-            >
-              Quick Draft
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="schedule" className="mt-4">
-            <Card className="bg-slate-900/60 border-slate-800">
-              <CardHeader>
-                <CardTitle>Schedule an Article</CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-2 grid gap-3">
-                  <Input
-                    placeholder="Headline"
-                    className="bg-slate-800/60 border-slate-700"
-                  />
-                  <Textarea
-                    placeholder="Short description"
-                    className="min-h-[120px] bg-slate-800/60 border-slate-700"
-                  />
-                </div>
-                <div className="grid gap-3">
-                  <Label>Publish date/time</Label>
-                  <Input
-                    type="datetime-local"
-                    className="bg-slate-800/60 border-slate-700"
-                  />
-                  <Label>Category</Label>
-                  <Input
-                    placeholder="e.g. Politics"
-                    className="bg-slate-800/60 border-slate-700"
-                  />
-                  <Button className="mt-2">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Schedule
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="quick-draft" className="mt-4">
-            <Card className="bg-slate-900/60 border-slate-800">
-              <CardHeader>
-                <CardTitle>Quick Draft</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-3">
-                <Input
-                  placeholder="Title"
-                  className="bg-slate-800/60 border-slate-700"
-                />
-                <Textarea
-                  placeholder="What’s the story?"
-                  className="min-h-[160px] bg-slate-800/60 border-slate-700"
-                />
-                <div className="flex items-center gap-2">
-                  <Button>
-                    <SaveIcon className="w-4 h-4 mr-2" />
-                    Save Draft
-                  </Button>
-                  <Button variant="secondary">
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload Media
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs> */}
       </main>
-
       <Dialog open={openCreate} onOpenChange={setOpenCreate}>
         <DialogContent
           className="w-full max-w-[95vw] md:max-w-4xl lg:max-w-6xl h-[90vh] md:h-auto md:max-h-[85vh] overflow-y-auto hide-scrollbar bg-slate-950 border border-slate-800 rounded-xl p-5 md:p-8 shadow-lg flex flex-col gap-4
-    "
+          "
         >
           <DialogHeader className="flex flex-col gap-2 sticky top-0 bg-slate-950 z-10">
             <DialogTitle className="text-xl md:text-2xl font-bold text-white">
@@ -497,25 +327,10 @@ export default function AdminDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+      <LiveEventsModal open={openLive} setOpen={setOpenLive} />
+      <UploadMediaModal open={openUpload} setOpen={setOpenUpload} />
     </>
   );
-}
+};
 
-// Small inline icon to avoid another import
-function SaveIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9l3 3v13a2 2 0 0 1-2 2Z" />
-      <path d="M7 3v8h10" />
-    </svg>
-  );
-}
+export default page;

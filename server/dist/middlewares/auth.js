@@ -81,6 +81,9 @@ const canCreateRead = (req, res, next) => __awaiter(void 0, void 0, void 0, func
             case "journalist":
                 next();
                 break;
+            case "editor":
+                next();
+                break;
             default:
                 return res.status(403).send("Unauthorized");
         }

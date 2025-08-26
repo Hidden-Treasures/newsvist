@@ -18,6 +18,9 @@ import { Colors } from "@/utils/Colors";
 import { useCategories, useSubCategories } from "@/hooks/useCategories";
 import { Select } from "../ui/select";
 import { Label } from "../ui/label";
+import { Button } from "../ui/button";
+import { Calendar } from "react-feather";
+import { Input } from "../ui/input";
 
 interface TagOption {
   label: string;
@@ -76,7 +79,8 @@ const NewsForm: FC<NewsFormProps> = ({
   const [isFocused, setIsFocused] = useState(false);
   const [publishDate, setPublishDate] = useState<string>("");
   const [isAdvertisement, setIsAdvertisement] = useState<boolean>(false);
-  // Using TanStack Query hooks
+  const [isScheduled, setIsScheduled] = useState(false);
+
   const { data: types = [] } = useNewsTypes();
   const { data: categories = [], isLoading: categoriesLoading } =
     useCategories();
@@ -143,7 +147,7 @@ const NewsForm: FC<NewsFormProps> = ({
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (isDraft = false) => {
     const tags = selectedNewsTags?.map((tag) => tag?.value || tag?.label);
     const formData = new FormData();
 
@@ -175,8 +179,9 @@ const NewsForm: FC<NewsFormProps> = ({
     formData.append("editorText", editorText);
     formData.append("name", bioName);
     formData.append("folder", "news_assets");
+    formData.append("isDraft", String(isDraft));
 
-    if (publishDate) {
+    if (isScheduled && publishDate) {
       formData.append("publishDate", publishDate);
     }
 
@@ -234,7 +239,7 @@ const NewsForm: FC<NewsFormProps> = ({
       {/* Left / Content */}
       <div className="flex-1 space-y-5">
         <label className="flex items-center gap-2">
-          <input
+          <Input
             type="checkbox"
             checked={isAdvertisement}
             onChange={(e) => setIsAdvertisement(e.target.checked)}
@@ -247,7 +252,7 @@ const NewsForm: FC<NewsFormProps> = ({
           <Label htmlFor="title" className="text-gray-300">
             Title
           </Label>
-          <input
+          <Input
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -355,7 +360,7 @@ const NewsForm: FC<NewsFormProps> = ({
         </div>
         <div>
           <Label className="text-gray-300">Bio Name</Label>
-          <input
+          <Input
             type="text"
             value={bioName}
             onChange={(e) => setBioName(e.target.value)}
@@ -364,22 +369,56 @@ const NewsForm: FC<NewsFormProps> = ({
           />
         </div>
         <div>
-          <Label className="text-gray-300">Publish Date & Time</Label>
-          <input
-            type="datetime-local"
-            value={publishDate}
-            onChange={(e) => setPublishDate(e.target.value)}
-            className="w-full border-2 p-2 rounded bg-transparent text-gray-500"
-          />
+          <Label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isScheduled}
+              onChange={(e) => setIsScheduled(e.target.checked)}
+              className="h-5 w-5 cursor-pointer"
+            />
+            <span className="text-gray-500">Schedule this article</span>
+          </Label>
+
+          {isScheduled && (
+            <div className="mt-2">
+              <Label className="text-gray-300">Publish Date & Time</Label>
+              <Input
+                type="datetime-local"
+                value={publishDate}
+                onChange={(e) => setPublishDate(e.target.value)}
+                className="w-full border-2 p-2 rounded bg-transparent text-gray-500"
+                min={new Date().toISOString().slice(0, 16)}
+              />
+            </div>
+          )}
         </div>
 
-        <div className="mt-auto">
-          <Submit
-            busy={busy}
-            value={btnTitle}
-            onClick={handleSubmit}
-            type="button"
-          />
+        <div className="mt-auto flex flex-col gap-2">
+          {/* Save as Draft */}
+          <Button
+            className="w-full rounded text-white bg-gray-600 hover:bg-gray-800 transition font-semibold text-lg h-10"
+            onClick={() => handleSubmit(true)}
+          >
+            Save as Draft
+          </Button>
+
+          {/* Publish / Schedule */}
+          {isScheduled ? (
+            <Button
+              className="w-full rounded text-white bg-blue-600 hover:bg-blue-900 transition font-semibold text-lg h-10 flex items-center justify-center"
+              onClick={() => handleSubmit(false)}
+            >
+              <Calendar className="w-4 h-4 mr-2" />
+              Schedule
+            </Button>
+          ) : (
+            <Submit
+              busy={busy}
+              value={btnTitle}
+              onClick={() => handleSubmit(false)}
+              type="button"
+            />
+          )}
         </div>
       </div>
     </form>

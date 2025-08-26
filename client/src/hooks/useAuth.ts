@@ -11,9 +11,10 @@ import {
   logoutUser,
   registerUser,
   updateBiography,
+  updateUserService,
 } from "@/services/auth";
 import { Biography, queryClient } from "@/services/types";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useRegister = () => {
   return useMutation({
@@ -37,6 +38,17 @@ export const useProfile = () => {
     retry: false,
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
+  });
+};
+
+export const useUpdateUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateUserService,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["profile", data.user._id] });
+    },
   });
 };
 

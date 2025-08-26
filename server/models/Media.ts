@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 
-const ImageSchema = new mongoose.Schema(
+const MediaSchema = new mongoose.Schema(
   {
-    user: {
+    author: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
@@ -16,6 +16,13 @@ const ImageSchema = new mongoose.Schema(
       {
         url: { type: String, required: true },
         public_id: { type: String, required: true },
+        format: { type: String },
+        size: { type: Number },
+        type: {
+          type: String,
+          enum: ["image", "video", "document", "other"],
+          default: "other",
+        },
         responsive: [String],
       },
     ],
@@ -39,4 +46,4 @@ const ImageSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Image", ImageSchema);
+export default mongoose.model("Media", MediaSchema);

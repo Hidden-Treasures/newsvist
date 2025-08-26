@@ -223,3 +223,10 @@ export type GetLiveEventEntriesResponse = {
   event: LiveEvent;
   entries: LiveEntry[];
 };
+
+export interface Notification {
+  _id: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+}

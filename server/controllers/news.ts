@@ -10,7 +10,7 @@ import SubCategory from "../models/Subcategory";
 import mongoose from "mongoose";
 import User from "../models/User";
 import { FileObject, GetNewsQuery, NewsQuery } from "../types";
-import Image from "../models/Image";
+import Media from "../models/Media";
 import Comment from "../models/Comment";
 import slugify from "slugify";
 import { cloudinary } from "../cloud";
@@ -19,6 +19,7 @@ import io from "../server";
 import LiveUpdateEntry from "../models/LiveUpdateEntry";
 import { hasRecentView } from "../lib/inmemory";
 import redisClient from "../lib/redis";
+import Notifications from "../models/Notifications";
 
 declare global {
   namespace Express {
@@ -102,6 +103,7 @@ export const createNews = async (req: Request, res: Response) => {
       name,
       isAdvertisement,
       publishDate,
+      isDraft,
     } = req.body;
 
     let bioId = null;
@@ -133,11 +135,17 @@ export const createNews = async (req: Request, res: Response) => {
       isAdvertisement,
     });
 
-    if (publishDate && new Date(publishDate) > new Date()) {
-      newNews.publishedAt = new Date(publishDate);
-      newNews.status = "scheduled";
-      newNews.published = false;
-    } else {
+    if (!isDraft && publishDate && new Date(publishDate) > new Date()) {
+      if (isAdmin || isEditor) {
+        newNews.publishedAt = new Date(publishDate);
+        newNews.status = "scheduled";
+        newNews.published = false;
+      } else {
+        return res
+          .status(403)
+          .json({ message: "You are not allowed to schedule articles." });
+      }
+    } else if (!isDraft) {
       if (isAdmin || isEditor) {
         newNews.status = "approved";
         newNews.published = true;
@@ -170,6 +178,22 @@ export const createNews = async (req: Request, res: Response) => {
     }
 
     await newNews.save();
+
+    if (role === "journalist") {
+      const recipients = await User.find({
+        role: { $in: ["admin", "editor"] },
+      }).select("_id");
+
+      const notifications = recipients.map((recipient) => ({
+        user: recipient._id,
+        message: `New article submitted by journalist: "${newNews.title}"`,
+        type: "article",
+      }));
+
+      if (notifications.length > 0) {
+        await Notifications.insertMany(notifications);
+      }
+    }
 
     const year = newNews.createdAt.getFullYear();
     const month = String(newNews.createdAt.getMonth() + 1).padStart(2, "0");
@@ -481,17 +505,33 @@ export const editorNewsList = async function (req: Request, res: Response) {
       ) || 5;
     const userId = (req.user as any)._id;
 
+    // Build query based on role
+    const query: any = { isDeleted: false };
+    if (req.user.role === "editor") {
+      query.editor = userId;
+    } else {
+      query.author = userId;
+    }
+
     const options = {
       page: page,
       limit: pageSize,
       sort: { createdAt: -1 },
+      populate: [
+        {
+          path: "author",
+          select: "username email",
+        },
+      ],
     };
-    const query = { user: userId, isDeleted: false };
 
     const paginatedNews = await News.paginate(query, options);
+
     res.json({
       news: paginatedNews.docs,
       totalPages: paginatedNews.totalPages,
+      currentPage: paginatedNews.page,
+      totalDocs: paginatedNews.totalDocs,
     });
   } catch (error) {
     console.error("Error fetching news data:", error);
@@ -551,7 +591,7 @@ export const totalNewsStats = async (req: Request, res: Response) => {
     // Count stats
     const totalArticles = await News.countDocuments({ isDeleted: false });
     const drafts = await News.countDocuments({
-      status: "pending",
+      status: "draft",
       isDeleted: false,
     });
     const reported = await News.countDocuments({
@@ -579,9 +619,102 @@ export const totalNewsStats = async (req: Request, res: Response) => {
   }
 };
 
+export const editorNewsStats = async (req: Request, res: Response) => {
+  try {
+    const filter: any = { isDeleted: false };
+
+    // If the user is an editor, only fetch their own news
+    if (req.user.role === "editor") {
+      filter.editor = req.user._id;
+    }
+
+    // Aggregate articles trend (last 14 days)
+    const trend = await News.aggregate([
+      {
+        $match: {
+          ...filter,
+          createdAt: { $gte: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000) },
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%b %d", date: "$createdAt" } },
+          v: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    const monthTrend = trend.map((t) => ({ d: t._id, v: t.v }));
+
+    // Count stats
+    const totalArticles = await News.countDocuments(filter);
+    const drafts = await News.countDocuments({ ...filter, status: "draft" });
+    const reported = await News.countDocuments({
+      ...filter,
+      status: "rejected",
+    });
+
+    const liveEvents = await LiveUpdateEntry.countDocuments(
+      req.user.role === "editor" ? { editor: req.user._id } : {}
+    );
+
+    res.json({
+      success: true,
+      stats: {
+        totalArticles,
+        drafts,
+        reported,
+        liveEvents,
+        monthTrend,
+      },
+    });
+  } catch (err) {
+    console.error("Dashboard stats error", err);
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch dashboard stats" });
+  }
+};
+
 export const recentArticles = async (req: Request, res: Response) => {
   try {
     const articles = await News.find({ isDeleted: false })
+      .populate("author", "username")
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    const formatted = articles.map((a) => ({
+      id: a._id,
+      title: a.title,
+      author: (a as any).author?.username || "Unknown",
+      category: a.newsCategory || "General",
+      status: a.published
+        ? "Published"
+        : a.status === "pending"
+        ? "Draft"
+        : "Rejected",
+      createdAt: a.createdAt.toLocaleDateString(),
+      views: a.views,
+    }));
+
+    res.json({ success: true, articles: formatted });
+  } catch (err) {
+    console.error("Recent articles error:", err);
+    res.status(500).json({ success: false });
+  }
+};
+
+export const editorRecentArticles = async (req: Request, res: Response) => {
+  try {
+    const filter: any = { isDeleted: false };
+
+    // If the user is an editor, only show their own articles
+    if (req.user.role === "editor") {
+      filter.editor = req.user._id;
+    }
+
+    const articles = await News.find(filter)
       .populate("author", "username")
       .sort({ createdAt: -1 })
       .limit(5);
@@ -1487,7 +1620,7 @@ export const getArticlesByCategory = async (
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
-export const getImageArticlesByCategory = async (
+export const getMediaArticlesByCategory = async (
   req: Request<{}, {}, {}, GetNewsQuery>,
   res: Response
 ) => {
@@ -1513,7 +1646,7 @@ export const getImageArticlesByCategory = async (
     }
 
     // Run query
-    let articles = Image.find(query);
+    let articles = Media.find(query);
 
     // Apply sort order if provided
     if (order) {
@@ -1997,7 +2130,7 @@ export const moderateComment = async (req: Request, res: Response) => {
   }
 };
 
-export const createImage = async (req: Request, res: Response) => {
+export const createMedia = async (req: Request, res: Response) => {
   try {
     const userId = (req.user as any)?._id;
 
@@ -2011,76 +2144,83 @@ export const createImage = async (req: Request, res: Response) => {
       return res.status(400).send({ error: "Alt text and title are required" });
     }
 
-    const imageFiles: FileObject[] = req.body.cloudinaryUrls || [];
+    const mediaFiles = req.body.cloudinaryUrls || [];
 
-    if (imageFiles.length === 0) {
+    if (!Array.isArray(mediaFiles) || mediaFiles.length === 0) {
       return res
         .status(400)
-        .json({ error: "At least one image file is required" });
+        .json({ error: "At least one media file is required" });
     }
 
-    const newImage = new Image({
+    const newMedia = new Media({
+      author: userId,
       title,
-      files: imageFiles,
+      files: mediaFiles.map((f: any) => ({
+        url: f.url,
+        public_id: f.public_id,
+        format: f.format || null,
+        size: f.size || null,
+        type: f.type || "other",
+        responsive: f.responsive || [],
+      })),
       caption,
       category,
       subCategory,
       tags: Array.isArray(tags) ? tags : [tags],
       altText,
-      user: userId,
     });
 
-    const savedImage = await newImage.save();
+    const savedMedia = await newMedia.save();
 
     res.status(201).json({
       success: true,
-      message: "Images uploaded and saved successfully",
-      image: savedImage,
+      message: "Medias uploaded and saved successfully",
+      media: savedMedia,
     });
   } catch (error) {
-    console.error("Error uploading images:", error);
-    res.status(500).json({ error: "Failed to upload images" });
+    console.error("Error uploading medias:", error);
+    res.status(500).json({ error: "Failed to upload medias" });
   }
 };
 
-// Fetch all images
-export const getImages = async (req: Request, res: Response) => {
+// Fetch all Medias
+export const getMedias = async (req: Request, res: Response) => {
   try {
-    let images;
+    let medias;
     if (req.user.role === "admin") {
-      // Admin can see all images
-      images = await Image.find()
+      // Admin can see all medias
+      medias = await Media.find()
         .populate("category")
         .populate("subCategory")
         .sort({ createdAt: -1 });
     } else {
-      // Non-admin users can only see their own images
-      images = await Image.find({ user: req.user._id })
+      // Non-admin users can only see their own medias
+      medias = await Media.find({ user: req.user._id })
         .populate("category")
         .populate("subCategory")
         .sort({ createdAt: -1 });
     }
 
-    res.status(200).json(images);
+    res.status(200).json(medias);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch images" });
+    res.status(500).json({ error: "Failed to fetch medias" });
   }
 };
-export const getAllImages = async (req: Request, res: Response) => {
+export const getAllMedias = async (req: Request, res: Response) => {
   try {
-    const images = await Image.find()
+    const medias = await Media.find()
       .populate("category")
       .populate("subCategory")
       .sort({ createdAt: -1 });
 
-    res.status(200).json(images);
+    res.status(200).json(medias);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch images" });
+    res.status(500).json({ error: "Failed to fetch medias" });
   }
 };
 
-// Fetch images by category or tag
-export const getImagesByCategoryOrTag = async (req: Request, res: Response) => {
+// Fetch medias by category or tag
+export const getMediasByCategoryOrTag = async (req: Request, res: Response) => {
   try {
     const { category, subCategory, tag } = req.query as {
       category?: string;
@@ -2093,36 +2233,36 @@ export const getImagesByCategoryOrTag = async (req: Request, res: Response) => {
     if (subCategory) filter.subCategory = subCategory;
     if (tag) filter.tags = tag;
 
-    const images = await Image.find(filter)
+    const medias = await Media.find(filter)
       .populate("category")
       .populate("subCategory")
       .sort({ createdAt: -1 });
 
-    res.status(200).json(images);
+    res.status(200).json(medias);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch images" });
+    res.status(500).json({ error: "Failed to fetch medias" });
   }
 };
 
-// Delete an image and all associated files from Cloudinary
-export const deleteImageByUser = async (req: Request, res: Response) => {
+// Delete an media and all associated files from Cloudinary
+export const deleteMediaByUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    // Find the image by ID in the database
-    const image = await Image.findById(id);
+    // Find the media by ID in the database
+    const media = await Media.findById(id);
 
-    if (!image) {
-      return res.status(404).json({ error: "Image not found" });
+    if (!media) {
+      return res.status(404).json({ error: "Media not found" });
     }
 
-    // Delete each image in the files array using its public_id
+    // Delete each media in the files array using its public_id
     const deleteResults = await Promise.all(
-      image.files.map(async (file) => {
-        console.log("Deleting image with public_id:", file.public_id);
+      media.files.map(async (file) => {
+        console.log("Deleting media with public_id:", file.public_id);
         const result = await cloudinary.uploader.destroy(file.public_id);
         if (result.result !== "ok") {
-          console.error(`Failed to delete image: ${file.public_id}`, result);
+          console.error(`Failed to delete media: ${file.public_id}`, result);
           return result;
         }
         return result;
@@ -2136,37 +2276,37 @@ export const deleteImageByUser = async (req: Request, res: Response) => {
     if (failedDeletions.length > 0) {
       return res
         .status(500)
-        .json({ error: "Failed to delete some images from Cloudinary" });
+        .json({ error: "Failed to delete some medias from Cloudinary" });
     }
 
-    // Remove the image document from MongoDB
-    await Image.findByIdAndDelete(id);
+    // Remove the media document from MongoDB
+    await Media.findByIdAndDelete(id);
 
     return res.status(200).json({
       message:
-        "All images and the associated image document deleted successfully",
+        "All medias and the associated media document deleted successfully",
     });
   } catch (error: any) {
-    console.error("Error deleting image:", error);
+    console.error("Error deleting media:", error);
     return res.status(500).json({ error: error.message });
   }
 };
 
-// get all images by admin
-export const images = async (req: Request, res: Response) => {
+// get all medias by admin
+export const medias = async (req: Request, res: Response) => {
   const page = parseInt(req.query.page as string) || 1;
   const limit = parseInt(req.query.limit as string) || 10;
 
   try {
-    const images = await Image.find()
+    const medias = await Media.find()
       .skip((page - 1) * limit)
       .limit(limit);
 
-    const totalImages = await Image.countDocuments();
+    const totalMedias = await Media.countDocuments();
 
     res.json({
-      images,
-      totalPages: Math.ceil(totalImages / limit),
+      medias,
+      totalPages: Math.ceil(totalMedias / limit),
       currentPage: page,
     });
   } catch (error: any) {
@@ -2176,16 +2316,16 @@ export const images = async (req: Request, res: Response) => {
   }
 };
 
-export const getSingleImage = async (req: Request, res: Response) => {
+export const getSingleMedia = async (req: Request, res: Response) => {
   try {
-    const image = await Image.findById(req.params.id);
-    if (!image) {
-      return res.status(404).json({ message: "Image not found" });
+    const media = await Media.findById(req.params.id);
+    if (!media) {
+      return res.status(404).json({ message: "Media not found" });
     }
-    res.status(200).json({ image });
+    res.status(200).json({ media });
   } catch (error) {
-    console.error("Error fetching image:", error);
-    res.status(500).json({ message: "Failed to fetch image details" });
+    console.error("Error fetching media:", error);
+    res.status(500).json({ message: "Failed to fetch media details" });
   }
 };
 

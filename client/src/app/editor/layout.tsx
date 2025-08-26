@@ -3,20 +3,14 @@
 import Header from "@/components/Header";
 import MobileSidebar from "@/components/MobileSidebar";
 import Sidebar from "@/components/Sidebar";
+
 import { useAuth } from "@/context/AuthContext";
 import { useCheckAuth } from "@/hooks/useAuth";
-import {
-  BarChart3,
-  BookOpen,
-  Flag,
-  ImageIcon,
-  Newspaper,
-  Settings,
-  Shapes,
-  User,
-  Users,
-  Video,
-} from "lucide-react";
+import { BarChart3, ImageIcon, Newspaper, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "react-toastify";
+
 import {
   Dialog,
   DialogContent,
@@ -24,9 +18,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useRouter } from "next/navigation";
-import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "react-toastify";
 import CreateNewsForm from "@/components/forms/CreateNews";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -40,32 +31,19 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   const nav = useMemo(
     () => [
-      { label: "Overview", href: "/admin/dashboard", icon: BarChart3 },
+      { label: "Overview", href: "/editor/dashboard", icon: BarChart3 },
       {
         label: "Articles",
-        href: "/admin/news-management/articles",
+        href: "/editor/articles",
         icon: Newspaper,
       },
-      { label: "Live Events", href: "/admin/live", icon: Video },
-      { label: "Media", href: "/admin/media", icon: ImageIcon },
-      { label: "Authors", href: "/admin/authors", icon: Users },
-      {
-        label: "Categories",
-        href: "/admin/news-management/categories",
-        icon: BookOpen,
-      },
-      {
-        label: "Types",
-        href: "/admin/news-management/manage-type",
-        icon: Shapes,
-      },
+      { label: "Media", href: "/editor/media", icon: ImageIcon },
+
       {
         label: "Biography",
-        href: "/admin/profile-management/biography",
+        href: "/editor/profile-management/biography",
         icon: User,
       },
-      { label: "Reports", href: "/admin/reports", icon: Flag },
-      { label: "Settings", href: "/admin/settings", icon: Settings },
     ],
     []
   );
@@ -78,7 +56,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       return;
     }
 
-    if (data?.user?.role !== "admin") {
+    if (data?.user?.role !== "editor") {
       toast.error("You do not have permission to access this page.");
       router.push("/");
     }

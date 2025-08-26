@@ -49,7 +49,10 @@ const userSchema = new mongoose_1.default.Schema({
         default: "reader",
     },
     profilePhoto: {
-        type: String,
+        type: Object,
+        url: { type: String, required: true },
+        public_id: { type: String, required: true },
+        responsive: [URL],
         default: "https://res.cloudinary.com/deazsxjtf/image/upload/v1753176879/newsvist-profile-picture_vi5org.png",
     },
     status: {

@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import ResetToken from "../models/ResetToken";
 import { sendEmail } from "../utils/email";
 import { generateResetToken, generateUniqueUsername } from "../utils/helper";
+import { FileObject } from "../types";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -116,29 +117,29 @@ export const updateUser = async (req: Request, res: Response) => {
 
     // If a new profile photo is uploaded
     if (req.body.cloudinaryUrls && req.body.cloudinaryUrls.length > 0) {
+      const cloudinaryUrls: FileObject[] = req.body.cloudinaryUrls;
+
+      const imageFiles = cloudinaryUrls.filter((file) =>
+        file.url.match(/\.(jpg|jpeg|png|webp|avif|gif)$/i)
+      );
       // Delete the old profile photo from Cloudinary if it exists
-      if (
-        user.profilePhoto &&
-        !user.profilePhoto.includes("default-profile_photos")
-      ) {
-        const publicId = user.profilePhoto.split("/").pop()?.split(".")[0];
-        if (publicId) {
-          await cloudinary.uploader.destroy(publicId);
-        }
+      if (imageFiles.length > 0) {
+        user.profilePhoto = {
+          url: imageFiles[0].url,
+          public_id: imageFiles[0].public_id,
+          responsive: imageFiles[0].responsive || [],
+        };
       }
-
-      // // Upload the new profile photo to Cloudinary
-      // const result = await cloudinary.uploader.upload(req.file.path, {
-      //   folder: "profile_photos",
-      //   public_id: `${userId}_${Date.now()}`,
-      // });
-
-      // if (!result || !result.secure_url) {
-      //   return res
-      //     .status(500)
-      //     .json({ message: "Failed to upload new profile photo" });
+      // if (
+      //   user.profilePhoto &&
+      //   !user.profilePhoto.includes("default-profile_photos")
+      // ) {
+      //   const publicId = user.profilePhoto.split("/").pop()?.split(".")[0];
+      //   if (publicId) {
+      //     await cloudinary.uploader.destroy(publicId);
+      //   }
       // }
-      user.profilePhoto = req.body.cloudinaryUrls[0];
+      // user.profilePhoto = req.body.cloudinaryUrls[0];
     }
 
     // Save the updated user

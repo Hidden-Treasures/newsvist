@@ -15,6 +15,7 @@ const biography_1 = require("../controllers/biography");
 const comment_1 = require("../controllers/comment");
 const livescore_1 = require("../controllers/livescore");
 const subscription_1 = require("../controllers/subscription");
+const notifications_1 = require("../controllers/notifications");
 // const { upload } = require("../s3Upload");
 const route = express_1.default.Router();
 route.post("/register", user_1.register);
@@ -46,8 +47,10 @@ route.get("/getsubcategories/:catName", auth_1.isAuth, news_2.getAllNewsSubCateg
 route.get("/allNewsList", auth_1.isAuth, auth_1.isAdmin, news_2.allNewsList);
 route.get("/editor-newsList", auth_1.isAuth, auth_1.isEditor, news_2.editorNewsList);
 route.get("/writer-newsList", auth_1.isAuth, auth_1.isJournalist, news_2.writerNewsList);
-route.get("/dashboard/stats", auth_1.isAuth, auth_1.isAdmin, news_1.totalNewsStats);
-route.get("/recent-articles", auth_1.isAuth, auth_1.isAdmin, news_1.recentArticles);
+route.get("/admin-dashboard/stats", auth_1.isAuth, auth_1.isAdmin, news_1.totalNewsStats);
+route.get("/editor-dashboard/stats", auth_1.isAuth, auth_1.isEditor, news_1.editorNewsStats);
+route.get("/admin-recent-articles", auth_1.isAuth, auth_1.isAdmin, news_1.recentArticles);
+route.get("/editor-recent-articles", auth_1.isAuth, auth_1.isEditor, news_1.editorRecentArticles);
 route.delete("/news/:newsId", auth_1.isAuth, auth_1.canCreateRead, news_2.deleteNews);
 route.get("/recycle-bin", auth_1.isAuth, news_2.getDeletedNews);
 route.delete("/recycle-bin/:newsId", auth_1.isAuth, auth_1.canCreateRead, news_2.addToNewsRecycleBin);
@@ -63,6 +66,7 @@ route.post("/addCategories", auth_1.isAuth, auth_1.canCreateRead, news_1.addCate
 route.put("/updateCategory/:id", auth_1.isAuth, auth_1.canCreateRead, news_1.updateCategory);
 route.put("/updateSubCategory/:categoryId/subcategory/:subcategoryId", auth_1.isAuth, auth_1.canCreateRead, news_1.updateSubCategory);
 route.get("/users", auth_1.isAuth, auth_1.isAdmin, news_1.users);
+route.put("/update/:userId", auth_1.isAuth, multer_1.upload.single("file"), multer_1.uploadToCloudinary, user_1.updateUser);
 route.post("/assignRole/:userId", auth_1.isAuth, news_1.assignRole);
 route.get("/user/:userid", auth_1.isAuth, auth_1.isAdmin, news_1.getUserbyID);
 route.delete("/deleteUsersManually/:id", auth_1.isAuth, auth_1.isAdmin, news_1.deleteUsersManually);
@@ -80,19 +84,19 @@ route.put("/reject/:id", auth_1.isAuth, auth_1.canCreateRead, news_1.rejectNews)
 route.get("/analytics", auth_1.isAuth, auth_1.isAdmin, news_1.getAnalytics);
 route.put("/comment/:id", auth_1.isAuth, auth_1.isAdmin, news_1.moderateComment);
 // Route to create a new image with file upload
-route.post("/images", auth_1.isAuth, multer_1.upload.array("images", 5), multer_1.uploadToCloudinary, news_1.createImage);
-route.get("/images", auth_1.isAuth, news_1.getImages);
-route.get("/imageByCat", news_1.getImageArticlesByCategory);
-// Route to fetch all images
-route.get("/all-images", news_1.getAllImages);
-// Route to get all images By Admin
-route.get("/image-gallery", news_1.images);
-// Route to fetch images by category, subcategory, or tag
-route.get("/images/filter", news_1.getImagesByCategoryOrTag);
-// Route to delete an image
-route.delete("/images/delete-by-user/:id", news_1.deleteImageByUser);
-// Route to get image details
-route.get("/image/:id", news_1.getSingleImage);
+route.post("/medias", auth_1.isAuth, multer_1.upload.array("medias", 5), multer_1.uploadToCloudinary, news_1.createMedia);
+route.get("/medias", auth_1.isAuth, news_1.getMedias);
+route.get("/media=by-Cat", news_1.getMediaArticlesByCategory);
+// Route to fetch all medias
+route.get("/all-medias", news_1.getAllMedias);
+// Route to get all medias By Admin
+route.get("/media-gallery", news_1.medias);
+// Route to fetch medias by category, subcategory, or tag
+route.get("/medias/filter", news_1.getMediasByCategoryOrTag);
+// Route to delete an media
+route.delete("/medias/delete-by-user/:id", news_1.deleteMediaByUser);
+// Route to get media details
+route.get("/media/:id", news_1.getSingleMedia);
 // ..............News Route...........
 // ..............COMMENT ROUTE ...........
 // Route to create a new comment or reply
@@ -136,4 +140,6 @@ route.post("/live-event", auth_1.isAuth, news_1.createLiveEvent);
 route.post("/live-event/:type/entry", auth_1.isAuth, multer_1.upload.single("file"), validator_1.validate, multer_1.uploadToCloudinary, news_1.addLiveUpdateEntry);
 route.get("/live-event/:type", auth_1.isAuth, news_1.getLiveEventEntries);
 route.get("/live-events", auth_1.isAuth, news_1.getAllLiveEvents);
+route.get("/notifications", auth_1.isAuth, notifications_1.getNotifications);
+route.patch("/notifications/:id/read", auth_1.isAuth, notifications_1.markAsRead);
 exports.default = route;

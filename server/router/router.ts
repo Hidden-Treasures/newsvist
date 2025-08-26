@@ -4,20 +4,22 @@ import {
   AllCategoriesWithSubCategory,
   approveNews,
   assignRole,
-  createImage,
+  createMedia,
   createLiveEvent,
   deleteCategory,
-  deleteImageByUser,
+  deleteMediaByUser,
   deleteSubCategory,
   deleteUsersManually,
+  editorNewsStats,
+  editorRecentArticles,
   getAdvertisements,
-  getAllImages,
+  getAllMedias,
   getAllLiveEvents,
   getAnalytics,
   getApprovedNews,
-  getImageArticlesByCategory,
-  getImages,
-  getImagesByCategoryOrTag,
+  getMediaArticlesByCategory,
+  getMedias,
+  getMediasByCategoryOrTag,
   getLiveEventEntries,
   getMostReadArticles,
   getNews,
@@ -26,10 +28,10 @@ import {
   getPendingNews,
   getRejectedNews,
   getRelatedNews,
-  getSingleImage,
+  getSingleMedia,
   getUpNextArticles,
   getUserbyID,
-  images,
+  medias,
   moderateComment,
   recentArticles,
   rejectNews,
@@ -113,6 +115,7 @@ import {
 import { createComment, getComments } from "../controllers/comment";
 import { liveScores } from "../controllers/livescore";
 import { subscription } from "../controllers/subscription";
+import { getNotifications, markAsRead } from "../controllers/notifications";
 
 // const { upload } = require("../s3Upload");
 const route = express.Router();
@@ -170,8 +173,10 @@ route.get("/getsubcategories/:catName", isAuth, getAllNewsSubCategories);
 route.get("/allNewsList", isAuth, isAdmin, allNewsList);
 route.get("/editor-newsList", isAuth, isEditor, editorNewsList);
 route.get("/writer-newsList", isAuth, isJournalist, writerNewsList);
-route.get("/dashboard/stats", isAuth, isAdmin, totalNewsStats);
-route.get("/recent-articles", isAuth, isAdmin, recentArticles);
+route.get("/admin-dashboard/stats", isAuth, isAdmin, totalNewsStats);
+route.get("/editor-dashboard/stats", isAuth, isEditor, editorNewsStats);
+route.get("/admin-recent-articles", isAuth, isAdmin, recentArticles);
+route.get("/editor-recent-articles", isAuth, isEditor, editorRecentArticles);
 
 route.delete("/news/:newsId", isAuth, canCreateRead, deleteNews);
 route.get("/recycle-bin", isAuth, getDeletedNews);
@@ -219,6 +224,13 @@ route.put(
 );
 
 route.get("/users", isAuth, isAdmin, users);
+route.put(
+  "/update/:userId",
+  isAuth,
+  upload.single("file"),
+  uploadToCloudinary,
+  updateUser
+);
 route.post("/assignRole/:userId", isAuth, assignRole);
 route.get("/user/:userid", isAuth, isAdmin, getUserbyID);
 route.delete("/deleteUsersManually/:id", isAuth, isAdmin, deleteUsersManually);
@@ -241,29 +253,29 @@ route.put("/comment/:id", isAuth, isAdmin, moderateComment);
 
 // Route to create a new image with file upload
 route.post(
-  "/images",
+  "/medias",
   isAuth,
-  upload.array("images", 5),
+  upload.array("medias", 5),
   uploadToCloudinary,
-  createImage
+  createMedia
 );
 
-route.get("/images", isAuth, getImages);
-route.get("/imageByCat", getImageArticlesByCategory);
-// Route to fetch all images
-route.get("/all-images", getAllImages);
+route.get("/medias", isAuth, getMedias);
+route.get("/media=by-Cat", getMediaArticlesByCategory);
+// Route to fetch all medias
+route.get("/all-medias", getAllMedias);
 
-// Route to get all images By Admin
-route.get("/image-gallery", images);
+// Route to get all medias By Admin
+route.get("/media-gallery", medias);
 
-// Route to fetch images by category, subcategory, or tag
-route.get("/images/filter", getImagesByCategoryOrTag);
+// Route to fetch medias by category, subcategory, or tag
+route.get("/medias/filter", getMediasByCategoryOrTag);
 
-// Route to delete an image
-route.delete("/images/delete-by-user/:id", deleteImageByUser);
+// Route to delete an media
+route.delete("/medias/delete-by-user/:id", deleteMediaByUser);
 
-// Route to get image details
-route.get("/image/:id", getSingleImage);
+// Route to get media details
+route.get("/media/:id", getSingleMedia);
 
 // ..............News Route...........
 
@@ -344,5 +356,8 @@ route.post(
 );
 route.get("/live-event/:type", isAuth, getLiveEventEntries);
 route.get("/live-events", isAuth, getAllLiveEvents);
+
+route.get("/notifications", isAuth, getNotifications);
+route.patch("/notifications/:id/read", isAuth, markAsRead);
 
 export default route;

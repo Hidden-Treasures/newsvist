@@ -1,7 +1,13 @@
 "use client";
 
-import { Fragment } from "react";
-import { Menu, MenuItem, Transition } from "@headlessui/react";
+import { Fragment, ReactNode } from "react";
+import {
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  Transition,
+} from "@headlessui/react";
 import { cn } from "@/utils/utils";
 
 export function DropdownMenu({ children }: { children: React.ReactNode }) {
@@ -13,13 +19,12 @@ export function DropdownMenu({ children }: { children: React.ReactNode }) {
 }
 
 export function DropdownMenuTrigger({
-  asChild,
   children,
 }: {
   asChild?: boolean;
   children: React.ReactNode;
 }) {
-  return <Menu.Button as={Fragment}>{children}</Menu.Button>;
+  return <MenuButton as={Fragment}>{children}</MenuButton>;
 }
 
 export function DropdownMenuContent({
@@ -29,7 +34,7 @@ export function DropdownMenuContent({
 }: {
   align?: "start" | "end";
   className?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <Transition
@@ -41,7 +46,7 @@ export function DropdownMenuContent({
       leaveFrom="transform opacity-100 scale-100"
       leaveTo="transform opacity-0 scale-95"
     >
-      <Menu.Items
+      <MenuItems
         className={cn(
           "absolute z-50 mt-2 w-56 origin-top-right rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none",
           align === "end" ? "right-0" : "left-0",
@@ -49,7 +54,7 @@ export function DropdownMenuContent({
         )}
       >
         {children}
-      </Menu.Items>
+      </MenuItems>
     </Transition>
   );
 }
@@ -58,14 +63,17 @@ export function DropdownMenuItem({
   children,
   className = "",
   onClick,
+  disabled = false,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
   onClick?: () => void;
+  disabled?: boolean;
 }) {
   return (
     <MenuItem>
       <button
+        disabled={disabled}
         onClick={onClick}
         className={cn(
           "flex w-full items-center px-3 py-2 text-sm text-gray-700 rounded-md transition-colors",

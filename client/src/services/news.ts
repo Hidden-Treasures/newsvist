@@ -339,6 +339,19 @@ export const fetchNewsList = async ({
     return handleError(error);
   }
 };
+export const getEditorNewsList = async ({
+  currentPage,
+  itemsPerPage,
+}: PaginationParams) => {
+  try {
+    const { data } = await api.get("/editor-newsList", {
+      params: { page: currentPage + 1, pageSize: itemsPerPage },
+    });
+    return data;
+  } catch (error) {
+    return handleError(error);
+  }
+};
 
 export const fetchAllNewsList = async ({
   currentPage,
@@ -714,6 +727,28 @@ export async function getLiveEventEntries(type: string) {
   );
   return data;
 }
+
+export const uploadMedia = async (
+  file: File,
+  onProgress?: (p: number) => void
+) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await api.post("/media/upload", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+    onUploadProgress: (progressEvent) => {
+      if (onProgress && progressEvent.total) {
+        const percent = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        );
+        onProgress(percent);
+      }
+    },
+  });
+
+  return response.data;
+};
 
 // Common error handler
 export function handleError(error: any): APIResponse {
