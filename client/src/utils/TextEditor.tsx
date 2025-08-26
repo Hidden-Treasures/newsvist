@@ -3,12 +3,13 @@
 import React from "react";
 import Underline from "@tiptap/extension-underline";
 import { Focus, Placeholder } from "@tiptap/extensions";
-import {
-  BackgroundColor,
-  TextStyle,
-  TextStyleKit,
-} from "@tiptap/extension-text-style";
-import Document from "@tiptap/extension-document";
+import { BackgroundColor, TextStyle } from "@tiptap/extension-text-style";
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import { all, createLowlight } from "lowlight";
+import js from "highlight.js/lib/languages/javascript";
+import ts from "highlight.js/lib/languages/typescript";
+import css from "highlight.js/lib/languages/css";
+import html from "highlight.js/lib/languages/xml";
 import Heading from "@tiptap/extension-heading";
 import Image from "@tiptap/extension-image";
 import Paragraph from "@tiptap/extension-paragraph";
@@ -18,15 +19,22 @@ import StarterKit from "@tiptap/starter-kit";
 import Toolbar from "./Toolbar";
 import TextAlign from "@tiptap/extension-text-align";
 import Code from "@tiptap/extension-code";
-import { BulletList, ListItem } from "@tiptap/extension-list";
-import Text from "@tiptap/extension-text";
+import { BulletList, ListItem, OrderedList } from "@tiptap/extension-list";
 import Link from "@tiptap/extension-link";
+import Blockquote from "@tiptap/extension-blockquote";
+import CodeBlock from "@tiptap/extension-code-block";
 
 interface TipTapProps {
   onChange: (content: string) => void;
   content?: string;
   description?: string;
 }
+
+const lowlight = createLowlight(all);
+lowlight.register("js", js);
+lowlight.register("ts", ts);
+lowlight.register("css", css);
+lowlight.register("html", html);
 
 export default function TextEditor({
   onChange,
@@ -41,45 +49,31 @@ export default function TextEditor({
     extensions: [
       StarterKit.configure({
         heading: false,
+        bulletList: false,
+        orderedList: false,
       }),
       Heading.configure({
         levels: [1, 2, 3],
       }),
+      Paragraph,
+      Blockquote,
+      BulletList,
+      OrderedList,
+      ListItem,
       TextAlign.configure({
         types: ["heading", "paragraph"],
         alignments: ["left", "center", "right", "justify"],
       }),
       Underline,
-      Document,
       TextStyle,
-      TextStyleKit,
       BackgroundColor,
-      Paragraph,
-      Text,
-      Image.configure({
-        inline: true,
-        allowBase64: true,
-      }),
-      Code,
-      BulletList,
-      ListItem,
-      Youtube.configure({
-        inline: false,
-        controls: true,
-        nocookie: true,
-      }),
-      Placeholder.configure({
-        placeholder: "Start typing ...",
-      }),
-      Focus.configure({
-        className: "has-focus",
-        mode: "all",
-      }),
-      Link.configure({
-        openOnClick: false,
-        autolink: true,
-        linkOnPaste: true,
-      }),
+      Image.configure({ inline: true, allowBase64: true }),
+      CodeBlock,
+      CodeBlockLowlight.configure({ lowlight }),
+      Youtube.configure({ inline: false, controls: true, nocookie: true }),
+      Placeholder.configure({ placeholder: "Start typing ..." }),
+      Focus.configure({ className: "has-focus", mode: "all" }),
+      Link.configure({ openOnClick: false, autolink: true, linkOnPaste: true }),
     ],
     autofocus: true,
     content: content || "<p></p>",

@@ -234,3 +234,36 @@ export interface Notification {
   isRead: boolean;
   createdAt: string;
 }
+
+export interface TagOption {
+  label: string;
+  value: string;
+}
+
+export interface InitialState {
+  editorText?: string;
+  title?: string;
+  city?: string;
+  type?: string;
+  isLiveUpdate?: boolean;
+  liveUpdateType?: string;
+  isAdvertisement?: boolean;
+  liveUpdateHeadline?: string;
+  newsCategory?: string;
+  subCategory?: string;
+  tags?: Array<string | { name: string; _id: string }>;
+  name?: { stageName: string };
+  file?: string;
+}
+
+export interface NewsFormProps {
+  busy: boolean;
+  btnTitle: string;
+  initialState?: InitialState;
+  onSubmit: (formData: FormData, reset: () => void) => void;
+  videoUploaded?: boolean;
+  isAdvertisement?: boolean;
+  setIsAdvertisement?: (value: boolean) => void;
+  selectedType: string;
+  onTypeChange: (val: string) => void;
+}
